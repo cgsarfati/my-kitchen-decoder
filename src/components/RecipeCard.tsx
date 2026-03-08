@@ -1,4 +1,4 @@
-import { Clock, Users, CheckCircle2, AlertCircle, AlertTriangle } from "lucide-react";
+import { Clock, Users, CheckCircle2, AlertCircle, AlertTriangle, XCircle } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import type { Recipe } from "@/types/recipe";
