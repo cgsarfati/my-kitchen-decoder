@@ -26,7 +26,7 @@ const RecipeCard = ({ recipe, onClick }: RecipeCardProps) => {
         {/* Gradient overlay for better badge contrast */}
         <div className="absolute inset-0 bg-gradient-to-t from-black/30 via-transparent to-transparent" />
         {isFullMatch ? (
-          <Badge className="absolute top-3 left-3 bg-accent text-accent-foreground gap-1 shadow-sm">
+          <Badge className="absolute top-3 left-3 bg-success text-success-foreground gap-1 shadow-sm">
             <CheckCircle2 className="h-3 w-3" />
             Full Match
           </Badge>
