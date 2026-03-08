@@ -271,28 +271,28 @@ const Index = () => {
                 Add ingredients with quantities to find matching recipes
               </p>
             </div>
-            {items.length > 0 && (
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={handleClearAll}
-                className="text-xs text-muted-foreground hover:text-destructive gap-1.5"
-              >
-                <Trash2 className="h-3.5 w-3.5" />
-                Clear all
-              </Button>
-            )}
           </div>
 
           <PantryInput onAdd={handleAdd} />
 
           {items.length > 0 && (
             <div className="pt-5 space-y-4">
-              <h4 className="text-sm font-medium text-muted-foreground uppercase tracking-wider flex items-center gap-2">
+              <div className="flex items-center gap-2">
                 <span className="h-px flex-1 bg-border" />
-                In Your Pantry ({items.length})
+                <h4 className="text-sm font-medium text-muted-foreground uppercase tracking-wider whitespace-nowrap">
+                  In Your Pantry ({items.length})
+                </h4>
                 <span className="h-px flex-1 bg-border" />
-              </h4>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={handleClearAll}
+                  className="text-xs text-muted-foreground hover:text-destructive gap-1 shrink-0 h-auto py-0.5 px-1.5"
+                >
+                  <Trash2 className="h-3 w-3" />
+                  Clear
+                </Button>
+              </div>
               <PantryList items={items} onRemove={handleRemove} onUpdate={handleUpdate} />
             </div>
           )}
