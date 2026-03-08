@@ -10,11 +10,10 @@ interface RecipeCardProps {
 
 const RecipeCard = ({ recipe, onClick }: RecipeCardProps) => {
   const isFullMatch = recipe.missedIngredientCount === 0 && (recipe.insufficientCount ?? 0) === 0;
-  const hasInsufficient = (recipe.insufficientCount ?? 0) > 0;
 
   return (
     <Card
-      className="overflow-hidden cursor-pointer hover:shadow-lg transition-all hover:-translate-y-1 border-border"
+      className="overflow-hidden cursor-pointer hover:shadow-kitchen-lg transition-all hover:-translate-y-1 border-border bg-card"
       onClick={() => onClick(recipe)}
     >
       <div className="relative">
@@ -24,18 +23,20 @@ const RecipeCard = ({ recipe, onClick }: RecipeCardProps) => {
           className="w-full h-48 object-cover"
           loading="lazy"
         />
+        {/* Gradient overlay for better badge contrast */}
+        <div className="absolute inset-0 bg-gradient-to-t from-black/30 via-transparent to-transparent" />
         {isFullMatch ? (
-          <Badge className="absolute top-3 left-3 bg-accent text-accent-foreground gap-1">
+          <Badge className="absolute top-3 left-3 bg-accent text-accent-foreground gap-1 shadow-sm">
             <CheckCircle2 className="h-3 w-3" />
             Full Match
           </Badge>
         ) : recipe.missedIngredientCount > 0 ? (
-          <Badge variant="secondary" className="absolute top-3 left-3 gap-1">
+          <Badge variant="secondary" className="absolute top-3 left-3 gap-1 shadow-sm">
             <AlertCircle className="h-3 w-3" />
             {recipe.missedIngredientCount} missing
           </Badge>
         ) : (
-          <Badge className="absolute top-3 left-3 bg-warning text-warning-foreground gap-1">
+          <Badge className="absolute top-3 left-3 bg-warning text-warning-foreground gap-1 shadow-sm">
             <AlertTriangle className="h-3 w-3" />
             {recipe.insufficientCount} not enough
           </Badge>
@@ -60,7 +61,7 @@ const RecipeCard = ({ recipe, onClick }: RecipeCardProps) => {
         </div>
 
         {/* Ingredient summary */}
-        <div className="space-y-1">
+        <div className="space-y-1 border-t border-dashed border-border pt-3">
           {recipe.matchedIngredients ? (
             <>
               {recipe.matchedIngredients.filter((i) => i.status === "have").length > 0 && (
