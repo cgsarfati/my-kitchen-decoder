@@ -82,7 +82,7 @@ const RecipeCard = ({ recipe, onClick }: RecipeCardProps) => {
             </>
           ) : (
             <>
-              <p className="text-xs font-medium text-accent">
+              <p className="text-xs font-medium text-success">
                 ✓ You have: {recipe.usedIngredients.map((i) => i.name).join(", ")}
               </p>
               {recipe.missedIngredients.length > 0 && (
