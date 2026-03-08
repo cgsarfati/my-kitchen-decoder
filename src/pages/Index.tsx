@@ -58,16 +58,27 @@ const Index = () => {
         },
       });
 
-      if (error) throw error;
+      if (error) {
+        // Edge function returns FunctionsHttpError for non-2xx responses
+        const errorBody = typeof error === 'object' && error?.context?.body ? await error.context.json?.() : null;
+        if (errorBody?.error === "RATE_LIMIT" || error?.message?.includes("429")) {
+          throw new Error("RATE_LIMIT");
+        }
+        throw error;
+      }
+      if (data?.error === "RATE_LIMIT") throw new Error("RATE_LIMIT");
       if (data?.error) throw new Error(data.error);
 
       const enriched = enrichRecipesWithQuantityMatch(data.recipes || [], items);
       setRecipes(enriched);
     } catch (err: any) {
       console.error("Search error:", err);
+      const isRateLimit = err.message === "RATE_LIMIT" || err.message?.includes("429") || err.message?.includes("daily points limit");
       toast({
-        title: "Search failed",
-        description: err.message || "Could not fetch recipes. Please try again.",
+        title: isRateLimit ? "API limit reached" : "Search failed",
+        description: isRateLimit
+          ? "We've hit our daily recipe search limit. Please try again tomorrow!"
+          : err.message || "Could not fetch recipes. Please try again.",
         variant: "destructive",
       });
       setRecipes([]);
