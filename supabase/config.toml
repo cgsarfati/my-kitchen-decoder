@@ -1,1 +1,4 @@
 project_id = "hsrldbzhltgunzoyzegi"
+
+[functions.search-recipes]
+verify_jwt = false
