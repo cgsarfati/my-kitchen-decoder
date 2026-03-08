@@ -167,7 +167,15 @@ const Index = () => {
           </div>
 
           <PantryInput onAdd={handleAdd} />
-          <PantryList items={items} onRemove={handleRemove} />
+
+          {items.length > 0 && (
+            <div className="border-t border-border pt-6 space-y-4">
+              <h4 className="text-sm font-medium text-muted-foreground uppercase tracking-wider">
+                Added Ingredients
+              </h4>
+              <PantryList items={items} onRemove={handleRemove} />
+            </div>
+          )}
 
           {items.length > 0 && (
             <Button
