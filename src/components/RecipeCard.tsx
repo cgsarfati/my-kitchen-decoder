@@ -26,7 +26,7 @@ const RecipeCard = ({ recipe, onClick }: RecipeCardProps) => {
         {/* Gradient overlay for better badge contrast */}
         <div className="absolute inset-0 bg-gradient-to-t from-black/30 via-transparent to-transparent" />
         {isFullMatch ? (
-          <Badge className="absolute top-3 left-3 bg-accent text-accent-foreground gap-1 shadow-sm">
+          <Badge className="absolute top-3 left-3 bg-success text-success-foreground gap-1 shadow-sm">
             <CheckCircle2 className="h-3 w-3" />
             Full Match
           </Badge>
@@ -65,7 +65,7 @@ const RecipeCard = ({ recipe, onClick }: RecipeCardProps) => {
           {recipe.matchedIngredients ? (
             <>
               {recipe.matchedIngredients.filter((i) => i.status === "have").length > 0 && (
-                <p className="text-xs font-medium text-accent">
+                <p className="text-xs font-medium text-success">
                   ✓ You have: {recipe.matchedIngredients.filter((i) => i.status === "have").map((i) => i.name).join(", ")}
                 </p>
               )}
@@ -82,7 +82,7 @@ const RecipeCard = ({ recipe, onClick }: RecipeCardProps) => {
             </>
           ) : (
             <>
-              <p className="text-xs font-medium text-accent">
+              <p className="text-xs font-medium text-success">
                 ✓ You have: {recipe.usedIngredients.map((i) => i.name).join(", ")}
               </p>
               {recipe.missedIngredients.length > 0 && (

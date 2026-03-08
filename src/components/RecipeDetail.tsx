@@ -94,7 +94,7 @@ const RecipeDetail = ({ recipe, onBack }: RecipeDetailProps) => {
             </span>
           )}
           {isFullMatch ? (
-            <Badge className="bg-accent text-accent-foreground gap-1">
+            <Badge className="bg-success text-success-foreground gap-1">
               <CheckCircle2 className="h-3 w-3" /> Full Match
             </Badge>
           ) : (recipe.insufficientCount ?? 0) > 0 && recipe.missedIngredientCount === 0 ? (
@@ -125,7 +125,7 @@ const RecipeDetail = ({ recipe, onBack }: RecipeDetailProps) => {
               }`}
             >
               {ing.status === "have" ? (
-                <CheckCircle2 className="h-4 w-4 mt-0.5 text-accent shrink-0" />
+                <CheckCircle2 className="h-4 w-4 mt-0.5 text-success shrink-0" />
               ) : ing.status === "insufficient" ? (
                 <AlertTriangle className="h-4 w-4 mt-0.5 text-warning shrink-0" />
               ) : (
