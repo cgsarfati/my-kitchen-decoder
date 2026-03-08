@@ -188,7 +188,7 @@ const Index = () => {
           <PantryInput onAdd={handleAdd} />
 
           {items.length > 0 && (
-            <div className="border-t border-dashed border-border pt-5 space-y-4">
+            <div className="pt-5 space-y-4">
               <h4 className="text-sm font-medium text-muted-foreground uppercase tracking-wider flex items-center gap-2">
                 <span className="h-px flex-1 bg-border" />
                 Added Ingredients
