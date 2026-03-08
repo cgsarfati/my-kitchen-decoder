@@ -65,29 +65,34 @@ const RecipeCard = ({ recipe, onClick }: RecipeCardProps) => {
           {recipe.matchedIngredients ? (
             <>
               {recipe.matchedIngredients.filter((i) => i.status === "have").length > 0 && (
-                <p className="text-xs font-medium text-success">
-                  ✓ You have: {recipe.matchedIngredients.filter((i) => i.status === "have").map((i) => i.name).join(", ")}
+                <p className="text-xs font-medium text-success flex items-start gap-1.5">
+                  <CheckCircle2 className="h-3.5 w-3.5 shrink-0 mt-px" />
+                  <span>You have: {recipe.matchedIngredients.filter((i) => i.status === "have").map((i) => i.name).join(", ")}</span>
                 </p>
               )}
               {recipe.matchedIngredients.filter((i) => i.status === "insufficient").length > 0 && (
-                <p className="text-xs font-medium text-warning">
-                  ⚠ Not enough: {recipe.matchedIngredients.filter((i) => i.status === "insufficient").map((i) => i.name).join(", ")}
+                <p className="text-xs font-medium text-warning flex items-start gap-1.5">
+                  <AlertTriangle className="h-3.5 w-3.5 shrink-0 mt-px" />
+                  <span>Not enough: {recipe.matchedIngredients.filter((i) => i.status === "insufficient").map((i) => i.name).join(", ")}</span>
                 </p>
               )}
               {recipe.matchedIngredients.filter((i) => i.status === "missing").length > 0 && (
-                <p className="text-xs font-medium text-destructive">
-                  ✗ Missing: {recipe.matchedIngredients.filter((i) => i.status === "missing").map((i) => i.name).join(", ")}
+                <p className="text-xs font-medium text-destructive flex items-start gap-1.5">
+                  <XCircle className="h-3.5 w-3.5 shrink-0 mt-px" />
+                  <span>Missing: {recipe.matchedIngredients.filter((i) => i.status === "missing").map((i) => i.name).join(", ")}</span>
                 </p>
               )}
             </>
           ) : (
             <>
-              <p className="text-xs font-medium text-success">
-                ✓ You have: {recipe.usedIngredients.map((i) => i.name).join(", ")}
+              <p className="text-xs font-medium text-success flex items-start gap-1.5">
+                <CheckCircle2 className="h-3.5 w-3.5 shrink-0 mt-px" />
+                <span>You have: {recipe.usedIngredients.map((i) => i.name).join(", ")}</span>
               </p>
               {recipe.missedIngredients.length > 0 && (
-                <p className="text-xs font-medium text-destructive">
-                  ✗ Missing: {recipe.missedIngredients.map((i) => i.name).join(", ")}
+                <p className="text-xs font-medium text-destructive flex items-start gap-1.5">
+                  <XCircle className="h-3.5 w-3.5 shrink-0 mt-px" />
+                  <span>Missing: {recipe.missedIngredients.map((i) => i.name).join(", ")}</span>
                 </p>
               )}
             </>
