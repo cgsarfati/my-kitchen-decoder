@@ -30,16 +30,29 @@ const RecipeResults = ({ recipes, isLoading, hasSearched, onRecipeClick }: Recip
     );
   }
 
-  // Sort: full matches first (0 missing), then by fewer missing ingredients
+  // Sort: full matches first, then insufficient-only, then by fewer missing
   const sorted = [...recipes].sort((a, b) => {
-    if (a.missedIngredientCount !== b.missedIngredientCount) {
-      return a.missedIngredientCount - b.missedIngredientCount;
-    }
+    const aMissing = a.missedIngredientCount;
+    const bMissing = b.missedIngredientCount;
+    const aInsuff = a.insufficientCount ?? 0;
+    const bInsuff = b.insufficientCount ?? 0;
+
+    // Full matches (0 missing, 0 insufficient) first
+    const aFull = aMissing === 0 && aInsuff === 0;
+    const bFull = bMissing === 0 && bInsuff === 0;
+    if (aFull !== bFull) return aFull ? -1 : 1;
+
+    // Then by missing count
+    if (aMissing !== bMissing) return aMissing - bMissing;
+
+    // Then by insufficient count
+    if (aInsuff !== bInsuff) return aInsuff - bInsuff;
+
     return b.usedIngredientCount - a.usedIngredientCount;
   });
 
-  const fullMatches = sorted.filter((r) => r.missedIngredientCount === 0);
-  const partialMatches = sorted.filter((r) => r.missedIngredientCount > 0);
+  const fullMatches = sorted.filter((r) => r.missedIngredientCount === 0 && (r.insufficientCount ?? 0) === 0);
+  const partialMatches = sorted.filter((r) => r.missedIngredientCount > 0 || (r.insufficientCount ?? 0) > 0);
 
   return (
     <section className="space-y-6">

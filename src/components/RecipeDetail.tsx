@@ -1,4 +1,4 @@
-import { ArrowLeft, Clock, Users, ExternalLink, CheckCircle2, XCircle } from "lucide-react";
+import { ArrowLeft, Clock, Users, ExternalLink, CheckCircle2, XCircle, AlertTriangle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import type { Recipe } from "@/types/recipe";
@@ -9,7 +9,7 @@ interface RecipeDetailProps {
 }
 
 const RecipeDetail = ({ recipe, onBack }: RecipeDetailProps) => {
-  const usedNames = new Set(recipe.usedIngredients.map((i) => i.name.toLowerCase()));
+  const isFullMatch = recipe.missedIngredientCount === 0 && (recipe.insufficientCount ?? 0) === 0;
 
   return (
     <div className="space-y-6">
@@ -39,9 +39,13 @@ const RecipeDetail = ({ recipe, onBack }: RecipeDetailProps) => {
               {recipe.readyInMinutes} min
             </span>
           )}
-          {recipe.missedIngredientCount === 0 ? (
+          {isFullMatch ? (
             <Badge className="bg-accent text-accent-foreground gap-1">
               <CheckCircle2 className="h-3 w-3" /> Full Match
+            </Badge>
+          ) : (recipe.insufficientCount ?? 0) > 0 && recipe.missedIngredientCount === 0 ? (
+            <Badge className="bg-warning text-warning-foreground gap-1">
+              <AlertTriangle className="h-3 w-3" /> {recipe.insufficientCount} not enough
             </Badge>
           ) : (
             <Badge variant="secondary" className="gap-1">
@@ -55,29 +59,35 @@ const RecipeDetail = ({ recipe, onBack }: RecipeDetailProps) => {
       <div className="space-y-3">
         <h3 className="text-xl text-foreground font-body font-semibold">Ingredients</h3>
         <ul className="space-y-2">
-          {recipe.extendedIngredients.map((ing, idx) => {
-            const isOwned = usedNames.has(ing.name.toLowerCase());
-            return (
-              <li
-                key={`${ing.id}-${idx}`}
-                className={`flex items-start gap-2 text-sm ${
-                  isOwned ? "text-foreground" : "text-destructive"
-                }`}
-              >
-                {isOwned ? (
-                  <CheckCircle2 className="h-4 w-4 mt-0.5 text-accent shrink-0" />
-                ) : (
-                  <XCircle className="h-4 w-4 mt-0.5 text-destructive shrink-0" />
+          {(recipe.matchedIngredients ?? recipe.extendedIngredients.map((i) => ({ ...i, status: "have" as const }))).map((ing, idx) => (
+            <li
+              key={`${ing.id}-${idx}`}
+              className={`flex items-start gap-2 text-sm ${
+                ing.status === "have"
+                  ? "text-foreground"
+                  : ing.status === "insufficient"
+                  ? "text-warning-foreground"
+                  : "text-destructive"
+              }`}
+            >
+              {ing.status === "have" ? (
+                <CheckCircle2 className="h-4 w-4 mt-0.5 text-accent shrink-0" />
+              ) : ing.status === "insufficient" ? (
+                <AlertTriangle className="h-4 w-4 mt-0.5 text-warning shrink-0" />
+              ) : (
+                <XCircle className="h-4 w-4 mt-0.5 text-destructive shrink-0" />
+              )}
+              <span>
+                {ing.original}
+                {ing.status === "insufficient" && (
+                  <span className="ml-1 text-xs text-warning font-medium">(not enough)</span>
                 )}
-                <span>
-                  {ing.original}
-                  {!isOwned && (
-                    <span className="ml-1 text-xs text-destructive font-medium">(missing)</span>
-                  )}
-                </span>
-              </li>
-            );
-          })}
+                {ing.status === "missing" && (
+                  <span className="ml-1 text-xs text-destructive font-medium">(missing)</span>
+                )}
+              </span>
+            </li>
+          ))}
         </ul>
       </div>
 

@@ -1,4 +1,4 @@
-import { Clock, Users, CheckCircle2, AlertCircle } from "lucide-react";
+import { Clock, Users, CheckCircle2, AlertCircle, AlertTriangle } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import type { Recipe } from "@/types/recipe";
@@ -9,7 +9,8 @@ interface RecipeCardProps {
 }
 
 const RecipeCard = ({ recipe, onClick }: RecipeCardProps) => {
-  const isFullMatch = recipe.missedIngredientCount === 0;
+  const isFullMatch = recipe.missedIngredientCount === 0 && (recipe.insufficientCount ?? 0) === 0;
+  const hasInsufficient = (recipe.insufficientCount ?? 0) > 0;
 
   return (
     <Card
@@ -28,10 +29,15 @@ const RecipeCard = ({ recipe, onClick }: RecipeCardProps) => {
             <CheckCircle2 className="h-3 w-3" />
             Full Match
           </Badge>
-        ) : (
+        ) : recipe.missedIngredientCount > 0 ? (
           <Badge variant="secondary" className="absolute top-3 left-3 gap-1">
             <AlertCircle className="h-3 w-3" />
             {recipe.missedIngredientCount} missing
+          </Badge>
+        ) : (
+          <Badge className="absolute top-3 left-3 bg-warning text-warning-foreground gap-1">
+            <AlertTriangle className="h-3 w-3" />
+            {recipe.insufficientCount} not enough
           </Badge>
         )}
       </div>
@@ -53,15 +59,37 @@ const RecipeCard = ({ recipe, onClick }: RecipeCardProps) => {
           )}
         </div>
 
-        {/* Used ingredients */}
+        {/* Ingredient summary */}
         <div className="space-y-1">
-          <p className="text-xs font-medium text-accent">
-            ✓ You have: {recipe.usedIngredients.map((i) => i.name).join(", ")}
-          </p>
-          {recipe.missedIngredients.length > 0 && (
-            <p className="text-xs font-medium text-destructive">
-              ✗ Missing: {recipe.missedIngredients.map((i) => i.name).join(", ")}
-            </p>
+          {recipe.matchedIngredients ? (
+            <>
+              {recipe.matchedIngredients.filter((i) => i.status === "have").length > 0 && (
+                <p className="text-xs font-medium text-accent">
+                  ✓ You have: {recipe.matchedIngredients.filter((i) => i.status === "have").map((i) => i.name).join(", ")}
+                </p>
+              )}
+              {recipe.matchedIngredients.filter((i) => i.status === "insufficient").length > 0 && (
+                <p className="text-xs font-medium text-warning">
+                  ⚠ Not enough: {recipe.matchedIngredients.filter((i) => i.status === "insufficient").map((i) => i.name).join(", ")}
+                </p>
+              )}
+              {recipe.matchedIngredients.filter((i) => i.status === "missing").length > 0 && (
+                <p className="text-xs font-medium text-destructive">
+                  ✗ Missing: {recipe.matchedIngredients.filter((i) => i.status === "missing").map((i) => i.name).join(", ")}
+                </p>
+              )}
+            </>
+          ) : (
+            <>
+              <p className="text-xs font-medium text-accent">
+                ✓ You have: {recipe.usedIngredients.map((i) => i.name).join(", ")}
+              </p>
+              {recipe.missedIngredients.length > 0 && (
+                <p className="text-xs font-medium text-destructive">
+                  ✗ Missing: {recipe.missedIngredients.map((i) => i.name).join(", ")}
+                </p>
+              )}
+            </>
           )}
         </div>
       </CardContent>
