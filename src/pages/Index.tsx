@@ -1,16 +1,19 @@
-import { useState, useCallback } from "react";
-import { ChefHat, Search, FlaskConical, UtensilsCrossed } from "lucide-react";
+import { useState, useCallback, useEffect, useRef } from "react";
+import { ChefHat, Search, FlaskConical, UtensilsCrossed, Save } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
+import AuthButton from "@/components/AuthButton";
 import PantryInput from "@/components/PantryInput";
 import PantryList from "@/components/PantryList";
 import RecipeResults from "@/components/RecipeResults";
 import RecipeDetail from "@/components/RecipeDetail";
 import { matchIngredients, summarizeMatch } from "@/lib/unitConversion";
 import { MOCK_RECIPES } from "@/lib/mockRecipes";
+import { loadPantry, savePantry } from "@/lib/pantryStorage";
 import type { PantryItem } from "@/types/pantry";
 import type { Recipe } from "@/types/recipe";
 
@@ -21,7 +24,43 @@ const Index = () => {
   const [hasSearched, setHasSearched] = useState(false);
   const [selectedRecipe, setSelectedRecipe] = useState<Recipe | null>(null);
   const [demoMode, setDemoMode] = useState(false);
+  const [pantryId, setPantryId] = useState<string | undefined>();
+  const [isSaving, setIsSaving] = useState(false);
+  const [pantryLoaded, setPantryLoaded] = useState(false);
   const { toast } = useToast();
+  const { user } = useAuth();
+
+  // Load saved pantry when user signs in
+  useEffect(() => {
+    if (!user) {
+      setPantryId(undefined);
+      setPantryLoaded(false);
+      return;
+    }
+    loadPantry(user.id).then((result) => {
+      if (result) {
+        setItems(result.items);
+        setPantryId(result.id);
+      }
+      setPantryLoaded(true);
+    });
+  }, [user]);
+
+  // Auto-save pantry on changes (debounced)
+  const saveTimeoutRef = useRef<ReturnType<typeof setTimeout>>();
+  useEffect(() => {
+    if (!user || !pantryLoaded) return;
+
+    if (saveTimeoutRef.current) clearTimeout(saveTimeoutRef.current);
+    saveTimeoutRef.current = setTimeout(async () => {
+      const id = await savePantry(user.id, items, pantryId);
+      if (id && !pantryId) setPantryId(id);
+    }, 1500);
+
+    return () => {
+      if (saveTimeoutRef.current) clearTimeout(saveTimeoutRef.current);
+    };
+  }, [items, user, pantryId, pantryLoaded]);
 
   const handleAdd = useCallback((item: Omit<PantryItem, "id">) => {
     setItems((prev) => [...prev, { ...item, id: crypto.randomUUID() }]);
@@ -101,11 +140,14 @@ const Index = () => {
     return (
       <div className="min-h-screen bg-kitchen-counter">
         <header className="border-b-2 border-kitchen bg-wood-grain sticky top-0 z-10">
-          <div className="container max-w-3xl mx-auto flex items-center gap-3 py-4 px-4">
-            <div className="h-10 w-10 rounded-xl bg-primary flex items-center justify-center shadow-kitchen">
-              <ChefHat className="h-5 w-5 text-primary-foreground" />
+          <div className="container max-w-3xl mx-auto flex items-center justify-between py-4 px-4">
+            <div className="flex items-center gap-3">
+              <div className="h-10 w-10 rounded-xl bg-primary flex items-center justify-center shadow-kitchen">
+                <ChefHat className="h-5 w-5 text-primary-foreground" />
+              </div>
+              <h1 className="text-2xl text-foreground">Pantry Cook</h1>
             </div>
-            <h1 className="text-2xl text-foreground">Pantry Cook</h1>
+            <AuthButton />
           </div>
         </header>
         <main className="container max-w-3xl mx-auto px-4 py-10">
@@ -128,16 +170,20 @@ const Index = () => {
             </div>
             <h1 className="text-2xl text-foreground">Pantry Cook</h1>
           </div>
-          <div className="flex items-center gap-2">
-            <FlaskConical className="h-4 w-4 text-muted-foreground" />
-            <Label htmlFor="demo-mode" className="text-sm text-muted-foreground cursor-pointer">
-              Demo
-            </Label>
-            <Switch
-              id="demo-mode"
-              checked={demoMode}
-              onCheckedChange={setDemoMode}
-            />
+          <div className="flex items-center gap-3">
+            <div className="flex items-center gap-2">
+              <FlaskConical className="h-4 w-4 text-muted-foreground" />
+              <Label htmlFor="demo-mode" className="text-sm text-muted-foreground cursor-pointer">
+                Demo
+              </Label>
+              <Switch
+                id="demo-mode"
+                checked={demoMode}
+                onCheckedChange={setDemoMode}
+              />
+            </div>
+            <div className="w-px h-6 bg-border" />
+            <AuthButton />
           </div>
         </div>
       </header>
@@ -152,7 +198,6 @@ const Index = () => {
 
         {/* Hero section with kitchen-card feel */}
         <section className="surface-paper-lg rounded-2xl p-8 md:p-10 text-center space-y-4 relative overflow-hidden">
-          {/* Decorative utensils watermark */}
           <div className="absolute top-4 right-6 opacity-[0.06] pointer-events-none">
             <UtensilsCrossed className="h-32 w-32 text-foreground" />
           </div>
@@ -166,23 +211,37 @@ const Index = () => {
           <p className="text-lg text-muted-foreground max-w-lg mx-auto relative z-[1]">
             Add the ingredients in your pantry and we'll find recipes you can actually make — even partial matches.
           </p>
+          {!user && (
+            <p className="text-sm text-primary relative z-[1]">
+              Sign in with Google to save your pantry between sessions.
+            </p>
+          )}
         </section>
 
-        {/* Pantry section styled like a recipe card / kitchen note */}
+        {/* Pantry section */}
         <section className="surface-paper rounded-2xl p-6 md:p-8 space-y-6 relative">
-          {/* Subtle top accent like a pinned note */}
           <div className="absolute -top-px left-8 right-8 h-1 bg-gradient-to-r from-transparent via-primary/60 to-transparent rounded-b-full" />
 
-          <div className="space-y-1">
-            <h3 className="text-xl text-foreground font-body font-semibold flex items-center gap-2">
-              <span className="inline-flex h-7 w-7 items-center justify-center rounded-lg bg-primary/10">
-                🧺
+          <div className="flex items-center justify-between">
+            <div className="space-y-1">
+              <h3 className="text-xl text-foreground font-body font-semibold flex items-center gap-2">
+                <span className="inline-flex h-7 w-7 items-center justify-center rounded-lg bg-primary/10">
+                  🧺
+                </span>
+                Your Pantry
+              </h3>
+              <p className="text-sm text-muted-foreground">
+                {user
+                  ? "Your pantry auto-saves to the cloud"
+                  : "Add ingredients with quantities to find matching recipes"}
+              </p>
+            </div>
+            {user && items.length > 0 && (
+              <span className="text-xs text-muted-foreground flex items-center gap-1">
+                <Save className="h-3 w-3" />
+                Auto-saved
               </span>
-              Your Pantry
-            </h3>
-            <p className="text-sm text-muted-foreground">
-              Add ingredients with quantities to find matching recipes
-            </p>
+            )}
           </div>
 
           <PantryInput onAdd={handleAdd} />
@@ -212,7 +271,6 @@ const Index = () => {
           )}
         </section>
 
-        {/* Recipe results on the "countertop" */}
         <RecipeResults
           recipes={recipes}
           isLoading={isLoading}
