@@ -249,9 +249,7 @@ const Index = () => {
                 Your Pantry
               </h3>
               <p className="text-sm text-muted-foreground">
-                {user
-                  ? "Your pantry auto-saves to the cloud"
-                  : "Add ingredients with quantities to find matching recipes"}
+                Add ingredients with quantities to find matching recipes
               </p>
             </div>
             {user && items.length > 0 && (
