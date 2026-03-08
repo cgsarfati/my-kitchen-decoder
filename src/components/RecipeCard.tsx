@@ -65,7 +65,7 @@ const RecipeCard = ({ recipe, onClick }: RecipeCardProps) => {
           {recipe.matchedIngredients ? (
             <>
               {recipe.matchedIngredients.filter((i) => i.status === "have").length > 0 && (
-                <p className="text-xs font-medium text-accent">
+                <p className="text-xs font-medium text-success">
                   ✓ You have: {recipe.matchedIngredients.filter((i) => i.status === "have").map((i) => i.name).join(", ")}
                 </p>
               )}
