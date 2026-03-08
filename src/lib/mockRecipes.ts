@@ -2,7 +2,7 @@ import type { Recipe } from "@/types/recipe";
 
 /**
  * Mock recipe data for demo mode.
- * Based on a pantry of: chicken breast, garlic, olive oil, rice.
+ * Covers various pantry combinations for testing.
  */
 export const MOCK_RECIPES: Recipe[] = [
   {
@@ -114,6 +114,58 @@ export const MOCK_RECIPES: Recipe[] = [
       { id: 9, name: "soy sauce", amount: 2, unit: "tbsp", original: "2 tablespoons soy sauce" },
       { id: 10, name: "bell pepper", amount: 1, unit: "", original: "1 bell pepper, sliced" },
       { id: 11, name: "broccoli", amount: 1, unit: "cup", original: "1 cup broccoli florets" },
+    ],
+  },
+  {
+    id: 105,
+    title: "Classic Chicken Parmesan Pasta",
+    image: "https://img.spoonacular.com/recipes/654959-312x231.jpg",
+    usedIngredientCount: 5,
+    missedIngredientCount: 0,
+    usedIngredients: [
+      { id: 1, name: "chicken breast", amount: 500, unit: "g", original: "500g chicken breast" },
+      { id: 2, name: "garlic", amount: 3, unit: "cloves", original: "3 cloves garlic" },
+      { id: 3, name: "olive oil", amount: 2, unit: "tbsp", original: "2 tablespoons olive oil" },
+      { id: 12, name: "spaghetti", amount: 400, unit: "g", original: "400g spaghetti" },
+      { id: 13, name: "parmesan", amount: 80, unit: "g", original: "80g parmesan" },
+    ],
+    missedIngredients: [],
+    servings: 4,
+    readyInMinutes: 30,
+    instructions:
+      "<ol><li>Cook spaghetti according to package directions.</li><li>Season chicken with salt and pepper, coat lightly in flour.</li><li>Heat olive oil and cook chicken 5-6 min per side until golden.</li><li>In same pan, sauté garlic for 1 minute.</li><li>Toss pasta with garlic oil, top with sliced chicken and grated parmesan.</li></ol>",
+    sourceUrl: "https://example.com/chicken-parm-pasta",
+    extendedIngredients: [
+      { id: 1, name: "chicken breast", amount: 500, unit: "g", original: "500g chicken breast" },
+      { id: 2, name: "garlic", amount: 3, unit: "cloves", original: "3 cloves garlic" },
+      { id: 3, name: "olive oil", amount: 2, unit: "tbsp", original: "2 tablespoons olive oil" },
+      { id: 12, name: "spaghetti", amount: 400, unit: "g", original: "400g spaghetti" },
+      { id: 13, name: "parmesan", amount: 80, unit: "g", original: "80g parmesan" },
+    ],
+  },
+  {
+    id: 106,
+    title: "Tomato Garlic Spaghetti",
+    image: "https://img.spoonacular.com/recipes/716195-312x231.jpg",
+    usedIngredientCount: 4,
+    missedIngredientCount: 0,
+    usedIngredients: [
+      { id: 2, name: "garlic", amount: 4, unit: "cloves", original: "4 cloves garlic" },
+      { id: 3, name: "olive oil", amount: 3, unit: "tbsp", original: "3 tablespoons olive oil" },
+      { id: 12, name: "spaghetti", amount: 300, unit: "g", original: "300g spaghetti" },
+      { id: 14, name: "tomato", amount: 400, unit: "g", original: "400g tomatoes" },
+    ],
+    missedIngredients: [],
+    servings: 3,
+    readyInMinutes: 20,
+    instructions:
+      "<ol><li>Cook spaghetti al dente.</li><li>Dice tomatoes. Heat olive oil, sauté garlic 1 min.</li><li>Add tomatoes, cook 8-10 min until saucy.</li><li>Toss pasta in the sauce, season with salt and pepper.</li></ol>",
+    sourceUrl: "https://example.com/tomato-garlic-spaghetti",
+    extendedIngredients: [
+      { id: 2, name: "garlic", amount: 4, unit: "cloves", original: "4 cloves garlic" },
+      { id: 3, name: "olive oil", amount: 3, unit: "tbsp", original: "3 tablespoons olive oil" },
+      { id: 12, name: "spaghetti", amount: 300, unit: "g", original: "300g spaghetti" },
+      { id: 14, name: "tomato", amount: 400, unit: "g", original: "400g tomatoes" },
     ],
   },
 ];
