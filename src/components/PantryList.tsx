@@ -3,7 +3,6 @@ import { X, Pencil, Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import type { PantryItem } from "@/types/pantry";
 import { COMMON_UNITS } from "@/types/pantry";
 import type { PantryItem } from "@/types/pantry";
 
