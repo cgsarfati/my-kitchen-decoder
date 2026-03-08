@@ -120,7 +120,7 @@ const RecipeDetail = ({ recipe, onBack }: RecipeDetailProps) => {
                 ing.status === "have"
                   ? "text-foreground"
                   : ing.status === "insufficient"
-                  ? "text-warning-foreground"
+                  ? "text-warning"
                   : "text-destructive"
               }`}
             >
