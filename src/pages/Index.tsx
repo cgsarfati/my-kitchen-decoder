@@ -271,17 +271,6 @@ const Index = () => {
                 Add ingredients with quantities to find matching recipes
               </p>
             </div>
-            {items.length > 0 && (
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={handleClearAll}
-                className="text-xs text-muted-foreground hover:text-destructive gap-1.5"
-              >
-                <Trash2 className="h-3.5 w-3.5" />
-                Clear all
-              </Button>
-            )}
           </div>
 
           <PantryInput onAdd={handleAdd} />
