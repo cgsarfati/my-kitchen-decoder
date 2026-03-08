@@ -28,4 +28,6 @@ export interface Recipe {
   /** Populated client-side after quantity matching */
   matchedIngredients?: RecipeIngredientWithStatus[];
   insufficientCount?: number;
+  /** Max servings user can make based on pantry quantities (full matches only) */
+  maxServings?: number | null;
 }

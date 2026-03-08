@@ -196,3 +196,57 @@ export function summarizeMatch(ingredients: IngredientWithStatus[]) {
   const missingCount = ingredients.filter((i) => i.status === "missing").length;
   return { haveCount, insufficientCount, missingCount };
 }
+
+/**
+ * Calculate the maximum servings a user can make based on their pantry quantities.
+ * Only meaningful for full-match recipes (no missing ingredients).
+ * Returns null if calculation isn't possible.
+ */
+export function calculateMaxServings(
+  pantryItems: { name: string; quantity: number; unit: string }[],
+  recipeIngredients: { id: number; name: string; amount: number; unit: string; original: string }[],
+  recipeServings: number
+): number | null {
+  if (recipeServings <= 0) return null;
+
+  let minRatio = Infinity;
+  let comparableCount = 0;
+
+  for (const ing of recipeIngredients) {
+    // Skip ingredients with no amount (seasonings, "to taste", etc.)
+    if (!ing.amount || ing.amount <= 0) continue;
+
+    const ingNameLower = ing.name.toLowerCase();
+
+    // Find matching pantry item
+    const pantryItem =
+      pantryItems.find((p) => p.name.toLowerCase() === ingNameLower) ??
+      pantryItems.find(
+        (p) =>
+          ingNameLower.includes(p.name.toLowerCase()) ||
+          p.name.toLowerCase().includes(ingNameLower)
+      );
+
+    if (!pantryItem) continue;
+
+    const pantryBase = toBaseAmount(pantryItem.quantity, pantryItem.unit);
+    const recipeBase = toBaseAmount(ing.amount, ing.unit);
+
+    // Can't compare if units are incompatible
+    if (!pantryBase || !recipeBase) continue;
+    if (pantryBase.category !== recipeBase.category) continue;
+
+    comparableCount++;
+    const ratio = pantryBase.baseAmount / recipeBase.baseAmount;
+    if (ratio < minRatio) minRatio = ratio;
+  }
+
+  // Need at least one comparable ingredient to calculate
+  if (comparableCount === 0 || minRatio === Infinity) return null;
+
+  // Convert ratio to servings: ratio * recipeServings
+  const maxServings = minRatio * recipeServings;
+
+  // Round down to nearest 0.5
+  return Math.floor(maxServings * 2) / 2;
+}
