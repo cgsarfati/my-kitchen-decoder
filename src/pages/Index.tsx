@@ -1,5 +1,5 @@
 import { useState, useCallback, useEffect, useRef } from "react";
-import { ChefHat, Search, FlaskConical, UtensilsCrossed, Save } from "lucide-react";
+import { ChefHat, Search, FlaskConical, UtensilsCrossed } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
