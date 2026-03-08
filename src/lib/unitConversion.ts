@@ -106,10 +106,10 @@ export function compareQuantity(
   const pantryBase = toBaseAmount(pantryAmount, pantryUnit);
   const recipeBase = toBaseAmount(recipeAmount, recipeUnit);
 
-  // If we can't convert either unit, or they're in different categories,
-  // we can't compare — assume the user has it
-  if (!pantryBase || !recipeBase) return "have";
-  if (pantryBase.category !== recipeBase.category) return "have";
+  // If we can't convert either unit, we can't compare — mark as insufficient
+  if (!pantryBase || !recipeBase) return "insufficient";
+  // If they're in different categories (e.g. count vs weight), can't compare — mark insufficient
+  if (pantryBase.category !== recipeBase.category) return "insufficient";
 
   // Allow a small tolerance (95%) for rounding
   return pantryBase.baseAmount >= recipeBase.baseAmount * 0.95 ? "have" : "insufficient";
