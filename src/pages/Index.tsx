@@ -95,7 +95,25 @@ const Index = () => {
 
     if (demoMode) {
       await new Promise((r) => setTimeout(r, 800));
-      const enriched = enrichRecipesWithQuantityMatch(MOCK_RECIPES, items);
+      // Filter mock recipes: recalculate used/missed based on actual pantry items
+      const pantryNames = items.map((i) => i.name.toLowerCase());
+      const filtered = MOCK_RECIPES.map((recipe) => {
+        const used = recipe.extendedIngredients.filter((ing) =>
+          pantryNames.some((p) => ing.name.toLowerCase().includes(p) || p.includes(ing.name.toLowerCase()))
+        );
+        const missed = recipe.extendedIngredients.filter((ing) =>
+          !pantryNames.some((p) => ing.name.toLowerCase().includes(p) || p.includes(ing.name.toLowerCase()))
+        );
+        return {
+          ...recipe,
+          usedIngredientCount: used.length,
+          missedIngredientCount: missed.length,
+          usedIngredients: used.map((i) => ({ id: i.id, name: i.name, amount: i.amount, unit: i.unit, original: i.original })),
+          missedIngredients: missed.map((i) => ({ id: i.id, name: i.name, amount: i.amount, unit: i.unit, original: i.original })),
+        };
+      }).filter((r) => r.usedIngredientCount > 0); // Only show recipes with at least 1 matching ingredient
+
+      const enriched = enrichRecipesWithQuantityMatch(filtered, items);
       setRecipes(enriched);
       setIsLoading(false);
       return;
