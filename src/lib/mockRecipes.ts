@@ -2,7 +2,7 @@ import type { Recipe } from "@/types/recipe";
 
 /**
  * Mock recipe data for demo mode.
- * Based on a pantry of: chicken breast, garlic, olive oil, rice.
+ * Covers various pantry combinations for testing.
  */
 export const MOCK_RECIPES: Recipe[] = [
   {
