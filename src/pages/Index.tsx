@@ -143,9 +143,9 @@ const Index = () => {
 
       <main className="container max-w-3xl mx-auto px-4 py-10 space-y-10">
         {demoMode && (
-          <div className="rounded-lg border border-accent bg-accent/10 px-4 py-3 text-sm text-accent-foreground flex items-center gap-2">
-            <FlaskConical className="h-4 w-4 shrink-0" />
-            Demo mode — results use sample data, no API calls are made.
+          <div className="rounded-lg border border-primary/30 bg-primary/10 px-4 py-3 text-sm text-foreground flex items-center gap-2">
+            <FlaskConical className="h-4 w-4 shrink-0 text-primary" />
+            <span><strong>Demo mode</strong> — results use sample data, no API calls are made.</span>
           </div>
         )}
 
