@@ -119,7 +119,12 @@ const Index = () => {
         recipe.missedIngredients.map((i) => i.name)
       );
       const summary = summarizeMatch(matched);
-      return { ...recipe, matchedIngredients: matched, insufficientCount: summary.insufficientCount };
+      const pantryMapped = pantryItems.map((p) => ({ name: p.name, quantity: p.quantity, unit: p.unit }));
+      const isFullMatch = summary.missingCount === 0 && summary.insufficientCount === 0;
+      const maxServings = isFullMatch
+        ? calculateMaxServings(pantryMapped, recipe.extendedIngredients, recipe.servings)
+        : null;
+      return { ...recipe, matchedIngredients: matched, insufficientCount: summary.insufficientCount, maxServings };
     });
   };
 
