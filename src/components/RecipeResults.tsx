@@ -103,10 +103,7 @@ const RecipeResults = ({ recipes, isLoading, hasSearched, onRecipeClick, demoMod
   return (
     <section className="space-y-6">
       {/* Sort controls */}
-      <div className="flex items-center justify-between">
-        <p className="text-sm text-muted-foreground">
-          {recipes.length} recipe{recipes.length !== 1 ? "s" : ""} found
-        </p>
+      <div className="flex items-center justify-end">
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button variant="outline" size="sm" className="gap-2 text-xs">
