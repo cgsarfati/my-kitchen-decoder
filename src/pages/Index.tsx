@@ -1,5 +1,5 @@
 import { useState, useCallback } from "react";
-import { ChefHat, Search, FlaskConical } from "lucide-react";
+import { ChefHat, Search, FlaskConical, UtensilsCrossed } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
@@ -40,7 +40,6 @@ const Index = () => {
         recipe.missedIngredients.map((i) => i.name)
       );
       const summary = summarizeMatch(matched);
-
       return {
         ...recipe,
         matchedIngredients: matched,
@@ -55,7 +54,6 @@ const Index = () => {
     setHasSearched(true);
     setSelectedRecipe(null);
 
-    // Demo mode: use mock data with a small delay to simulate loading
     if (demoMode) {
       await new Promise((r) => setTimeout(r, 800));
       const enriched = enrichRecipesWithQuantityMatch(MOCK_RECIPES, items);
@@ -101,28 +99,31 @@ const Index = () => {
 
   if (selectedRecipe) {
     return (
-      <div className="min-h-screen bg-background">
-        <header className="border-b border-border bg-card/60 backdrop-blur-sm sticky top-0 z-10">
+      <div className="min-h-screen bg-kitchen-tile">
+        <header className="border-b-2 border-kitchen bg-wood-grain sticky top-0 z-10">
           <div className="container max-w-3xl mx-auto flex items-center gap-3 py-4 px-4">
-            <div className="h-10 w-10 rounded-xl bg-primary flex items-center justify-center">
+            <div className="h-10 w-10 rounded-xl bg-primary flex items-center justify-center shadow-kitchen">
               <ChefHat className="h-5 w-5 text-primary-foreground" />
             </div>
             <h1 className="text-2xl text-foreground">Pantry Cook</h1>
           </div>
         </header>
         <main className="container max-w-3xl mx-auto px-4 py-10">
-          <RecipeDetail recipe={selectedRecipe} onBack={() => setSelectedRecipe(null)} />
+          <div className="surface-paper-lg rounded-2xl p-6 md:p-8">
+            <RecipeDetail recipe={selectedRecipe} onBack={() => setSelectedRecipe(null)} />
+          </div>
         </main>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-background">
-      <header className="border-b border-border bg-card/60 backdrop-blur-sm sticky top-0 z-10">
+    <div className="min-h-screen bg-kitchen-tile">
+      {/* Wood-grain header like a kitchen shelf */}
+      <header className="border-b-2 border-kitchen bg-wood-grain sticky top-0 z-10">
         <div className="container max-w-3xl mx-auto flex items-center justify-between py-4 px-4">
           <div className="flex items-center gap-3">
-            <div className="h-10 w-10 rounded-xl bg-primary flex items-center justify-center">
+            <div className="h-10 w-10 rounded-xl bg-primary flex items-center justify-center shadow-kitchen">
               <ChefHat className="h-5 w-5 text-primary-foreground" />
             </div>
             <h1 className="text-2xl text-foreground">Pantry Cook</h1>
@@ -141,7 +142,7 @@ const Index = () => {
         </div>
       </header>
 
-      <main className="container max-w-3xl mx-auto px-4 py-10 space-y-10">
+      <main className="container max-w-3xl mx-auto px-4 py-10 space-y-8">
         {demoMode && (
           <div className="rounded-lg border border-primary/30 bg-primary/10 px-4 py-3 text-sm text-foreground flex items-center gap-2">
             <FlaskConical className="h-4 w-4 shrink-0 text-primary" />
@@ -149,18 +150,36 @@ const Index = () => {
           </div>
         )}
 
-        <section className="text-center space-y-3">
-          <h2 className="text-4xl md:text-5xl text-foreground leading-tight">
+        {/* Hero section with kitchen-card feel */}
+        <section className="surface-paper-lg rounded-2xl p-8 md:p-10 text-center space-y-4 relative overflow-hidden">
+          {/* Decorative utensils watermark */}
+          <div className="absolute top-4 right-6 opacity-[0.06] pointer-events-none">
+            <UtensilsCrossed className="h-32 w-32 text-foreground" />
+          </div>
+          <div className="absolute bottom-4 left-6 opacity-[0.04] pointer-events-none rotate-12">
+            <ChefHat className="h-24 w-24 text-foreground" />
+          </div>
+
+          <h2 className="text-4xl md:text-5xl text-foreground leading-tight relative z-[1]">
             Cook with what you have
           </h2>
-          <p className="text-lg text-muted-foreground max-w-lg mx-auto">
+          <p className="text-lg text-muted-foreground max-w-lg mx-auto relative z-[1]">
             Add the ingredients in your pantry and we'll find recipes you can actually make — even partial matches.
           </p>
         </section>
 
-        <section className="space-y-6">
+        {/* Pantry section styled like a recipe card / kitchen note */}
+        <section className="surface-paper rounded-2xl p-6 md:p-8 space-y-6 relative">
+          {/* Subtle top accent like a pinned note */}
+          <div className="absolute -top-px left-8 right-8 h-1 bg-gradient-to-r from-transparent via-primary/60 to-transparent rounded-b-full" />
+
           <div className="space-y-1">
-            <h3 className="text-xl text-foreground font-body font-semibold">Your Pantry</h3>
+            <h3 className="text-xl text-foreground font-body font-semibold flex items-center gap-2">
+              <span className="inline-flex h-7 w-7 items-center justify-center rounded-lg bg-primary/10">
+                🧺
+              </span>
+              Your Pantry
+            </h3>
             <p className="text-sm text-muted-foreground">
               Add ingredients with quantities to find matching recipes
             </p>
@@ -169,9 +188,11 @@ const Index = () => {
           <PantryInput onAdd={handleAdd} />
 
           {items.length > 0 && (
-            <div className="border-t border-border pt-6 space-y-4">
-              <h4 className="text-sm font-medium text-muted-foreground uppercase tracking-wider">
+            <div className="border-t border-dashed border-border pt-5 space-y-4">
+              <h4 className="text-sm font-medium text-muted-foreground uppercase tracking-wider flex items-center gap-2">
+                <span className="h-px flex-1 bg-border" />
                 Added Ingredients
+                <span className="h-px flex-1 bg-border" />
               </h4>
               <PantryList items={items} onRemove={handleRemove} />
             </div>
@@ -181,7 +202,7 @@ const Index = () => {
             <Button
               variant="hero"
               size="lg"
-              className="w-full gap-2"
+              className="w-full gap-2 shadow-kitchen"
               onClick={handleSearch}
               disabled={isLoading}
             >
@@ -191,6 +212,7 @@ const Index = () => {
           )}
         </section>
 
+        {/* Recipe results on the "countertop" */}
         <RecipeResults
           recipes={recipes}
           isLoading={isLoading}

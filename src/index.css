@@ -6,22 +6,22 @@
 
 @layer base {
   :root {
-    --background: 35 33% 97%;
+    --background: 30 25% 95%;
     --foreground: 25 30% 12%;
 
-    --card: 36 30% 100%;
+    --card: 33 30% 98%;
     --card-foreground: 25 30% 12%;
 
-    --popover: 36 30% 100%;
+    --popover: 33 30% 98%;
     --popover-foreground: 25 30% 12%;
 
     --primary: 25 85% 55%;
     --primary-foreground: 0 0% 100%;
 
-    --secondary: 35 30% 92%;
+    --secondary: 35 30% 90%;
     --secondary-foreground: 25 30% 18%;
 
-    --muted: 35 20% 93%;
+    --muted: 33 18% 91%;
     --muted-foreground: 25 10% 45%;
 
     --accent: 145 35% 45%;
@@ -33,11 +33,18 @@
     --destructive: 0 72% 51%;
     --destructive-foreground: 0 0% 100%;
 
-    --border: 30 20% 88%;
-    --input: 30 20% 88%;
+    --border: 30 20% 85%;
+    --input: 30 20% 85%;
     --ring: 25 85% 55%;
 
     --radius: 0.75rem;
+
+    /* Kitchen-specific tokens */
+    --surface-warm: 33 35% 96%;
+    --surface-wood: 28 40% 88%;
+    --surface-tile: 30 15% 93%;
+    --kitchen-shadow: 0 8px 32px -8px hsl(25 40% 20% / 0.12);
+    --kitchen-shadow-lg: 0 16px 48px -12px hsl(25 40% 20% / 0.18);
 
     --sidebar-background: 0 0% 98%;
     --sidebar-foreground: 240 5.3% 26.1%;
@@ -75,6 +82,13 @@
     --border: 25 12% 22%;
     --input: 25 12% 22%;
     --ring: 25 85% 55%;
+
+    --surface-warm: 25 18% 11%;
+    --surface-wood: 25 20% 15%;
+    --surface-tile: 25 12% 13%;
+    --kitchen-shadow: 0 8px 32px -8px hsl(0 0% 0% / 0.4);
+    --kitchen-shadow-lg: 0 16px 48px -12px hsl(0 0% 0% / 0.5);
+
     --sidebar-background: 240 5.9% 10%;
     --sidebar-foreground: 240 4.8% 95.9%;
     --sidebar-primary: 224.3 76.3% 48%;
@@ -99,4 +113,77 @@
   h1, h2, h3 {
     font-family: var(--font-display);
   }
+}
+
+/* Kitchen texture backgrounds */
+.bg-kitchen-tile {
+  background-color: hsl(var(--background));
+  background-image:
+    linear-gradient(45deg, hsl(var(--border) / 0.3) 25%, transparent 25%),
+    linear-gradient(-45deg, hsl(var(--border) / 0.3) 25%, transparent 25%),
+    linear-gradient(45deg, transparent 75%, hsl(var(--border) / 0.3) 75%),
+    linear-gradient(-45deg, transparent 75%, hsl(var(--border) / 0.3) 75%);
+  background-size: 40px 40px;
+  background-position: 0 0, 0 20px, 20px -20px, -20px 0px;
+}
+
+.bg-wood-grain {
+  background-color: hsl(var(--surface-wood));
+  background-image:
+    repeating-linear-gradient(
+      90deg,
+      transparent,
+      transparent 4px,
+      hsl(28 30% 75% / 0.15) 4px,
+      hsl(28 30% 75% / 0.15) 5px
+    ),
+    repeating-linear-gradient(
+      0deg,
+      transparent,
+      transparent 20px,
+      hsl(28 25% 60% / 0.06) 20px,
+      hsl(28 25% 60% / 0.06) 22px
+    );
+}
+
+.dark .bg-wood-grain {
+  background-color: hsl(var(--surface-wood));
+  background-image:
+    repeating-linear-gradient(
+      90deg,
+      transparent,
+      transparent 4px,
+      hsl(28 20% 30% / 0.2) 4px,
+      hsl(28 20% 30% / 0.2) 5px
+    ),
+    repeating-linear-gradient(
+      0deg,
+      transparent,
+      transparent 20px,
+      hsl(28 15% 25% / 0.1) 20px,
+      hsl(28 15% 25% / 0.1) 22px
+    );
+}
+
+.surface-paper {
+  background-color: hsl(var(--card));
+  box-shadow: var(--kitchen-shadow);
+  border: 1px solid hsl(var(--border));
+}
+
+.surface-paper-lg {
+  background-color: hsl(var(--card));
+  box-shadow: var(--kitchen-shadow-lg);
+  border: 1px solid hsl(var(--border));
+}
+
+/* Decorative kitchen border */
+.border-kitchen {
+  border-image: repeating-linear-gradient(
+    90deg,
+    hsl(var(--primary)) 0px,
+    hsl(var(--primary)) 8px,
+    transparent 8px,
+    transparent 16px
+  ) 4;
 }
