@@ -12,7 +12,7 @@ interface PantryInputProps {
 const PantryInput = ({ onAdd }: PantryInputProps) => {
   const [name, setName] = useState("");
   const [quantity, setQuantity] = useState("");
-  const [unit, setUnit] = useState("piece");
+  const [unit, setUnit] = useState("g");
   const [genericSuggestions, setGenericSuggestions] = useState<string[] | null>(null);
 
   const handleNameChange = (value: string) => {
