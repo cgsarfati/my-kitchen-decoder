@@ -2,6 +2,8 @@ import { useState } from "react";
 import { X, Pencil, Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { COMMON_UNITS } from "@/types/pantry";
 import type { PantryItem } from "@/types/pantry";
 
 /** Map ingredient keywords to emoji icons */
@@ -98,7 +100,18 @@ const PantryList = ({ items, onRemove, onUpdate }: PantryListProps) => {
                       if (e.key === "Escape") setEditingId(null);
                     }}
                   />
-                  <span className="text-xs text-muted-foreground">{item.unit}</span>
+                  <Select value={editUnit} onValueChange={setEditUnit}>
+                    <SelectTrigger className="h-6 w-[70px] text-xs px-1.5">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {COMMON_UNITS.map((u) => (
+                        <SelectItem key={u} value={u} className="text-xs">
+                          {u}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                   <Button
                     variant="ghost"
                     size="icon"
