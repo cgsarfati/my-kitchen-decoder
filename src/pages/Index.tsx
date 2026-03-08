@@ -266,7 +266,7 @@ const Index = () => {
             <div className="pt-5 space-y-4">
               <h4 className="text-sm font-medium text-muted-foreground uppercase tracking-wider flex items-center gap-2">
                 <span className="h-px flex-1 bg-border" />
-                Added Ingredients
+                In Your Pantry ({items.length})
                 <span className="h-px flex-1 bg-border" />
               </h4>
               <PantryList items={items} onRemove={handleRemove} />
