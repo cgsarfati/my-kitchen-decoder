@@ -125,7 +125,7 @@ const RecipeDetail = ({ recipe, onBack }: RecipeDetailProps) => {
               }`}
             >
               {ing.status === "have" ? (
-                <CheckCircle2 className="h-4 w-4 mt-0.5 text-accent shrink-0" />
+                <CheckCircle2 className="h-4 w-4 mt-0.5 text-success shrink-0" />
               ) : ing.status === "insufficient" ? (
                 <AlertTriangle className="h-4 w-4 mt-0.5 text-warning shrink-0" />
               ) : (
