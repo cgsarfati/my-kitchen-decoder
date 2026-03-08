@@ -95,10 +95,7 @@ const RecipeDetail = ({ recipe, onBack }: RecipeDetailProps) => {
       {recipe.instructions && (
         <div className="space-y-3">
           <h3 className="text-xl text-foreground font-body font-semibold">Instructions</h3>
-          <div
-            className="prose prose-sm max-w-none text-foreground/90"
-            dangerouslySetInnerHTML={{ __html: recipe.instructions }}
-          />
+          <InstructionSteps raw={recipe.instructions} />
         </div>
       )}
 
