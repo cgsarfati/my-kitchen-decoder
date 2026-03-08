@@ -34,6 +34,12 @@ serve(async (req) => {
     const searchRes = await fetch(searchUrl);
     if (!searchRes.ok) {
       const errText = await searchRes.text();
+      if (searchRes.status === 402) {
+        return new Response(
+          JSON.stringify({ error: "RATE_LIMIT", message: "Daily API limit reached. Please try again tomorrow." }),
+          { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
       throw new Error(`Spoonacular search failed [${searchRes.status}]: ${errText}`);
     }
     const recipes = await searchRes.json();
