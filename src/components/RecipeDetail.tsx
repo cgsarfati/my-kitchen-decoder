@@ -82,10 +82,16 @@ const RecipeDetail = ({ recipe, onBack }: RecipeDetailProps) => {
 
       <div className="space-y-2">
         <h2 className="text-3xl text-foreground">{recipe.title}</h2>
-        <div className="flex items-center gap-4 text-muted-foreground">
+        <div className="flex items-center gap-4 text-muted-foreground flex-wrap">
           <span className="flex items-center gap-1">
             <Users className="h-4 w-4" />
-            {recipe.servings} servings
+            {isFullMatch && recipe.maxServings != null && recipe.maxServings !== recipe.servings ? (
+              <span>
+                <strong className="text-foreground">{recipe.maxServings}</strong> of {recipe.servings} servings
+              </span>
+            ) : (
+              <span>{recipe.servings} servings</span>
+            )}
           </span>
           {recipe.readyInMinutes > 0 && (
             <span className="flex items-center gap-1">

@@ -50,7 +50,9 @@ const RecipeCard = ({ recipe, onClick }: RecipeCardProps) => {
         <div className="flex items-center gap-4 text-sm text-muted-foreground">
           <span className="flex items-center gap-1">
             <Users className="h-4 w-4" />
-            {recipe.servings} servings
+            {isFullMatch && recipe.maxServings != null && recipe.maxServings !== recipe.servings
+              ? `${recipe.maxServings} of ${recipe.servings} servings`
+              : `${recipe.servings} servings`}
           </span>
           {recipe.readyInMinutes > 0 && (
             <span className="flex items-center gap-1">
