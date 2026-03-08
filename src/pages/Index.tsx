@@ -7,6 +7,7 @@ import PantryInput from "@/components/PantryInput";
 import PantryList from "@/components/PantryList";
 import RecipeResults from "@/components/RecipeResults";
 import RecipeDetail from "@/components/RecipeDetail";
+import { matchIngredients, summarizeMatch } from "@/lib/unitConversion";
 import type { PantryItem } from "@/types/pantry";
 import type { Recipe } from "@/types/recipe";
 
@@ -26,6 +27,24 @@ const Index = () => {
     setItems((prev) => prev.filter((i) => i.id !== id));
   }, []);
 
+  const enrichRecipesWithQuantityMatch = (rawRecipes: Recipe[], pantryItems: PantryItem[]): Recipe[] => {
+    return rawRecipes.map((recipe) => {
+      const matched = matchIngredients(
+        pantryItems.map((p) => ({ name: p.name, quantity: p.quantity, unit: p.unit })),
+        recipe.extendedIngredients,
+        recipe.usedIngredients.map((i) => i.name),
+        recipe.missedIngredients.map((i) => i.name)
+      );
+      const summary = summarizeMatch(matched);
+
+      return {
+        ...recipe,
+        matchedIngredients: matched,
+        insufficientCount: summary.insufficientCount,
+      };
+    });
+  };
+
   const handleSearch = async () => {
     if (items.length === 0) return;
     setIsLoading(true);
@@ -42,7 +61,8 @@ const Index = () => {
       if (error) throw error;
       if (data?.error) throw new Error(data.error);
 
-      setRecipes(data.recipes || []);
+      const enriched = enrichRecipesWithQuantityMatch(data.recipes || [], items);
+      setRecipes(enriched);
     } catch (err: any) {
       console.error("Search error:", err);
       toast({

@@ -1,9 +1,15 @@
+import type { IngredientMatchStatus } from "@/lib/unitConversion";
+
 export interface RecipeIngredient {
   id: number;
   name: string;
   amount: number;
   unit: string;
   original: string;
+}
+
+export interface RecipeIngredientWithStatus extends RecipeIngredient {
+  status: IngredientMatchStatus;
 }
 
 export interface Recipe {
@@ -19,4 +25,7 @@ export interface Recipe {
   instructions: string;
   sourceUrl: string;
   extendedIngredients: RecipeIngredient[];
+  /** Populated client-side after quantity matching */
+  matchedIngredients?: RecipeIngredientWithStatus[];
+  insufficientCount?: number;
 }
