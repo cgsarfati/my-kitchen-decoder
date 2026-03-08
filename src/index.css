@@ -116,15 +116,58 @@
 }
 
 /* Kitchen texture backgrounds */
-.bg-kitchen-tile {
-  background-color: hsl(var(--background));
+.bg-kitchen-counter {
+  background-color: hsl(28 35% 82%);
   background-image:
-    linear-gradient(45deg, hsl(var(--border) / 0.3) 25%, transparent 25%),
-    linear-gradient(-45deg, hsl(var(--border) / 0.3) 25%, transparent 25%),
-    linear-gradient(45deg, transparent 75%, hsl(var(--border) / 0.3) 75%),
-    linear-gradient(-45deg, transparent 75%, hsl(var(--border) / 0.3) 75%);
-  background-size: 40px 40px;
-  background-position: 0 0, 0 20px, 20px -20px, -20px 0px;
+    repeating-linear-gradient(
+      95deg,
+      transparent,
+      transparent 3px,
+      hsl(28 30% 72% / 0.18) 3px,
+      hsl(28 30% 72% / 0.18) 4px
+    ),
+    repeating-linear-gradient(
+      92deg,
+      transparent,
+      transparent 11px,
+      hsl(30 25% 68% / 0.1) 11px,
+      hsl(30 25% 68% / 0.1) 13px
+    ),
+    repeating-linear-gradient(
+      0deg,
+      transparent,
+      transparent 60px,
+      hsl(25 20% 65% / 0.06) 60px,
+      hsl(25 20% 65% / 0.06) 62px
+    ),
+    linear-gradient(180deg, hsl(30 30% 85% / 0.5) 0%, transparent 40%, transparent 60%, hsl(28 25% 78% / 0.3) 100%);
+}
+
+.dark .bg-kitchen-counter {
+  background-color: hsl(25 18% 14%);
+  background-image:
+    repeating-linear-gradient(
+      95deg,
+      transparent,
+      transparent 3px,
+      hsl(25 15% 20% / 0.3) 3px,
+      hsl(25 15% 20% / 0.3) 4px
+    ),
+    repeating-linear-gradient(
+      92deg,
+      transparent,
+      transparent 11px,
+      hsl(25 12% 22% / 0.2) 11px,
+      hsl(25 12% 22% / 0.2) 13px
+    ),
+    repeating-linear-gradient(
+      0deg,
+      transparent,
+      transparent 60px,
+      hsl(25 10% 18% / 0.15) 60px,
+      hsl(25 10% 18% / 0.15) 62px
+    ),
+    linear-gradient(180deg, hsl(25 15% 16% / 0.5) 0%, transparent 40%, transparent 60%, hsl(25 12% 12% / 0.3) 100%);
 }
 
 .bg-wood-grain {
