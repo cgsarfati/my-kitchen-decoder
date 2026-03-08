@@ -118,7 +118,7 @@ const Index = () => {
   }
 
   return (
-    <div className="min-h-screen bg-kitchen-tile">
+    <div className="min-h-screen bg-kitchen-counter">
       {/* Wood-grain header like a kitchen shelf */}
       <header className="border-b-2 border-kitchen bg-wood-grain sticky top-0 z-10">
         <div className="container max-w-3xl mx-auto flex items-center justify-between py-4 px-4">
