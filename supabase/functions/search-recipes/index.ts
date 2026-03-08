@@ -29,7 +29,7 @@ serve(async (req) => {
     const ingredientList = ingredients.map((i: { name: string }) => i.name).join(",");
 
     // Search recipes by ingredients
-    const searchUrl = `https://api.spoonacular.com/recipes/findByIngredients?ingredients=${encodeURIComponent(ingredientList)}&number=12&ranking=2&ignorePantry=true&apiKey=${apiKey}`;
+    const searchUrl = `https://api.spoonacular.com/recipes/findByIngredients?ingredients=${encodeURIComponent(ingredientList)}&number=12&ranking=2&ignorePantry=false&apiKey=${apiKey}`;
     
     const searchRes = await fetch(searchUrl);
     if (!searchRes.ok) {
