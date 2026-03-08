@@ -3,6 +3,60 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import type { Recipe } from "@/types/recipe";
 
+/** Parse raw HTML/text instructions into clean numbered steps */
+function parseSteps(raw: string): string[] {
+  // Strip HTML tags, then split on common patterns
+  const text = raw
+    .replace(/<li[^>]*>/gi, "|||")
+    .replace(/<\/li>/gi, "")
+    .replace(/<[^>]+>/g, "")
+    .replace(/&amp;/g, "&")
+    .replace(/&lt;/g, "<")
+    .replace(/&gt;/g, ">")
+    .replace(/&#?\w+;/g, "");
+
+  let steps: string[];
+
+  if (text.includes("|||")) {
+    steps = text.split("|||");
+  } else {
+    // Split on numbered patterns like "1." or "1)" or newlines
+    steps = text.split(/(?:\r?\n)+|(?<=\.)\s+(?=\d+[.)]\s)/).flatMap((s) =>
+      s.split(/\d+[.)]\s+/)
+    );
+  }
+
+  return steps
+    .map((s) => s.trim())
+    .filter((s) => s.length > 5); // filter out empty/tiny fragments
+}
+
+const InstructionSteps = ({ raw }: { raw: string }) => {
+  const steps = parseSteps(raw);
+
+  if (steps.length <= 1) {
+    // Couldn't parse into steps — render as prose
+    return (
+      <p className="text-sm text-foreground/90 leading-relaxed whitespace-pre-line">
+        {steps[0] || raw.replace(/<[^>]+>/g, "").trim()}
+      </p>
+    );
+  }
+
+  return (
+    <ol className="space-y-3">
+      {steps.map((step, i) => (
+        <li key={i} className="flex gap-3 text-sm">
+          <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-primary/15 text-primary font-semibold text-xs">
+            {i + 1}
+          </span>
+          <span className="text-foreground/90 leading-relaxed pt-0.5">{step}</span>
+        </li>
+      ))}
+    </ol>
+  );
+};
+
 interface RecipeDetailProps {
   recipe: Recipe;
   onBack: () => void;
@@ -95,10 +149,7 @@ const RecipeDetail = ({ recipe, onBack }: RecipeDetailProps) => {
       {recipe.instructions && (
         <div className="space-y-3">
           <h3 className="text-xl text-foreground font-body font-semibold">Instructions</h3>
-          <div
-            className="prose prose-sm max-w-none text-foreground/90"
-            dangerouslySetInnerHTML={{ __html: recipe.instructions }}
-          />
+          <InstructionSteps raw={recipe.instructions} />
         </div>
       )}
 
