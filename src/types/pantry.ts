@@ -6,7 +6,7 @@ export interface PantryItem {
 }
 
 export const COMMON_UNITS = [
-  'g', 'kg', 'ml', 'l', 'cup', 'cups', 'tbsp', 'tsp',
-  'oz', 'lb', 'piece', 'pieces', 'clove', 'cloves',
-  'slice', 'slices', 'bunch', 'can', 'cans',
+  'g', 'kg', 'ml', 'l', 'cup', 'tbsp', 'tsp',
+  'oz', 'lb', 'piece', 'clove',
+  'slice', 'bunch', 'can',
 ] as const;
