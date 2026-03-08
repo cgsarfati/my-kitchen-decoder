@@ -38,7 +38,7 @@ const PantryInput = ({ onAdd }: PantryInputProps) => {
     onAdd({ name: trimmed, quantity: parseFloat(quantity), unit });
     setName("");
     setQuantity("");
-    setUnit("piece");
+    setUnit("g");
     setGenericSuggestions(null);
   };
 
