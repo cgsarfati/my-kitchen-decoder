@@ -11,7 +11,7 @@ import PantryInput from "@/components/PantryInput";
 import PantryList from "@/components/PantryList";
 import RecipeResults from "@/components/RecipeResults";
 import RecipeDetail from "@/components/RecipeDetail";
-import { matchIngredients, summarizeMatch } from "@/lib/unitConversion";
+import { matchIngredients, summarizeMatch, calculateMaxServings } from "@/lib/unitConversion";
 import { MOCK_RECIPES } from "@/lib/mockRecipes";
 import { loadPantry, savePantry } from "@/lib/pantryStorage";
 import type { PantryItem } from "@/types/pantry";
@@ -119,7 +119,12 @@ const Index = () => {
         recipe.missedIngredients.map((i) => i.name)
       );
       const summary = summarizeMatch(matched);
-      return { ...recipe, matchedIngredients: matched, insufficientCount: summary.insufficientCount };
+      const pantryMapped = pantryItems.map((p) => ({ name: p.name, quantity: p.quantity, unit: p.unit }));
+      const isFullMatch = summary.missingCount === 0 && summary.insufficientCount === 0;
+      const maxServings = isFullMatch
+        ? calculateMaxServings(pantryMapped, recipe.extendedIngredients, recipe.servings)
+        : null;
+      return { ...recipe, matchedIngredients: matched, insufficientCount: summary.insufficientCount, maxServings };
     });
   };
 
