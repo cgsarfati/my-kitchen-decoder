@@ -101,7 +101,18 @@ const PantryList = ({ items, onRemove, onUpdate }: PantryListProps) => {
                       if (e.key === "Escape") setEditingId(null);
                     }}
                   />
-                  <span className="text-xs text-muted-foreground">{item.unit}</span>
+                  <Select value={editUnit} onValueChange={setEditUnit}>
+                    <SelectTrigger className="h-6 w-[70px] text-xs px-1.5">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {COMMON_UNITS.map((u) => (
+                        <SelectItem key={u} value={u} className="text-xs">
+                          {u}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                   <Button
                     variant="ghost"
                     size="icon"
