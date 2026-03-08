@@ -252,12 +252,6 @@ const Index = () => {
                 Add ingredients with quantities to find matching recipes
               </p>
             </div>
-            {user && items.length > 0 && (
-              <span className="text-xs text-muted-foreground flex items-center gap-1">
-                <Save className="h-3 w-3" />
-                Auto-saved
-              </span>
-            )}
           </div>
 
           <PantryInput onAdd={handleAdd} />
