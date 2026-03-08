@@ -92,9 +92,23 @@ const Index = () => {
   }, []);
 
   const handleClearAll = useCallback(() => {
+    const previousItems = [...items];
     setItems([]);
-    toast({ title: "Pantry cleared", description: "All ingredients have been removed." });
-  }, [toast]);
+    toast({
+      title: "Pantry cleared",
+      description: "All ingredients have been removed.",
+      action: (
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => setItems(previousItems)}
+          className="text-xs"
+        >
+          Undo
+        </Button>
+      ),
+    });
+  }, [items, toast]);
 
   const enrichRecipesWithQuantityMatch = (rawRecipes: Recipe[], pantryItems: PantryItem[]): Recipe[] => {
     return rawRecipes.map((recipe) => {
