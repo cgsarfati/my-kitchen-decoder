@@ -99,7 +99,7 @@ const Index = () => {
 
   if (selectedRecipe) {
     return (
-      <div className="min-h-screen bg-kitchen-tile">
+      <div className="min-h-screen bg-kitchen-counter">
         <header className="border-b-2 border-kitchen bg-wood-grain sticky top-0 z-10">
           <div className="container max-w-3xl mx-auto flex items-center gap-3 py-4 px-4">
             <div className="h-10 w-10 rounded-xl bg-primary flex items-center justify-center shadow-kitchen">
@@ -118,7 +118,7 @@ const Index = () => {
   }
 
   return (
-    <div className="min-h-screen bg-kitchen-tile">
+    <div className="min-h-screen bg-kitchen-counter">
       {/* Wood-grain header like a kitchen shelf */}
       <header className="border-b-2 border-kitchen bg-wood-grain sticky top-0 z-10">
         <div className="container max-w-3xl mx-auto flex items-center justify-between py-4 px-4">
