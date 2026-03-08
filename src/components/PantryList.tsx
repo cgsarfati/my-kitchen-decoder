@@ -1,152 +1,68 @@
-import { X } from "lucide-react";
+import { useState } from "react";
+import { X, Pencil, Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import type { PantryItem } from "@/types/pantry";
 
 /** Map ingredient keywords to emoji icons */
 const INGREDIENT_ICONS: Record<string, string> = {
-  // Proteins
-  chicken: "🍗",
-  beef: "🥩",
-  steak: "🥩",
-  pork: "🥩",
-  lamb: "🥩",
-  turkey: "🦃",
-  fish: "🐟",
-  salmon: "🐟",
-  tuna: "🐟",
-  shrimp: "🦐",
-  prawn: "🦐",
-  crab: "🦀",
-  lobster: "🦞",
-  egg: "🥚",
-  tofu: "🧈",
-  sausage: "🌭",
-  bacon: "🥓",
-
-  // Vegetables
-  garlic: "🧄",
-  onion: "🧅",
-  potato: "🥔",
-  carrot: "🥕",
-  broccoli: "🥦",
-  lettuce: "🥬",
-  spinach: "🥬",
-  kale: "🥬",
-  corn: "🌽",
-  pepper: "🌶️",
-  chili: "🌶️",
-  tomato: "🍅",
-  mushroom: "🍄",
-  cucumber: "🥒",
-  zucchini: "🥒",
-  eggplant: "🍆",
-  avocado: "🥑",
-  pea: "🫛",
-  bean: "🫘",
-  ginger: "🫚",
-
-  // Fruits
-  apple: "🍎",
-  banana: "🍌",
-  orange: "🍊",
-  lemon: "🍋",
-  lime: "🍋",
-  strawberry: "🍓",
-  blueberry: "🫐",
-  grape: "🍇",
-  peach: "🍑",
-  pear: "🍐",
-  cherry: "🍒",
-  watermelon: "🍉",
-  pineapple: "🍍",
-  coconut: "🥥",
-  mango: "🥭",
-
-  // Grains & Carbs
-  rice: "🍚",
-  bread: "🍞",
-  pasta: "🍝",
-  spaghetti: "🍝",
-  noodle: "🍜",
-  flour: "🌾",
-  wheat: "🌾",
-  oat: "🌾",
-  cereal: "🥣",
-  tortilla: "🫓",
-  pancake: "🥞",
-  waffle: "🧇",
-
-  // Dairy
-  milk: "🥛",
-  cheese: "🧀",
-  butter: "🧈",
-  cream: "🥛",
-  yogurt: "🥛",
-
-  // Oils & Condiments
-  oil: "🫒",
-  olive: "🫒",
-  vinegar: "🫗",
-  sauce: "🫗",
-  soy: "🫗",
-  honey: "🍯",
-  sugar: "🍬",
-  salt: "🧂",
-  ketchup: "🫗",
-  mustard: "🫗",
-
-  // Nuts & Seeds
-  peanut: "🥜",
-  almond: "🥜",
-  walnut: "🥜",
-  cashew: "🥜",
-  seed: "🌰",
-  chestnut: "🌰",
-
-  // Herbs & Spices
-  basil: "🌿",
-  thyme: "🌿",
-  rosemary: "🌿",
-  oregano: "🌿",
-  cilantro: "🌿",
-  parsley: "🌿",
-  mint: "🌿",
-  cinnamon: "🫙",
-  cumin: "🫙",
-  paprika: "🫙",
-  turmeric: "🫙",
-
-  // Beverages & Other
-  water: "💧",
-  wine: "🍷",
-  beer: "🍺",
-  coffee: "☕",
-  tea: "🍵",
-  chocolate: "🍫",
-  cocoa: "🍫",
-  ice: "🧊",
+  chicken: "🍗", beef: "🥩", steak: "🥩", pork: "🥩", lamb: "🥩",
+  turkey: "🦃", fish: "🐟", salmon: "🐟", tuna: "🐟", shrimp: "🦐",
+  prawn: "🦐", crab: "🦀", lobster: "🦞", egg: "🥚", tofu: "🧈",
+  sausage: "🌭", bacon: "🥓",
+  garlic: "🧄", onion: "🧅", potato: "🥔", carrot: "🥕", broccoli: "🥦",
+  lettuce: "🥬", spinach: "🥬", kale: "🥬", corn: "🌽", pepper: "🌶️",
+  chili: "🌶️", tomato: "🍅", mushroom: "🍄", cucumber: "🥒", zucchini: "🥒",
+  eggplant: "🍆", avocado: "🥑", pea: "🫛", bean: "🫘", ginger: "🫚",
+  apple: "🍎", banana: "🍌", orange: "🍊", lemon: "🍋", lime: "🍋",
+  strawberry: "🍓", blueberry: "🫐", grape: "🍇", peach: "🍑", pear: "🍐",
+  cherry: "🍒", watermelon: "🍉", pineapple: "🍍", coconut: "🥥", mango: "🥭",
+  rice: "🍚", bread: "🍞", pasta: "🍝", spaghetti: "🍝", noodle: "🍜",
+  flour: "🌾", wheat: "🌾", oat: "🌾", cereal: "🥣", tortilla: "🫓",
+  pancake: "🥞", waffle: "🧇",
+  milk: "🥛", cheese: "🧀", butter: "🧈", cream: "🥛", yogurt: "🥛",
+  oil: "🫒", olive: "🫒", vinegar: "🫗", sauce: "🫗", soy: "🫗",
+  honey: "🍯", sugar: "🍬", salt: "🧂", ketchup: "🫗", mustard: "🫗",
+  peanut: "🥜", almond: "🥜", walnut: "🥜", cashew: "🥜", seed: "🌰", chestnut: "🌰",
+  basil: "🌿", thyme: "🌿", rosemary: "🌿", oregano: "🌿", cilantro: "🌿",
+  parsley: "🌿", mint: "🌿", cinnamon: "🫙", cumin: "🫙", paprika: "🫙", turmeric: "🫙",
+  water: "💧", wine: "🍷", beer: "🍺", coffee: "☕", tea: "🍵",
+  chocolate: "🍫", cocoa: "🍫", ice: "🧊",
 };
 
 function getIngredientIcon(name: string): string {
   const lower = name.toLowerCase();
-
-  // Direct match first
   for (const [keyword, icon] of Object.entries(INGREDIENT_ICONS)) {
-    if (lower.includes(keyword)) {
-      return icon;
-    }
+    if (lower.includes(keyword)) return icon;
   }
-
-  // Default
   return "🥘";
 }
 
 interface PantryListProps {
   items: PantryItem[];
   onRemove: (id: string) => void;
+  onUpdate?: (id: string, quantity: number, unit: string) => void;
 }
 
-const PantryList = ({ items, onRemove }: PantryListProps) => {
+const PantryList = ({ items, onRemove, onUpdate }: PantryListProps) => {
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editQty, setEditQty] = useState("");
+  const [editUnit, setEditUnit] = useState("");
+
+  const startEdit = (item: PantryItem) => {
+    setEditingId(item.id);
+    setEditQty(String(item.quantity));
+    setEditUnit(item.unit);
+  };
+
+  const saveEdit = (id: string) => {
+    const qty = parseFloat(editQty);
+    if (!isNaN(qty) && qty > 0 && onUpdate) {
+      onUpdate(id, qty, editUnit);
+    }
+    setEditingId(null);
+  };
+
   if (items.length === 0) {
     return (
       <div className="text-center py-12 text-muted-foreground">
@@ -163,13 +79,44 @@ const PantryList = ({ items, onRemove }: PantryListProps) => {
           key={item.id}
           className="flex items-center justify-between bg-surface-warm rounded-xl px-4 py-3 border border-border group hover:border-primary/40 hover:shadow-kitchen transition-all"
         >
-          <div className="flex items-center gap-3 min-w-0">
+          <div className="flex items-center gap-3 min-w-0 flex-1">
             <span className="text-lg leading-none">{getIngredientIcon(item.name)}</span>
-            <div className="min-w-0">
+            <div className="min-w-0 flex-1">
               <span className="font-medium text-foreground capitalize text-sm block truncate">{item.name}</span>
-              <span className="text-xs text-muted-foreground">
-                {item.quantity} {item.unit}
-              </span>
+              {editingId === item.id ? (
+                <div className="flex items-center gap-1 mt-0.5">
+                  <Input
+                    type="number"
+                    value={editQty}
+                    onChange={(e) => setEditQty(e.target.value)}
+                    className="h-6 w-16 text-xs px-1.5"
+                    min="0.01"
+                    step="any"
+                    autoFocus
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") saveEdit(item.id);
+                      if (e.key === "Escape") setEditingId(null);
+                    }}
+                  />
+                  <span className="text-xs text-muted-foreground">{item.unit}</span>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-5 w-5 text-success"
+                    onClick={() => saveEdit(item.id)}
+                  >
+                    <Check className="h-3 w-3" />
+                  </Button>
+                </div>
+              ) : (
+                <span
+                  className="text-xs text-muted-foreground cursor-pointer hover:text-primary transition-colors inline-flex items-center gap-1"
+                  onClick={() => startEdit(item)}
+                >
+                  {item.quantity} {item.unit}
+                  <Pencil className="h-2.5 w-2.5 opacity-0 group-hover:opacity-100 transition-opacity" />
+                </span>
+              )}
             </div>
           </div>
           <Button
