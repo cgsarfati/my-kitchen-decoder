@@ -23,7 +23,7 @@ const PantryInput = ({ onAdd }: PantryInputProps) => {
     setName(value);
     if (genericSuggestions) setGenericSuggestions(null);
     if (spellSuggestions) setSpellSuggestions(null);
-    if (error) setError(null);
+    if (error) { setError(null); setErrorFields({}); }
   };
 
   const handleSubmit = (e: React.FormEvent) => {
