@@ -14,9 +14,14 @@ interface ParsedIngredient {
 
 // Pattern-based mock parser that handles common natural language formats
 const MOCK_PATTERNS: { pattern: RegExp; extract: (m: RegExpMatchArray) => ParsedIngredient | null }[] = [
+  // "a teaspoon of paprika" or "an oz of butter"
+  {
+    pattern: /^(?:a|an)\s+(g|kg|oz|lb|ml|l|cup|cups|tbsp|tsp|teaspoon|teaspoons|tablespoon|tablespoons|clove|cloves|can|cans|slice|slices|bunch)\s+(?:of\s+)?(.+)/i,
+    extract: (m) => ({ quantity: 1, unit: normalizeUnit(m[1]), name: m[2].trim() }),
+  },
   // "500g chicken breast" or "500 g chicken"
   {
-    pattern: /(\d+(?:\.\d+)?)\s*(g|kg|oz|lb|ml|l|cup|cups|tbsp|tsp|clove|cloves|can|cans|slice|slices|bunch)\s+(?:of\s+)?(.+)/i,
+    pattern: /(\d+(?:\.\d+)?)\s*(g|kg|oz|lb|ml|l|cup|cups|tbsp|tsp|teaspoon|teaspoons|tablespoon|tablespoons|clove|cloves|can|cans|slice|slices|bunch)\s+(?:of\s+)?(.+)/i,
     extract: (m) => ({ quantity: parseFloat(m[1]), unit: normalizeUnit(m[2]), name: m[3].trim() }),
   },
   // "2 chicken breasts"
