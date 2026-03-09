@@ -16,6 +16,7 @@ import { MOCK_RECIPES } from "@/lib/mockRecipes";
 import { loadPantry, savePantry } from "@/lib/pantryStorage";
 import type { PantryItem } from "@/types/pantry";
 import type { Recipe } from "@/types/recipe";
+import { trackEvent, AnalyticsEvents } from "@/lib/analytics";
 
 const Index = () => {
   const [items, setItems] = useState<PantryItem[]>([]);
@@ -79,7 +80,6 @@ const Index = () => {
 
   const handleAdd = useCallback((item: Omit<PantryItem, "id">) => {
     setItems((prev) => {
-      // Find existing item with same name (case-insensitive)
       const existing = prev.find(
         (i) => i.name.toLowerCase() === item.name.toLowerCase()
       );
@@ -87,10 +87,10 @@ const Index = () => {
         const existingUnit = UNIT_MAP[existing.unit.toLowerCase()];
         const newUnit = UNIT_MAP[item.unit.toLowerCase()];
 
-        // If both units are in the same category, convert and sum
         if (existingUnit && newUnit && existingUnit.category === newUnit.category) {
           const newQtyInBase = item.quantity * newUnit.toBase;
           const addedInExistingUnit = newQtyInBase / existingUnit.toBase;
+          trackEvent(AnalyticsEvents.MERGE_DUPLICATE, { ingredient: item.name, from_unit: item.unit, to_unit: existing.unit });
           return prev.map((i) =>
             i.id === existing.id
               ? { ...i, quantity: Math.round((i.quantity + addedInExistingUnit) * 100) / 100 }
@@ -98,8 +98,8 @@ const Index = () => {
           );
         }
 
-        // Same unit string (fallback for unitless matches)
         if (existing.unit === item.unit) {
+          trackEvent(AnalyticsEvents.MERGE_DUPLICATE, { ingredient: item.name, unit: item.unit });
           return prev.map((i) =>
             i.id === existing.id
               ? { ...i, quantity: i.quantity + item.quantity }
@@ -107,12 +107,17 @@ const Index = () => {
           );
         }
       }
+      trackEvent(AnalyticsEvents.ADD_INGREDIENT, { ingredient: item.name, quantity: item.quantity, unit: item.unit });
       return [...prev, { ...item, id: crypto.randomUUID() }];
     });
   }, []);
 
   const handleRemove = useCallback((id: string) => {
-    setItems((prev) => prev.filter((i) => i.id !== id));
+    setItems((prev) => {
+      const item = prev.find((i) => i.id === id);
+      if (item) trackEvent(AnalyticsEvents.REMOVE_INGREDIENT, { ingredient: item.name });
+      return prev.filter((i) => i.id !== id);
+    });
   }, []);
 
   const handleUpdate = useCallback((id: string, quantity: number, unit: string) => {
@@ -124,6 +129,7 @@ const Index = () => {
   const handleClearAll = useCallback(() => {
     const previousItems = [...items];
     setItems([]);
+    trackEvent(AnalyticsEvents.CLEAR_PANTRY, { item_count: items.length });
     toast({
       title: "Pantry cleared",
       description: "All ingredients have been removed.",
@@ -160,6 +166,8 @@ const Index = () => {
 
   const handleSearch = async () => {
     if (items.length === 0) return;
+    const ingredientNames = items.map((i) => i.name);
+    trackEvent(AnalyticsEvents.SEARCH_RECIPES, { ingredient_count: items.length, ingredients: ingredientNames, demo: demoMode });
     setIsLoading(true);
     setHasSearched(true);
     setSelectedRecipe(null);
@@ -184,6 +192,7 @@ const Index = () => {
       }).filter((r) => r.usedIngredientCount > 0);
       const enriched = enrichRecipesWithQuantityMatch(filtered, items);
       setRecipes(enriched);
+      trackEvent(AnalyticsEvents.SEARCH_RESULTS, { result_count: enriched.length, full_matches: enriched.filter(r => r.missedIngredientCount === 0).length, demo: true });
       setIsLoading(false);
       return;
     }
@@ -201,6 +210,7 @@ const Index = () => {
       if (data?.error) throw new Error(data.error);
       const enriched = enrichRecipesWithQuantityMatch(data.recipes || [], items);
       setRecipes(enriched);
+      trackEvent(AnalyticsEvents.SEARCH_RESULTS, { result_count: enriched.length, full_matches: enriched.filter(r => r.missedIngredientCount === 0).length, demo: false });
     } catch (err: any) {
       console.error("Search error:", err);
       const isRateLimit = err.message === "RATE_LIMIT" || err.message?.includes("429") || err.message?.includes("daily points limit");
@@ -244,12 +254,12 @@ const Index = () => {
             <Label htmlFor="demo-mode" className="text-sm text-muted-foreground cursor-pointer">
               Demo
             </Label>
-            <Switch id="demo-mode" checked={demoMode} onCheckedChange={setDemoMode} />
+            <Switch id="demo-mode" checked={demoMode} onCheckedChange={(v) => { setDemoMode(v); trackEvent(AnalyticsEvents.DEMO_MODE_TOGGLE, { enabled: v }); }} />
           </div>
           {/* Mobile demo toggle - compact */}
           <div className="flex sm:hidden items-center gap-1.5">
             <FlaskConical className="h-3.5 w-3.5 text-muted-foreground" />
-            <Switch id="demo-mode-mobile" checked={demoMode} onCheckedChange={setDemoMode} />
+            <Switch id="demo-mode-mobile" checked={demoMode} onCheckedChange={(v) => { setDemoMode(v); trackEvent(AnalyticsEvents.DEMO_MODE_TOGGLE, { enabled: v }); }} />
           </div>
           <div className="w-px h-6 bg-border" />
           <AuthButton />
@@ -364,7 +374,7 @@ const Index = () => {
           recipes={recipes}
           isLoading={isLoading}
           hasSearched={hasSearched}
-          onRecipeClick={setSelectedRecipe}
+          onRecipeClick={(recipe) => { trackEvent(AnalyticsEvents.VIEW_RECIPE, { recipe_id: recipe.id, recipe_title: recipe.title }); setSelectedRecipe(recipe); }}
           demoMode={demoMode}
         />
       </main>

@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback, createContext, useContext } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { trackEvent, AnalyticsEvents } from "@/lib/analytics";
 import type { User, Session } from "@supabase/supabase-js";
 
 interface AuthContextType {
@@ -25,10 +26,15 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
   useEffect(() => {
     // Set up auth listener BEFORE getting session
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       setSession(session);
       setUser(session?.user ?? null);
       setLoading(false);
+      if (event === "SIGNED_IN") {
+        trackEvent(AnalyticsEvents.SIGN_IN, { provider: session?.user?.app_metadata?.provider });
+      } else if (event === "SIGNED_OUT") {
+        trackEvent(AnalyticsEvents.SIGN_OUT);
+      }
     });
 
     // Get initial session

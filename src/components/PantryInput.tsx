@@ -5,6 +5,7 @@ import { Input } from "@/components/ui/input";
 import { COMMON_UNITS, type PantryItem } from "@/types/pantry";
 import { checkGenericIngredient } from "@/lib/ingredientValidation";
 import { getSpellSuggestions } from "@/lib/spellCheck";
+import { trackEvent, AnalyticsEvents } from "@/lib/analytics";
 
 interface PantryInputProps {
   onAdd: (item: Omit<PantryItem, "id">) => void;
@@ -33,16 +34,19 @@ const PantryInput = ({ onAdd }: PantryInputProps) => {
     if (!trimmed && (!quantity || parseFloat(quantity) <= 0)) {
       setError("Please enter an ingredient and quantity.");
       setErrorFields({ name: true, qty: true });
+      trackEvent(AnalyticsEvents.VALIDATION_ERROR, { type: "missing_both" });
       return;
     }
     if (!trimmed) {
       setError("Please enter an ingredient name.");
       setErrorFields({ name: true });
+      trackEvent(AnalyticsEvents.VALIDATION_ERROR, { type: "missing_name" });
       return;
     }
     if (!quantity || parseFloat(quantity) <= 0) {
       setError("Please enter a quantity.");
       setErrorFields({ qty: true });
+      trackEvent(AnalyticsEvents.VALIDATION_ERROR, { type: "missing_qty", ingredient: trimmed });
       return;
     }
     setError(null);
@@ -53,6 +57,7 @@ const PantryInput = ({ onAdd }: PantryInputProps) => {
     if (generic) {
       setGenericSuggestions(generic);
       setSpellSuggestions(null);
+      trackEvent(AnalyticsEvents.GENERIC_INGREDIENT_BLOCKED, { ingredient: trimmed, suggestions: generic.slice(0, 3) });
       return;
     }
 
@@ -61,6 +66,7 @@ const PantryInput = ({ onAdd }: PantryInputProps) => {
     if (spell) {
       setSpellSuggestions(spell);
       setGenericSuggestions(null);
+      trackEvent(AnalyticsEvents.SPELL_SUGGESTION_SHOWN, { input: trimmed, suggestions: spell });
       return;
     }
 
@@ -73,6 +79,10 @@ const PantryInput = ({ onAdd }: PantryInputProps) => {
   };
 
   const handleSuggestionClick = (suggestion: string) => {
+    // Track if this was a spell-check suggestion acceptance
+    if (spellSuggestions) {
+      trackEvent(AnalyticsEvents.SPELL_SUGGESTION_ACCEPTED, { original: name.trim(), accepted: suggestion });
+    }
     setName(suggestion);
     setGenericSuggestions(null);
     setSpellSuggestions(null);
@@ -81,6 +91,7 @@ const PantryInput = ({ onAdd }: PantryInputProps) => {
   const handleAddAnyway = () => {
     const trimmed = name.trim();
     if (!trimmed || !quantity) return;
+    trackEvent(AnalyticsEvents.SPELL_ADD_ANYWAY, { ingredient: trimmed });
     onAdd({ name: trimmed, quantity: parseFloat(quantity), unit });
     setName("");
     setQuantity("");
