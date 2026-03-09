@@ -40,6 +40,7 @@ const PantryInput = ({ onAdd }: PantryInputProps) => {
     if (!trimmed) {
       setError("Please enter an ingredient name.");
       setErrorFields({ name: true });
+      trackEvent(AnalyticsEvents.VALIDATION_ERROR, { type: "missing_name" });
       return;
     }
     if (!quantity || parseFloat(quantity) <= 0) {
