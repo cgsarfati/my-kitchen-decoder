@@ -127,8 +127,8 @@ const Index = () => {
   }, []);
 
   const handleClearAll = useCallback(() => {
-    const previousItems = [...items];
     setItems([]);
+    trackEvent(AnalyticsEvents.CLEAR_PANTRY, { item_count: items.length });
     toast({
       title: "Pantry cleared",
       description: "All ingredients have been removed.",
