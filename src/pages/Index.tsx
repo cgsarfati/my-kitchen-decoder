@@ -259,7 +259,7 @@ const Index = () => {
           {/* Mobile demo toggle - compact */}
           <div className="flex sm:hidden items-center gap-1.5">
             <FlaskConical className="h-3.5 w-3.5 text-muted-foreground" />
-            <Switch id="demo-mode-mobile" checked={demoMode} onCheckedChange={setDemoMode} />
+            <Switch id="demo-mode-mobile" checked={demoMode} onCheckedChange={(v) => { setDemoMode(v); trackEvent(AnalyticsEvents.DEMO_MODE_TOGGLE, { enabled: v }); }} />
           </div>
           <div className="w-px h-6 bg-border" />
           <AuthButton />
