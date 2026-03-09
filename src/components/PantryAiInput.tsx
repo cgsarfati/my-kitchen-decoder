@@ -1,9 +1,11 @@
 import { useState } from "react";
 import { Sparkles, Loader2, Plus, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { mockParseIngredients } from "@/lib/mockAiParser";
-import type { PantryItem } from "@/types/pantry";
+import { COMMON_UNITS, type PantryItem } from "@/types/pantry";
 import { trackEvent, AnalyticsEvents } from "@/lib/analytics";
 
 interface PantryAiInputProps {
@@ -39,6 +41,16 @@ const PantryAiInput = ({ onAdd }: PantryAiInputProps) => {
     } finally {
       setIsParsing(false);
     }
+  };
+
+  const updateItem = (index: number, field: "quantity" | "unit", value: string) => {
+    setParsed((prev) =>
+      prev?.map((item, i) => {
+        if (i !== index) return item;
+        if (field === "quantity") return { ...item, quantity: parseFloat(value) || 0 };
+        return { ...item, unit: value };
+      }) ?? null
+    );
   };
 
   const toggleItem = (index: number) => {
@@ -123,38 +135,61 @@ const PantryAiInput = ({ onAdd }: PantryAiInputProps) => {
           </p>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
             {parsed.map((item, i) => (
-              <button
+              <div
                 key={i}
-                type="button"
-                onClick={() => toggleItem(i)}
                 className={`flex items-center gap-3 px-4 py-3 rounded-xl border text-left transition-all ${
                   item.selected
                     ? "border-primary/50 bg-primary/5 shadow-sm"
                     : "border-border bg-card opacity-50"
                 }`}
               >
-                <div
-                  className={`h-5 w-5 rounded-md border-2 flex items-center justify-center shrink-0 transition-colors ${
-                    item.selected
-                      ? "border-primary bg-primary"
-                      : "border-muted-foreground/30"
-                  }`}
+                <button
+                  type="button"
+                  onClick={() => toggleItem(i)}
+                  className="shrink-0"
                 >
-                  {item.selected && (
-                    <svg className="h-3 w-3 text-primary-foreground" viewBox="0 0 12 12" fill="none">
-                      <path d="M2 6L5 9L10 3" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                    </svg>
-                  )}
-                </div>
+                  <div
+                    className={`h-5 w-5 rounded-md border-2 flex items-center justify-center transition-colors ${
+                      item.selected
+                        ? "border-primary bg-primary"
+                        : "border-muted-foreground/30"
+                    }`}
+                  >
+                    {item.selected && (
+                      <svg className="h-3 w-3 text-primary-foreground" viewBox="0 0 12 12" fill="none">
+                        <path d="M2 6L5 9L10 3" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                      </svg>
+                    )}
+                  </div>
+                </button>
                 <div className="min-w-0 flex-1">
                   <span className="text-sm font-medium text-foreground capitalize block truncate">
                     {item.name}
                   </span>
-                  <span className="text-xs text-muted-foreground">
-                    {item.quantity} {item.unit}
-                  </span>
+                  <div className="flex items-center gap-1 mt-1">
+                    <Input
+                      type="number"
+                      value={item.quantity}
+                      onChange={(e) => updateItem(i, "quantity", e.target.value)}
+                      className="h-6 w-16 text-xs px-1.5"
+                      min="0.01"
+                      step="any"
+                    />
+                    <Select value={item.unit} onValueChange={(v) => updateItem(i, "unit", v)}>
+                      <SelectTrigger className="h-6 w-[70px] text-xs px-1.5">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {COMMON_UNITS.map((u) => (
+                          <SelectItem key={u} value={u} className="text-xs">
+                            {u}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
                 </div>
-              </button>
+              </div>
             ))}
           </div>
 
