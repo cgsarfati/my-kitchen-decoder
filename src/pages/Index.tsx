@@ -262,7 +262,7 @@ const Index = () => {
             <ChefHat className="h-24 w-24 text-foreground" />
           </div>
           <h2 className="text-4xl md:text-5xl text-foreground leading-tight relative z-[1]">
-            Cook with what you have
+            Unlock recipes hiding in your kitchen
           </h2>
           <p className="text-lg text-muted-foreground max-w-lg mx-auto relative z-[1]">
             Add the ingredients in your pantry and we'll find recipes you can actually make — even partial matches.
