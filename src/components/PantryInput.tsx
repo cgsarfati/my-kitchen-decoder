@@ -57,6 +57,7 @@ const PantryInput = ({ onAdd }: PantryInputProps) => {
     if (generic) {
       setGenericSuggestions(generic);
       setSpellSuggestions(null);
+      trackEvent(AnalyticsEvents.GENERIC_INGREDIENT_BLOCKED, { ingredient: trimmed, suggestions: generic.slice(0, 3) });
       return;
     }
 
