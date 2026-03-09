@@ -45,6 +45,16 @@ const PantryAiInput = ({ onAdd }: PantryAiInputProps) => {
     }
   };
 
+  const updateItem = (index: number, field: "quantity" | "unit", value: string) => {
+    setParsed((prev) =>
+      prev?.map((item, i) => {
+        if (i !== index) return item;
+        if (field === "quantity") return { ...item, quantity: parseFloat(value) || 0 };
+        return { ...item, unit: value };
+      }) ?? null
+    );
+  };
+
   const toggleItem = (index: number) => {
     setParsed((prev) =>
       prev?.map((item, i) => (i === index ? { ...item, selected: !item.selected } : item)) ?? null
