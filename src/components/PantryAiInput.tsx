@@ -4,7 +4,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { mockParseIngredients } from "@/lib/mockAiParser";
+import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
 import { COMMON_UNITS, type PantryItem } from "@/types/pantry";
 import { trackEvent, AnalyticsEvents } from "@/lib/analytics";
 
@@ -23,6 +24,7 @@ const PantryAiInput = ({ onAdd }: PantryAiInputProps) => {
   const [text, setText] = useState("");
   const [isParsing, setIsParsing] = useState(false);
   const [parsed, setParsed] = useState<ParsedItem[] | null>(null);
+  const { toast } = useToast();
 
   const handleParse = async () => {
     if (!text.trim()) return;
@@ -30,13 +32,39 @@ const PantryAiInput = ({ onAdd }: PantryAiInputProps) => {
     setParsed(null);
 
     try {
-      const results = await mockParseIngredients(text);
-      setParsed(results.map((r) => ({ ...r, selected: true })));
+      const { data, error } = await supabase.functions.invoke("parse-ingredients", {
+        body: { text: text.trim() },
+      });
+
+      if (error) {
+        console.error("Parse error:", error);
+        throw error;
+      }
+
+      if (data?.error === "RATE_LIMIT" || data?.error === "PAYMENT_REQUIRED") {
+        toast({
+          title: data.error === "RATE_LIMIT" ? "AI rate limit" : "AI credits needed",
+          description: data.message,
+          variant: "destructive",
+        });
+        setParsed([]);
+        return;
+      }
+
+      if (data?.error) throw new Error(data.error);
+
+      const results = data?.ingredients || [];
+      setParsed(results.map((r: { name: string; quantity: number; unit: string }) => ({ ...r, selected: true })));
       trackEvent(AnalyticsEvents.AI_PARSE_COMPLETE, {
         input_length: text.length,
         parsed_count: results.length,
       });
     } catch {
+      toast({
+        title: "Parsing failed",
+        description: "Could not parse ingredients. Please try again.",
+        variant: "destructive",
+      });
       setParsed([]);
     } finally {
       setIsParsing(false);
