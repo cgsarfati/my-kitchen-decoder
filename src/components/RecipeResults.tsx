@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Loader2, ArrowUpDown, Clock, ChefHat, Users, SearchX, FlaskConical, Lightbulb } from "lucide-react";
+import { Loader2, ArrowUpDown, Clock, ChefHat, Users, SearchX, FlaskConical, Lightbulb, ListMinus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -10,7 +10,9 @@ import {
 import RecipeCard from "@/components/RecipeCard";
 import type { Recipe } from "@/types/recipe";
 
-type SortOption = "match" | "time" | "servings";
+type SortOption = "match" | "time" | "servings" | "fewest_missing";
+
+const PAGE_SIZE = 6;
 
 interface RecipeResultsProps {
   recipes: Recipe[];
@@ -28,6 +30,12 @@ const sortRecipes = (recipes: Recipe[], sortBy: SortOption): Recipe[] => {
     if (sortBy === "servings") {
       return (b.servings || 0) - (a.servings || 0);
     }
+    if (sortBy === "fewest_missing") {
+      const aTotalMissing = a.missedIngredientCount + (a.insufficientCount ?? 0);
+      const bTotalMissing = b.missedIngredientCount + (b.insufficientCount ?? 0);
+      if (aTotalMissing !== bTotalMissing) return aTotalMissing - bTotalMissing;
+      return b.usedIngredientCount - a.usedIngredientCount;
+    }
     // Default: match quality
     const aMissing = a.missedIngredientCount;
     const bMissing = b.missedIngredientCount;
@@ -44,12 +52,14 @@ const sortRecipes = (recipes: Recipe[], sortBy: SortOption): Recipe[] => {
 
 const SORT_LABELS: Record<SortOption, { label: string; icon: React.ReactNode }> = {
   match: { label: "Best Match", icon: <ChefHat className="h-4 w-4" /> },
+  fewest_missing: { label: "Fewest Missing", icon: <ListMinus className="h-4 w-4" /> },
   time: { label: "Fastest", icon: <Clock className="h-4 w-4" /> },
   servings: { label: "Most Servings", icon: <Users className="h-4 w-4" /> },
 };
 
 const RecipeResults = ({ recipes, isLoading, hasSearched, onRecipeClick, demoMode }: RecipeResultsProps) => {
   const [sortBy, setSortBy] = useState<SortOption>("match");
+  const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
 
   if (isLoading) {
     return (
@@ -100,10 +110,20 @@ const RecipeResults = ({ recipes, isLoading, hasSearched, onRecipeClick, demoMod
   const fullMatches = sorted.filter((r) => r.missedIngredientCount === 0 && (r.insufficientCount ?? 0) === 0);
   const partialMatches = sorted.filter((r) => r.missedIngredientCount > 0 || (r.insufficientCount ?? 0) > 0);
 
+  // Paginate: combine full + partial in order, then slice
+  const allOrdered = [...fullMatches, ...partialMatches];
+  const visible = allOrdered.slice(0, visibleCount);
+  const visibleFull = visible.filter((r) => r.missedIngredientCount === 0 && (r.insufficientCount ?? 0) === 0);
+  const visiblePartial = visible.filter((r) => r.missedIngredientCount > 0 || (r.insufficientCount ?? 0) > 0);
+  const hasMore = visibleCount < allOrdered.length;
+
   return (
     <section className="space-y-6">
-      {/* Sort controls */}
-      <div className="flex items-center justify-end">
+      {/* Sort controls + result count */}
+      <div className="flex items-center justify-between">
+        <p className="text-sm text-muted-foreground">
+          {recipes.length} recipe{recipes.length !== 1 ? "s" : ""} found
+        </p>
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button variant="outline" size="sm" className="gap-2 text-xs">
@@ -115,7 +135,7 @@ const RecipeResults = ({ recipes, isLoading, hasSearched, onRecipeClick, demoMod
             {(Object.keys(SORT_LABELS) as SortOption[]).map((key) => (
               <DropdownMenuItem
                 key={key}
-                onClick={() => setSortBy(key)}
+                onClick={() => { setSortBy(key); setVisibleCount(PAGE_SIZE); }}
                 className="gap-2"
               >
                 {SORT_LABELS[key].icon}
@@ -127,29 +147,41 @@ const RecipeResults = ({ recipes, isLoading, hasSearched, onRecipeClick, demoMod
         </DropdownMenu>
       </div>
 
-      {fullMatches.length > 0 && (
+      {visibleFull.length > 0 && (
         <div className="space-y-4">
           <h3 className="text-xl text-foreground font-body font-semibold">
             Ready to Cook ({fullMatches.length})
           </h3>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            {fullMatches.map((recipe) => (
+            {visibleFull.map((recipe) => (
               <RecipeCard key={recipe.id} recipe={recipe} onClick={onRecipeClick} />
             ))}
           </div>
         </div>
       )}
 
-      {partialMatches.length > 0 && (
+      {visiblePartial.length > 0 && (
         <div className="space-y-4">
           <h3 className="text-xl text-foreground font-body font-semibold">
             Almost There ({partialMatches.length})
           </h3>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            {partialMatches.map((recipe) => (
+            {visiblePartial.map((recipe) => (
               <RecipeCard key={recipe.id} recipe={recipe} onClick={onRecipeClick} />
             ))}
           </div>
+        </div>
+      )}
+
+      {hasMore && (
+        <div className="flex justify-center pt-2">
+          <Button
+            variant="outline"
+            onClick={() => setVisibleCount((prev) => prev + PAGE_SIZE)}
+            className="gap-2"
+          >
+            Show more recipes ({allOrdered.length - visibleCount} remaining)
+          </Button>
         </div>
       )}
     </section>
