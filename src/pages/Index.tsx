@@ -166,6 +166,8 @@ const Index = () => {
 
   const handleSearch = async () => {
     if (items.length === 0) return;
+    const ingredientNames = items.map((i) => i.name);
+    trackEvent(AnalyticsEvents.SEARCH_RECIPES, { ingredient_count: items.length, ingredients: ingredientNames, demo: demoMode });
     setIsLoading(true);
     setHasSearched(true);
     setSelectedRecipe(null);
