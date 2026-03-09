@@ -1,9 +1,10 @@
 import { useState } from "react";
-import { Plus, AlertTriangle } from "lucide-react";
+import { Plus, AlertTriangle, SpellCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { COMMON_UNITS, type PantryItem } from "@/types/pantry";
 import { checkGenericIngredient } from "@/lib/ingredientValidation";
+import { getSpellSuggestions } from "@/lib/spellCheck";
 
 interface PantryInputProps {
   onAdd: (item: Omit<PantryItem, "id">) => void;
@@ -14,13 +15,12 @@ const PantryInput = ({ onAdd }: PantryInputProps) => {
   const [quantity, setQuantity] = useState("");
   const [unit, setUnit] = useState("g");
   const [genericSuggestions, setGenericSuggestions] = useState<string[] | null>(null);
+  const [spellSuggestions, setSpellSuggestions] = useState<string[] | null>(null);
 
   const handleNameChange = (value: string) => {
     setName(value);
-    // Clear suggestions when user edits
-    if (genericSuggestions) {
-      setGenericSuggestions(null);
-    }
+    if (genericSuggestions) setGenericSuggestions(null);
+    if (spellSuggestions) setSpellSuggestions(null);
   };
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -28,10 +28,19 @@ const PantryInput = ({ onAdd }: PantryInputProps) => {
     const trimmed = name.trim();
     if (!trimmed || !quantity) return;
 
-    // Check for generic ingredients
-    const suggestions = checkGenericIngredient(trimmed);
-    if (suggestions) {
-      setGenericSuggestions(suggestions);
+    // Check for generic ingredients first
+    const generic = checkGenericIngredient(trimmed);
+    if (generic) {
+      setGenericSuggestions(generic);
+      setSpellSuggestions(null);
+      return;
+    }
+
+    // Check for misspellings
+    const spell = getSpellSuggestions(trimmed);
+    if (spell) {
+      setSpellSuggestions(spell);
+      setGenericSuggestions(null);
       return;
     }
 
@@ -40,11 +49,23 @@ const PantryInput = ({ onAdd }: PantryInputProps) => {
     setQuantity("");
     setUnit("g");
     setGenericSuggestions(null);
+    setSpellSuggestions(null);
   };
 
   const handleSuggestionClick = (suggestion: string) => {
     setName(suggestion);
     setGenericSuggestions(null);
+    setSpellSuggestions(null);
+  };
+
+  const handleAddAnyway = () => {
+    const trimmed = name.trim();
+    if (!trimmed || !quantity) return;
+    onAdd({ name: trimmed, quantity: parseFloat(quantity), unit });
+    setName("");
+    setQuantity("");
+    setUnit("g");
+    setSpellSuggestions(null);
   };
 
   return (
@@ -101,6 +122,36 @@ const PantryInput = ({ onAdd }: PantryInputProps) => {
               </button>
             ))}
           </div>
+        </div>
+      )}
+
+      {spellSuggestions && (
+        <div className="rounded-lg border border-primary/30 bg-primary/5 p-4 space-y-3">
+          <div className="flex items-start gap-2">
+            <SpellCheck className="h-4 w-4 text-primary mt-0.5 shrink-0" />
+            <p className="text-sm text-foreground">
+              Did you mean one of these instead of <span className="font-semibold">"{name.trim()}"</span>?
+            </p>
+          </div>
+          <div className="flex flex-wrap gap-2">
+            {spellSuggestions.map((suggestion) => (
+              <button
+                key={suggestion}
+                type="button"
+                onClick={() => handleSuggestionClick(suggestion)}
+                className="px-3 py-1.5 text-sm rounded-full border border-border bg-card hover:bg-primary hover:text-primary-foreground hover:border-primary transition-colors capitalize"
+              >
+                {suggestion}
+              </button>
+            ))}
+          </div>
+          <button
+            type="button"
+            onClick={handleAddAnyway}
+            className="text-xs text-muted-foreground hover:text-foreground underline underline-offset-2 transition-colors"
+          >
+            Add "{name.trim()}" anyway
+          </button>
         </div>
       )}
     </div>

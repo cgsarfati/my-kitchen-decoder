@@ -1,4 +1,5 @@
-import { Clock, Users, CheckCircle2, AlertCircle, AlertTriangle, XCircle } from "lucide-react";
+import { useState } from "react";
+import { Clock, Users, CheckCircle2, AlertCircle, AlertTriangle, XCircle, UtensilsCrossed } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import type { Recipe } from "@/types/recipe";
@@ -10,6 +11,8 @@ interface RecipeCardProps {
 
 const RecipeCard = ({ recipe, onClick }: RecipeCardProps) => {
   const isFullMatch = recipe.missedIngredientCount === 0 && (recipe.insufficientCount ?? 0) === 0;
+  const [imgError, setImgError] = useState(false);
+  const hasImage = recipe.image && !imgError;
 
   return (
     <Card
@@ -17,14 +20,24 @@ const RecipeCard = ({ recipe, onClick }: RecipeCardProps) => {
       onClick={() => onClick(recipe)}
     >
       <div className="relative">
-        <img
-          src={recipe.image}
-          alt={recipe.title}
-          className="w-full h-48 object-cover"
-          loading="lazy"
-        />
+        {hasImage ? (
+          <img
+            src={recipe.image}
+            alt={recipe.title}
+            className="w-full h-48 object-cover"
+            loading="lazy"
+            onError={() => setImgError(true)}
+          />
+        ) : (
+          <div className="w-full h-48 bg-muted flex flex-col items-center justify-center gap-2">
+            <UtensilsCrossed className="h-12 w-12 text-muted-foreground/40" />
+            <span className="text-xs text-muted-foreground">No photo available</span>
+          </div>
+        )}
         {/* Gradient overlay for better badge contrast */}
-        <div className="absolute inset-0 bg-gradient-to-t from-black/30 via-transparent to-transparent" />
+        {hasImage && (
+          <div className="absolute inset-0 bg-gradient-to-t from-black/30 via-transparent to-transparent" />
+        )}
         {isFullMatch ? (
           <Badge className="absolute top-3 left-3 bg-success text-success-foreground gap-1 shadow-sm">
             <CheckCircle2 className="h-3 w-3" />
