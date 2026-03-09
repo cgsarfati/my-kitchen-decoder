@@ -32,17 +32,21 @@ const PantryInput = ({ onAdd }: PantryInputProps) => {
 
     if (!trimmed && (!quantity || parseFloat(quantity) <= 0)) {
       setError("Please enter an ingredient and quantity.");
+      setErrorFields({ name: true, qty: true });
       return;
     }
     if (!trimmed) {
       setError("Please enter an ingredient name.");
+      setErrorFields({ name: true });
       return;
     }
     if (!quantity || parseFloat(quantity) <= 0) {
       setError("Please enter a quantity.");
+      setErrorFields({ qty: true });
       return;
     }
     setError(null);
+    setErrorFields({});
 
     // Check for generic ingredients first
     const generic = checkGenericIngredient(trimmed);
