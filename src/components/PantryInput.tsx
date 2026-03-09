@@ -104,9 +104,9 @@ const PantryInput = ({ onAdd }: PantryInputProps) => {
             value={quantity}
             onChange={(e) => {
               setQuantity(e.target.value);
-              if (error) setError(null);
+              if (error) { setError(null); setErrorFields({}); }
             }}
-            className={`w-24 bg-card ${error ? "border-destructive ring-1 ring-destructive" : ""}`}
+            className={`w-24 bg-card ${errorFields.qty ? "border-destructive ring-1 ring-destructive" : ""}`}
             min="0"
             step="any"
           />
