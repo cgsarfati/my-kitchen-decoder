@@ -210,6 +210,7 @@ const Index = () => {
       if (data?.error) throw new Error(data.error);
       const enriched = enrichRecipesWithQuantityMatch(data.recipes || [], items);
       setRecipes(enriched);
+      trackEvent(AnalyticsEvents.SEARCH_RESULTS, { result_count: enriched.length, full_matches: enriched.filter(r => r.missedIngredientCount === 0).length, demo: false });
     } catch (err: any) {
       console.error("Search error:", err);
       const isRateLimit = err.message === "RATE_LIMIT" || err.message?.includes("429") || err.message?.includes("daily points limit");
