@@ -79,6 +79,10 @@ const PantryInput = ({ onAdd }: PantryInputProps) => {
   };
 
   const handleSuggestionClick = (suggestion: string) => {
+    // Track if this was a spell-check suggestion acceptance
+    if (spellSuggestions) {
+      trackEvent(AnalyticsEvents.SPELL_SUGGESTION_ACCEPTED, { original: name.trim(), accepted: suggestion });
+    }
     setName(suggestion);
     setGenericSuggestions(null);
     setSpellSuggestions(null);
