@@ -335,7 +335,36 @@ const Index = () => {
             </div>
           </div>
 
-          <PantryInput onAdd={handleAdd} />
+          <div className="flex rounded-lg border border-border overflow-hidden w-fit">
+            <button
+              onClick={() => setInputMode("manual")}
+              className={`flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium transition-colors ${
+                inputMode === "manual"
+                  ? "bg-primary text-primary-foreground"
+                  : "bg-card text-muted-foreground hover:text-foreground"
+              }`}
+            >
+              <List className="h-3.5 w-3.5" />
+              Manual
+            </button>
+            <button
+              onClick={() => setInputMode("ai")}
+              className={`flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium transition-colors ${
+                inputMode === "ai"
+                  ? "bg-primary text-primary-foreground"
+                  : "bg-card text-muted-foreground hover:text-foreground"
+              }`}
+            >
+              <Sparkles className="h-3.5 w-3.5" />
+              Smart Paste
+            </button>
+          </div>
+
+          {inputMode === "manual" ? (
+            <PantryInput onAdd={handleAdd} />
+          ) : (
+            <PantryAiInput onAdd={handleAdd} />
+          )}
 
           {items.length > 0 && (
             <div className="pt-5 space-y-4">
