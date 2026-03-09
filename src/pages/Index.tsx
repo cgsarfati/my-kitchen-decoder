@@ -374,7 +374,7 @@ const Index = () => {
           recipes={recipes}
           isLoading={isLoading}
           hasSearched={hasSearched}
-          onRecipeClick={setSelectedRecipe}
+          onRecipeClick={(recipe) => { trackEvent(AnalyticsEvents.VIEW_RECIPE, { recipe_id: recipe.id, recipe_title: recipe.title }); setSelectedRecipe(recipe); }}
           demoMode={demoMode}
         />
       </main>
