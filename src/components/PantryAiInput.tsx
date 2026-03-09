@@ -75,6 +75,7 @@ const PantryAiInput = ({ onAdd }: PantryAiInputProps) => {
     setParsed(null);
   };
 
+  const MAX_CHARS = 500;
   const selectedCount = parsed?.filter((p) => p.selected).length ?? 0;
 
   return (
@@ -84,17 +85,23 @@ const PantryAiInput = ({ onAdd }: PantryAiInputProps) => {
           placeholder={'Describe what\'s in your pantry, e.g.:\n"500g chicken breast, 3 cloves of garlic, olive oil, and some rice"'}
           value={text}
           onChange={(e) => {
-            setText(e.target.value);
-            if (parsed) setParsed(null);
+            if (e.target.value.length <= MAX_CHARS) {
+              setText(e.target.value);
+              if (parsed) setParsed(null);
+            }
           }}
           className="bg-card min-h-[100px] resize-none pr-10"
           disabled={isParsing}
+          maxLength={MAX_CHARS}
         />
+        <span className={`absolute bottom-2 right-2 text-[10px] ${text.length > MAX_CHARS * 0.9 ? "text-destructive" : "text-muted-foreground/50"}`}>
+          {text.length}/{MAX_CHARS}
+        </span>
         {text && !isParsing && (
           <button
             type="button"
             onClick={handleClear}
-            className="absolute top-2 right-2 p-1 rounded-md text-muted-foreground hover:text-foreground transition-colors"
+            className="absolute top-2 right-8 p-1 rounded-md text-muted-foreground hover:text-foreground transition-colors"
           >
             <X className="h-4 w-4" />
           </button>
