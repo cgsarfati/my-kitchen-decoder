@@ -1,6 +1,7 @@
 import { ArrowLeft, Clock, Users, ExternalLink, CheckCircle2, XCircle, AlertTriangle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import SubstituteSuggestion from "@/components/SubstituteSuggestion";
 import type { Recipe } from "@/types/recipe";
 
 /** Parse raw HTML/text instructions into clean numbered steps */
