@@ -61,9 +61,10 @@ const InstructionSteps = ({ raw }: { raw: string }) => {
 interface RecipeDetailProps {
   recipe: Recipe;
   onBack: () => void;
+  pantryItemNames?: string[];
 }
 
-const RecipeDetail = ({ recipe, onBack }: RecipeDetailProps) => {
+const RecipeDetail = ({ recipe, onBack, pantryItemNames = [] }: RecipeDetailProps) => {
   const isFullMatch = recipe.missedIngredientCount === 0 && (recipe.insufficientCount ?? 0) === 0;
 
   return (
