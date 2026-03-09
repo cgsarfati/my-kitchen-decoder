@@ -34,6 +34,7 @@ const PantryInput = ({ onAdd }: PantryInputProps) => {
     if (!trimmed && (!quantity || parseFloat(quantity) <= 0)) {
       setError("Please enter an ingredient and quantity.");
       setErrorFields({ name: true, qty: true });
+      trackEvent(AnalyticsEvents.VALIDATION_ERROR, { type: "missing_both" });
       return;
     }
     if (!trimmed) {
