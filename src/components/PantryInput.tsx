@@ -16,6 +16,7 @@ const PantryInput = ({ onAdd }: PantryInputProps) => {
   const [unit, setUnit] = useState("g");
   const [genericSuggestions, setGenericSuggestions] = useState<string[] | null>(null);
   const [spellSuggestions, setSpellSuggestions] = useState<string[] | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
   const handleNameChange = (value: string) => {
     setName(value);
