@@ -95,7 +95,7 @@ const PantryInput = ({ onAdd }: PantryInputProps) => {
           placeholder="Ingredient (e.g. chicken breast)"
           value={name}
           onChange={(e) => handleNameChange(e.target.value)}
-          className="flex-1 bg-card"
+          className={`flex-1 bg-card ${errorFields.name ? "border-destructive ring-1 ring-destructive" : ""}`}
         />
         <div className="flex gap-3">
           <Input
