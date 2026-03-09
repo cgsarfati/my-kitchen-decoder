@@ -41,8 +41,12 @@ const MOCK_PATTERNS: { pattern: RegExp; extract: (m: RegExpMatchArray) => Parsed
 function normalizeUnit(unit: string): string {
   const map: Record<string, string> = {
     cups: "cup", cloves: "clove", cans: "can", slices: "slice",
-    grams: "g", kilograms: "kg", ounces: "oz", pounds: "lb",
-    liters: "l", litres: "l", tablespoons: "tbsp", teaspoons: "tsp",
+    gram: "g", grams: "g", kilogram: "kg", kilograms: "kg",
+    ounce: "oz", ounces: "oz", pound: "lb", pounds: "lb", lbs: "lb",
+    liter: "l", liters: "l", litre: "l", litres: "l",
+    milliliter: "ml", milliliters: "ml",
+    tablespoon: "tbsp", tablespoons: "tbsp",
+    teaspoon: "tsp", teaspoons: "tsp",
   };
   return map[unit.toLowerCase()] ?? unit.toLowerCase();
 }
