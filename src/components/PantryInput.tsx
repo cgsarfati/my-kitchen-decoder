@@ -16,17 +16,25 @@ const PantryInput = ({ onAdd }: PantryInputProps) => {
   const [unit, setUnit] = useState("g");
   const [genericSuggestions, setGenericSuggestions] = useState<string[] | null>(null);
   const [spellSuggestions, setSpellSuggestions] = useState<string[] | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
   const handleNameChange = (value: string) => {
     setName(value);
     if (genericSuggestions) setGenericSuggestions(null);
     if (spellSuggestions) setSpellSuggestions(null);
+    if (error) setError(null);
   };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     const trimmed = name.trim();
-    if (!trimmed || !quantity) return;
+    if (!trimmed) return;
+
+    if (!quantity || parseFloat(quantity) <= 0) {
+      setError("Please enter a quantity.");
+      return;
+    }
+    setError(null);
 
     // Check for generic ingredients first
     const generic = checkGenericIngredient(trimmed);
@@ -82,8 +90,11 @@ const PantryInput = ({ onAdd }: PantryInputProps) => {
             type="number"
             placeholder="Qty"
             value={quantity}
-            onChange={(e) => setQuantity(e.target.value)}
-            className="w-24 bg-card"
+            onChange={(e) => {
+              setQuantity(e.target.value);
+              if (error) setError(null);
+            }}
+            className={`w-24 bg-card ${error ? "border-destructive ring-1 ring-destructive" : ""}`}
             min="0"
             step="any"
           />
@@ -101,6 +112,13 @@ const PantryInput = ({ onAdd }: PantryInputProps) => {
           </Button>
         </div>
       </form>
+
+      {error && (
+        <p className="text-sm text-destructive flex items-center gap-1.5">
+          <AlertTriangle className="h-3.5 w-3.5 shrink-0" />
+          {error}
+        </p>
+      )}
 
       {genericSuggestions && (
         <div className="rounded-lg border border-warning/50 bg-warning/10 p-4 space-y-3">
