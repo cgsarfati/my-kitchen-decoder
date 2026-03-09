@@ -24,7 +24,7 @@ const Index = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [hasSearched, setHasSearched] = useState(false);
   const [selectedRecipe, setSelectedRecipe] = useState<Recipe | null>(null);
-  const [demoMode, setDemoMode] = useState(false);
+  const [demoMode, setDemoMode] = useState(true);
   const [pantryId, setPantryId] = useState<string | undefined>();
   const [pantryLoaded, setPantryLoaded] = useState(false);
   const [darkMode, setDarkMode] = useState(() => {
