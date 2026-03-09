@@ -124,30 +124,39 @@ const RecipeDetail = ({ recipe, onBack, pantryItemNames = [] }: RecipeDetailProp
           {(recipe.matchedIngredients ?? recipe.extendedIngredients.map((i) => ({ ...i, status: "have" as const }))).map((ing, idx) => (
             <li
               key={`${ing.id}-${idx}`}
-              className={`flex items-start gap-2 text-sm ${
+              className="text-sm"
+            >
+              <div className={`flex items-start gap-2 ${
                 ing.status === "have"
                   ? "text-foreground"
                   : ing.status === "insufficient"
                   ? "text-warning"
                   : "text-destructive"
-              }`}
-            >
-              {ing.status === "have" ? (
-                <CheckCircle2 className="h-4 w-4 mt-0.5 text-success shrink-0" />
-              ) : ing.status === "insufficient" ? (
-                <AlertTriangle className="h-4 w-4 mt-0.5 text-warning shrink-0" />
-              ) : (
-                <XCircle className="h-4 w-4 mt-0.5 text-destructive shrink-0" />
-              )}
-              <span>
-                {ing.original}
-                {ing.status === "insufficient" && (
-                  <span className="ml-1 text-xs text-warning font-medium">(not enough)</span>
+              }`}>
+                {ing.status === "have" ? (
+                  <CheckCircle2 className="h-4 w-4 mt-0.5 text-success shrink-0" />
+                ) : ing.status === "insufficient" ? (
+                  <AlertTriangle className="h-4 w-4 mt-0.5 text-warning shrink-0" />
+                ) : (
+                  <XCircle className="h-4 w-4 mt-0.5 text-destructive shrink-0" />
                 )}
-                {ing.status === "missing" && (
-                  <span className="ml-1 text-xs text-destructive font-medium">(missing)</span>
-                )}
-              </span>
+                <span className="flex items-center flex-wrap gap-x-1">
+                  {ing.original}
+                  {ing.status === "insufficient" && (
+                    <span className="text-xs text-warning font-medium">(not enough)</span>
+                  )}
+                  {ing.status === "missing" && (
+                    <span className="text-xs text-destructive font-medium">(missing)</span>
+                  )}
+                  {(ing.status === "missing" || ing.status === "insufficient") && (
+                    <SubstituteSuggestion
+                      ingredientName={ing.name}
+                      recipeName={recipe.title}
+                      pantryItems={pantryItemNames}
+                    />
+                  )}
+                </span>
+              </div>
             </li>
           ))}
         </ul>
