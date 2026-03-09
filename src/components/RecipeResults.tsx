@@ -110,12 +110,9 @@ const RecipeResults = ({ recipes, isLoading, hasSearched, onRecipeClick, demoMod
   const fullMatches = sorted.filter((r) => r.missedIngredientCount === 0 && (r.insufficientCount ?? 0) === 0);
   const partialMatches = sorted.filter((r) => r.missedIngredientCount > 0 || (r.insufficientCount ?? 0) > 0);
 
-  // Paginate: combine full + partial in order, then slice
-  const allOrdered = [...fullMatches, ...partialMatches];
-  const visible = allOrdered.slice(0, visibleCount);
-  const visibleFull = visible.filter((r) => r.missedIngredientCount === 0 && (r.insufficientCount ?? 0) === 0);
-  const visiblePartial = visible.filter((r) => r.missedIngredientCount > 0 || (r.insufficientCount ?? 0) > 0);
-  const hasMore = visibleCount < allOrdered.length;
+  // Show all full matches; paginate only partial matches
+  const visiblePartial = partialMatches.slice(0, visibleCount);
+  const hasMore = visibleCount < partialMatches.length;
 
   return (
     <section className="space-y-6">
