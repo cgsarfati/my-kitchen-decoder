@@ -278,7 +278,11 @@ const Index = () => {
         {header}
         <main className="container max-w-3xl mx-auto px-4 py-10">
           <div className="surface-paper-lg rounded-2xl p-6 md:p-8">
-            <RecipeDetail recipe={selectedRecipe} onBack={() => setSelectedRecipe(null)} />
+            <RecipeDetail
+              recipe={selectedRecipe}
+              onBack={() => setSelectedRecipe(null)}
+              pantryItemNames={items.map((i) => i.name)}
+            />
           </div>
         </main>
       </div>
