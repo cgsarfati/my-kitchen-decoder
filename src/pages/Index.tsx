@@ -79,16 +79,33 @@ const Index = () => {
 
   const handleAdd = useCallback((item: Omit<PantryItem, "id">) => {
     setItems((prev) => {
+      // Find existing item with same name (case-insensitive)
       const existing = prev.find(
-        (i) => i.name.toLowerCase() === item.name.toLowerCase() && i.unit === item.unit
+        (i) => i.name.toLowerCase() === item.name.toLowerCase()
       );
       if (existing) {
-        // Merge: sum quantities for same ingredient + unit
-        return prev.map((i) =>
-          i.id === existing.id
-            ? { ...i, quantity: i.quantity + item.quantity }
-            : i
-        );
+        const existingUnit = UNIT_MAP[existing.unit.toLowerCase()];
+        const newUnit = UNIT_MAP[item.unit.toLowerCase()];
+
+        // If both units are in the same category, convert and sum
+        if (existingUnit && newUnit && existingUnit.category === newUnit.category) {
+          const newQtyInBase = item.quantity * newUnit.toBase;
+          const addedInExistingUnit = newQtyInBase / existingUnit.toBase;
+          return prev.map((i) =>
+            i.id === existing.id
+              ? { ...i, quantity: Math.round((i.quantity + addedInExistingUnit) * 100) / 100 }
+              : i
+          );
+        }
+
+        // Same unit string (fallback for unitless matches)
+        if (existing.unit === item.unit) {
+          return prev.map((i) =>
+            i.id === existing.id
+              ? { ...i, quantity: i.quantity + item.quantity }
+              : i
+          );
+        }
       }
       return [...prev, { ...item, id: crypto.randomUUID() }];
     });

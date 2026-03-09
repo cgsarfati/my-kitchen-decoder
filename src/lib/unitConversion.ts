@@ -13,7 +13,7 @@ interface UnitInfo {
   toBase: number; // multiplier to convert to base unit
 }
 
-const UNIT_MAP: Record<string, UnitInfo> = {
+export const UNIT_MAP: Record<string, UnitInfo> = {
   // Weight → grams
   g: { category: "weight", toBase: 1 },
   gram: { category: "weight", toBase: 1 },
