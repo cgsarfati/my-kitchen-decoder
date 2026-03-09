@@ -177,7 +177,7 @@ const RecipeResults = ({ recipes, isLoading, hasSearched, onRecipeClick, demoMod
             onClick={() => setVisibleCount((prev) => prev + PAGE_SIZE)}
             className="gap-2"
           >
-            Show more recipes ({allOrdered.length - visibleCount} remaining)
+            Show more recipes ({partialMatches.length - visibleCount} remaining)
           </Button>
         </div>
       )}
