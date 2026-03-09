@@ -31,9 +31,10 @@ const Index = () => {
   const [pantryLoaded, setPantryLoaded] = useState(false);
   const [darkMode, setDarkMode] = useState(() => {
     if (typeof window !== "undefined") {
-      return document.documentElement.classList.contains("dark");
+      const saved = localStorage.getItem("theme");
+      if (saved) return saved === "dark";
     }
-    return false;
+    return true;
   });
   const { toast } = useToast();
   const { user } = useAuth();
