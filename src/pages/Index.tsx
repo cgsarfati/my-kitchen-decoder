@@ -192,6 +192,7 @@ const Index = () => {
       }).filter((r) => r.usedIngredientCount > 0);
       const enriched = enrichRecipesWithQuantityMatch(filtered, items);
       setRecipes(enriched);
+      trackEvent(AnalyticsEvents.SEARCH_RESULTS, { result_count: enriched.length, full_matches: enriched.filter(r => r.missedIngredientCount === 0).length, demo: true });
       setIsLoading(false);
       return;
     }
