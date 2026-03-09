@@ -5,6 +5,7 @@ import { Input } from "@/components/ui/input";
 import { COMMON_UNITS, type PantryItem } from "@/types/pantry";
 import { checkGenericIngredient } from "@/lib/ingredientValidation";
 import { getSpellSuggestions } from "@/lib/spellCheck";
+import { trackEvent, AnalyticsEvents } from "@/lib/analytics";
 
 interface PantryInputProps {
   onAdd: (item: Omit<PantryItem, "id">) => void;
