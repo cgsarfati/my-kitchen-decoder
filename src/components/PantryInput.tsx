@@ -28,7 +28,13 @@ const PantryInput = ({ onAdd }: PantryInputProps) => {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     const trimmed = name.trim();
-    if (!trimmed || !quantity) return;
+    if (!trimmed) return;
+
+    if (!quantity || parseFloat(quantity) <= 0) {
+      setError("Please enter a quantity.");
+      return;
+    }
+    setError(null);
 
     // Check for generic ingredients first
     const generic = checkGenericIngredient(trimmed);
