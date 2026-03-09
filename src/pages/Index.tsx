@@ -16,6 +16,7 @@ import { MOCK_RECIPES } from "@/lib/mockRecipes";
 import { loadPantry, savePantry } from "@/lib/pantryStorage";
 import type { PantryItem } from "@/types/pantry";
 import type { Recipe } from "@/types/recipe";
+import { trackEvent, AnalyticsEvents } from "@/lib/analytics";
 
 const Index = () => {
   const [items, setItems] = useState<PantryItem[]>([]);
