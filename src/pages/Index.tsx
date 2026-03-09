@@ -113,7 +113,11 @@ const Index = () => {
   }, []);
 
   const handleRemove = useCallback((id: string) => {
-    setItems((prev) => prev.filter((i) => i.id !== id));
+    setItems((prev) => {
+      const item = prev.find((i) => i.id === id);
+      if (item) trackEvent(AnalyticsEvents.REMOVE_INGREDIENT, { ingredient: item.name });
+      return prev.filter((i) => i.id !== id);
+    });
   }, []);
 
   const handleUpdate = useCallback((id: string, quantity: number, unit: string) => {
