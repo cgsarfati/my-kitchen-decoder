@@ -110,12 +110,9 @@ const RecipeResults = ({ recipes, isLoading, hasSearched, onRecipeClick, demoMod
   const fullMatches = sorted.filter((r) => r.missedIngredientCount === 0 && (r.insufficientCount ?? 0) === 0);
   const partialMatches = sorted.filter((r) => r.missedIngredientCount > 0 || (r.insufficientCount ?? 0) > 0);
 
-  // Paginate: combine full + partial in order, then slice
-  const allOrdered = [...fullMatches, ...partialMatches];
-  const visible = allOrdered.slice(0, visibleCount);
-  const visibleFull = visible.filter((r) => r.missedIngredientCount === 0 && (r.insufficientCount ?? 0) === 0);
-  const visiblePartial = visible.filter((r) => r.missedIngredientCount > 0 || (r.insufficientCount ?? 0) > 0);
-  const hasMore = visibleCount < allOrdered.length;
+  // Show all full matches; paginate only partial matches
+  const visiblePartial = partialMatches.slice(0, visibleCount);
+  const hasMore = visibleCount < partialMatches.length;
 
   return (
     <section className="space-y-6">
@@ -147,13 +144,13 @@ const RecipeResults = ({ recipes, isLoading, hasSearched, onRecipeClick, demoMod
         </DropdownMenu>
       </div>
 
-      {visibleFull.length > 0 && (
+      {fullMatches.length > 0 && (
         <div className="space-y-4">
           <h3 className="text-xl text-foreground font-body font-semibold">
             Ready to Cook ({fullMatches.length})
           </h3>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            {visibleFull.map((recipe) => (
+            {fullMatches.map((recipe) => (
               <RecipeCard key={recipe.id} recipe={recipe} onClick={onRecipeClick} />
             ))}
           </div>
@@ -180,7 +177,7 @@ const RecipeResults = ({ recipes, isLoading, hasSearched, onRecipeClick, demoMod
             onClick={() => setVisibleCount((prev) => prev + PAGE_SIZE)}
             className="gap-2"
           >
-            Show more recipes ({allOrdered.length - visibleCount} remaining)
+            Show more recipes ({partialMatches.length - visibleCount} remaining)
           </Button>
         </div>
       )}

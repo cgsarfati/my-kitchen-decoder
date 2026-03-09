@@ -24,7 +24,7 @@ const Index = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [hasSearched, setHasSearched] = useState(false);
   const [selectedRecipe, setSelectedRecipe] = useState<Recipe | null>(null);
-  const [demoMode, setDemoMode] = useState(false);
+  const [demoMode, setDemoMode] = useState(true);
   const [pantryId, setPantryId] = useState<string | undefined>();
   const [pantryLoaded, setPantryLoaded] = useState(false);
   const [darkMode, setDarkMode] = useState(() => {
@@ -250,7 +250,6 @@ const Index = () => {
           </Button>
           {/* Demo toggle - hidden on very small screens, shown on sm+ */}
           <div className="hidden sm:flex items-center gap-2">
-            <FlaskConical className="h-4 w-4 text-muted-foreground" />
             <Label htmlFor="demo-mode" className="text-sm text-muted-foreground cursor-pointer">
               Demo
             </Label>
@@ -258,7 +257,9 @@ const Index = () => {
           </div>
           {/* Mobile demo toggle - compact */}
           <div className="flex sm:hidden items-center gap-1.5">
-            <FlaskConical className="h-3.5 w-3.5 text-muted-foreground" />
+            <Label htmlFor="demo-mode-mobile" className="text-xs text-muted-foreground cursor-pointer">
+              Demo
+            </Label>
             <Switch id="demo-mode-mobile" checked={demoMode} onCheckedChange={(v) => { setDemoMode(v); trackEvent(AnalyticsEvents.DEMO_MODE_TOGGLE, { enabled: v }); }} />
           </div>
           <div className="w-px h-6 bg-border" />
