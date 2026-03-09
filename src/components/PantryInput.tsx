@@ -17,12 +17,13 @@ const PantryInput = ({ onAdd }: PantryInputProps) => {
   const [genericSuggestions, setGenericSuggestions] = useState<string[] | null>(null);
   const [spellSuggestions, setSpellSuggestions] = useState<string[] | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [errorFields, setErrorFields] = useState<{ name?: boolean; qty?: boolean }>({});
 
   const handleNameChange = (value: string) => {
     setName(value);
     if (genericSuggestions) setGenericSuggestions(null);
     if (spellSuggestions) setSpellSuggestions(null);
-    if (error) setError(null);
+    if (error) { setError(null); setErrorFields({}); }
   };
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -31,17 +32,21 @@ const PantryInput = ({ onAdd }: PantryInputProps) => {
 
     if (!trimmed && (!quantity || parseFloat(quantity) <= 0)) {
       setError("Please enter an ingredient and quantity.");
+      setErrorFields({ name: true, qty: true });
       return;
     }
     if (!trimmed) {
       setError("Please enter an ingredient name.");
+      setErrorFields({ name: true });
       return;
     }
     if (!quantity || parseFloat(quantity) <= 0) {
       setError("Please enter a quantity.");
+      setErrorFields({ qty: true });
       return;
     }
     setError(null);
+    setErrorFields({});
 
     // Check for generic ingredients first
     const generic = checkGenericIngredient(trimmed);
@@ -90,7 +95,7 @@ const PantryInput = ({ onAdd }: PantryInputProps) => {
           placeholder="Ingredient (e.g. chicken breast)"
           value={name}
           onChange={(e) => handleNameChange(e.target.value)}
-          className="flex-1 bg-card"
+          className={`flex-1 bg-card ${errorFields.name ? "border-destructive ring-1 ring-destructive" : ""}`}
         />
         <div className="flex gap-3">
           <Input
@@ -99,9 +104,9 @@ const PantryInput = ({ onAdd }: PantryInputProps) => {
             value={quantity}
             onChange={(e) => {
               setQuantity(e.target.value);
-              if (error) setError(null);
+              if (error) { setError(null); setErrorFields({}); }
             }}
-            className={`w-24 bg-card ${error ? "border-destructive ring-1 ring-destructive" : ""}`}
+            className={`w-24 bg-card ${errorFields.qty ? "border-destructive ring-1 ring-destructive" : ""}`}
             min="0"
             step="any"
           />
