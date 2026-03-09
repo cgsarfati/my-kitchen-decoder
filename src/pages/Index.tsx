@@ -254,7 +254,7 @@ const Index = () => {
             <Label htmlFor="demo-mode" className="text-sm text-muted-foreground cursor-pointer">
               Demo
             </Label>
-            <Switch id="demo-mode" checked={demoMode} onCheckedChange={setDemoMode} />
+            <Switch id="demo-mode" checked={demoMode} onCheckedChange={(v) => { setDemoMode(v); trackEvent(AnalyticsEvents.DEMO_MODE_TOGGLE, { enabled: v }); }} />
           </div>
           {/* Mobile demo toggle - compact */}
           <div className="flex sm:hidden items-center gap-1.5">
