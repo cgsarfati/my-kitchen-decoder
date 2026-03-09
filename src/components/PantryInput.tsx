@@ -91,6 +91,7 @@ const PantryInput = ({ onAdd }: PantryInputProps) => {
   const handleAddAnyway = () => {
     const trimmed = name.trim();
     if (!trimmed || !quantity) return;
+    trackEvent(AnalyticsEvents.SPELL_ADD_ANYWAY, { ingredient: trimmed });
     onAdd({ name: trimmed, quantity: parseFloat(quantity), unit });
     setName("");
     setQuantity("");
