@@ -8,6 +8,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import AuthButton from "@/components/AuthButton";
 import PantryInput from "@/components/PantryInput";
+import PantryAiInput from "@/components/PantryAiInput";
 import PantryList from "@/components/PantryList";
 import RecipeResults from "@/components/RecipeResults";
 import RecipeDetail from "@/components/RecipeDetail";
