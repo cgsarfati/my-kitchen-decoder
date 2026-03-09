@@ -66,6 +66,7 @@ const PantryInput = ({ onAdd }: PantryInputProps) => {
     if (spell) {
       setSpellSuggestions(spell);
       setGenericSuggestions(null);
+      trackEvent(AnalyticsEvents.SPELL_SUGGESTION_SHOWN, { input: trimmed, suggestions: spell });
       return;
     }
 
