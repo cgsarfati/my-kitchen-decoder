@@ -28,8 +28,15 @@ const PantryInput = ({ onAdd }: PantryInputProps) => {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     const trimmed = name.trim();
-    if (!trimmed) return;
 
+    if (!trimmed && (!quantity || parseFloat(quantity) <= 0)) {
+      setError("Please enter an ingredient and quantity.");
+      return;
+    }
+    if (!trimmed) {
+      setError("Please enter an ingredient name.");
+      return;
+    }
     if (!quantity || parseFloat(quantity) <= 0) {
       setError("Please enter a quantity.");
       return;
