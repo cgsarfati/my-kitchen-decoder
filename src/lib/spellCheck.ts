@@ -3,7 +3,7 @@
  * Suggests corrections from a known ingredient dictionary.
  */
 
-const KNOWN_INGREDIENTS = [
+export const KNOWN_INGREDIENTS = [
   // Proteins
   "chicken breast", "chicken thigh", "ground beef", "steak", "pork chops",
   "salmon", "tuna", "cod", "shrimp", "turkey breast", "lamb", "bacon",

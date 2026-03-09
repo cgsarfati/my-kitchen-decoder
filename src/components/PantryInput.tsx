@@ -1,10 +1,10 @@
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import { Plus, AlertTriangle, SpellCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { COMMON_UNITS, type PantryItem } from "@/types/pantry";
 import { checkGenericIngredient } from "@/lib/ingredientValidation";
-import { getSpellSuggestions } from "@/lib/spellCheck";
+import { getSpellSuggestions, KNOWN_INGREDIENTS } from "@/lib/spellCheck";
 import { trackEvent, AnalyticsEvents } from "@/lib/analytics";
 
 interface PantryInputProps {
@@ -19,16 +19,86 @@ const PantryInput = ({ onAdd }: PantryInputProps) => {
   const [spellSuggestions, setSpellSuggestions] = useState<string[] | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [errorFields, setErrorFields] = useState<{ name?: boolean; qty?: boolean }>({});
+  const [autocomplete, setAutocomplete] = useState<string[]>([]);
+  const [showAutocomplete, setShowAutocomplete] = useState(false);
+  const [activeIndex, setActiveIndex] = useState(-1);
+  const inputRef = useRef<HTMLInputElement>(null);
+  const autocompleteRef = useRef<HTMLDivElement>(null);
+
+  // Close autocomplete on outside click
+  useEffect(() => {
+    const handleClick = (e: MouseEvent) => {
+      if (
+        autocompleteRef.current &&
+        !autocompleteRef.current.contains(e.target as Node) &&
+        inputRef.current &&
+        !inputRef.current.contains(e.target as Node)
+      ) {
+        setShowAutocomplete(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClick);
+    return () => document.removeEventListener("mousedown", handleClick);
+  }, []);
 
   const handleNameChange = (value: string) => {
     setName(value);
     if (genericSuggestions) setGenericSuggestions(null);
     if (spellSuggestions) setSpellSuggestions(null);
     if (error) { setError(null); setErrorFields({}); }
+
+    // Autocomplete
+    const trimmed = value.trim().toLowerCase();
+    if (trimmed.length >= 2) {
+      const matches = KNOWN_INGREDIENTS.filter((ing) => ing.includes(trimmed))
+        .sort((a, b) => {
+          // Prioritize starts-with matches
+          const aStarts = a.startsWith(trimmed) ? 0 : 1;
+          const bStarts = b.startsWith(trimmed) ? 0 : 1;
+          if (aStarts !== bStarts) return aStarts - bStarts;
+          return a.length - b.length;
+        })
+        .slice(0, 6);
+      setAutocomplete(matches);
+      setShowAutocomplete(matches.length > 0);
+      setActiveIndex(-1);
+    } else {
+      setAutocomplete([]);
+      setShowAutocomplete(false);
+    }
+  };
+
+  const handleAutocompleteSelect = (suggestion: string) => {
+    setName(suggestion);
+    setAutocomplete([]);
+    setShowAutocomplete(false);
+    setActiveIndex(-1);
+    // Focus qty field after selection
+    setTimeout(() => {
+      const qtyInput = document.querySelector<HTMLInputElement>('input[placeholder="Qty"]');
+      qtyInput?.focus();
+    }, 0);
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (!showAutocomplete || autocomplete.length === 0) return;
+    if (e.key === "ArrowDown") {
+      e.preventDefault();
+      setActiveIndex((prev) => (prev < autocomplete.length - 1 ? prev + 1 : 0));
+    } else if (e.key === "ArrowUp") {
+      e.preventDefault();
+      setActiveIndex((prev) => (prev > 0 ? prev - 1 : autocomplete.length - 1));
+    } else if (e.key === "Enter" && activeIndex >= 0) {
+      e.preventDefault();
+      handleAutocompleteSelect(autocomplete[activeIndex]);
+    } else if (e.key === "Escape") {
+      setShowAutocomplete(false);
+    }
   };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    setShowAutocomplete(false);
     const trimmed = name.trim();
 
     if (!trimmed && (!quantity || parseFloat(quantity) <= 0)) {
@@ -79,7 +149,6 @@ const PantryInput = ({ onAdd }: PantryInputProps) => {
   };
 
   const handleSuggestionClick = (suggestion: string) => {
-    // Track if this was a spell-check suggestion acceptance
     if (spellSuggestions) {
       trackEvent(AnalyticsEvents.SPELL_SUGGESTION_ACCEPTED, { original: name.trim(), accepted: suggestion });
     }
@@ -102,12 +171,39 @@ const PantryInput = ({ onAdd }: PantryInputProps) => {
   return (
     <div className="space-y-3">
       <form onSubmit={handleSubmit} className="flex flex-col sm:flex-row gap-3">
-        <Input
-          placeholder="Ingredient (e.g. chicken breast)"
-          value={name}
-          onChange={(e) => handleNameChange(e.target.value)}
-          className={`flex-1 bg-card ${errorFields.name ? "border-destructive ring-1 ring-destructive" : ""}`}
-        />
+        <div className="relative flex-1">
+          <Input
+            ref={inputRef}
+            placeholder="Ingredient (e.g. chicken breast)"
+            value={name}
+            onChange={(e) => handleNameChange(e.target.value)}
+            onFocus={() => { if (autocomplete.length > 0) setShowAutocomplete(true); }}
+            onKeyDown={handleKeyDown}
+            className={`bg-card ${errorFields.name ? "border-destructive ring-1 ring-destructive" : ""}`}
+            autoComplete="off"
+          />
+          {showAutocomplete && autocomplete.length > 0 && (
+            <div
+              ref={autocompleteRef}
+              className="absolute z-20 top-full left-0 right-0 mt-1 rounded-lg border border-border bg-popover shadow-lg overflow-hidden"
+            >
+              {autocomplete.map((item, i) => (
+                <button
+                  key={item}
+                  type="button"
+                  onClick={() => handleAutocompleteSelect(item)}
+                  className={`w-full text-left px-3 py-2 text-sm capitalize transition-colors ${
+                    i === activeIndex
+                      ? "bg-accent text-accent-foreground"
+                      : "text-popover-foreground hover:bg-accent/50"
+                  }`}
+                >
+                  {item}
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
         <div className="flex gap-3">
           <Input
             type="number"
