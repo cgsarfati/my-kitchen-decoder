@@ -64,4 +64,8 @@ export const AnalyticsEvents = {
 
   // Mode
   DEMO_MODE_TOGGLE: "demo_mode_toggle",
+
+  // AI Parser
+  AI_PARSE_COMPLETE: "ai_parse_complete",
+  AI_ITEMS_ADDED: "ai_items_added",
 } as const;
