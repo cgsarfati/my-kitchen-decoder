@@ -356,7 +356,7 @@ const Index = () => {
               }`}
             >
               <Sparkles className="h-3.5 w-3.5" />
-              Smart Paste
+              Describe
             </button>
           </div>
 
