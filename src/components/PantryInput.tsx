@@ -113,6 +113,13 @@ const PantryInput = ({ onAdd }: PantryInputProps) => {
         </div>
       </form>
 
+      {error && (
+        <p className="text-sm text-destructive flex items-center gap-1.5">
+          <AlertTriangle className="h-3.5 w-3.5 shrink-0" />
+          {error}
+        </p>
+      )}
+
       {genericSuggestions && (
         <div className="rounded-lg border border-warning/50 bg-warning/10 p-4 space-y-3">
           <div className="flex items-start gap-2">

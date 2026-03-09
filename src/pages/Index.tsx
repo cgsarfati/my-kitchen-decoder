@@ -78,7 +78,20 @@ const Index = () => {
   }, [items, user, pantryId, pantryLoaded]);
 
   const handleAdd = useCallback((item: Omit<PantryItem, "id">) => {
-    setItems((prev) => [...prev, { ...item, id: crypto.randomUUID() }]);
+    setItems((prev) => {
+      const existing = prev.find(
+        (i) => i.name.toLowerCase() === item.name.toLowerCase() && i.unit === item.unit
+      );
+      if (existing) {
+        // Merge: sum quantities for same ingredient + unit
+        return prev.map((i) =>
+          i.id === existing.id
+            ? { ...i, quantity: i.quantity + item.quantity }
+            : i
+        );
+      }
+      return [...prev, { ...item, id: crypto.randomUUID() }];
+    });
   }, []);
 
   const handleRemove = useCallback((id: string) => {
