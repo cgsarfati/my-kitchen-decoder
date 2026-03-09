@@ -261,7 +261,7 @@ const Index = () => {
           <div className="absolute bottom-4 left-6 opacity-[0.04] pointer-events-none rotate-12">
             <ChefHat className="h-24 w-24 text-foreground" />
           </div>
-          <h2 className="text-3xl md:text-5xl text-foreground leading-tight relative z-[1]">
+          <h2 className="text-2xl sm:text-3xl md:text-5xl text-foreground leading-tight relative z-[1] whitespace-nowrap">
             Unlock recipes hiding in your kitchen
           </h2>
           <p className="text-lg text-muted-foreground max-w-lg mx-auto relative z-[1]">
