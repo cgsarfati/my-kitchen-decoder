@@ -13,15 +13,17 @@ interface ParsedIngredient {
 }
 
 // Pattern-based mock parser that handles common natural language formats
+const UNIT_PATTERN = "g|kg|oz|lb|lbs|ml|l|cup|cups|tbsp|tsp|teaspoon|teaspoons|tablespoon|tablespoons|clove|cloves|can|cans|slice|slices|bunch|gram|grams|kilogram|kilograms|ounce|ounces|pound|pounds|liter|liters|litre|litres|milliliter|milliliters";
+
 const MOCK_PATTERNS: { pattern: RegExp; extract: (m: RegExpMatchArray) => ParsedIngredient | null }[] = [
   // "a teaspoon of paprika" or "an oz of butter"
   {
-    pattern: /^(?:a|an)\s+(g|kg|oz|lb|ml|l|cup|cups|tbsp|tsp|teaspoon|teaspoons|tablespoon|tablespoons|clove|cloves|can|cans|slice|slices|bunch)\s+(?:of\s+)?(.+)/i,
+    pattern: new RegExp(`^(?:a|an)\\s+(${UNIT_PATTERN})\\s+(?:of\\s+)?(.+)`, "i"),
     extract: (m) => ({ quantity: 1, unit: normalizeUnit(m[1]), name: m[2].trim() }),
   },
-  // "500g chicken breast" or "500 g chicken"
+  // "500g chicken breast" or "500 grams of chicken"
   {
-    pattern: /(\d+(?:\.\d+)?)\s*(g|kg|oz|lb|ml|l|cup|cups|tbsp|tsp|teaspoon|teaspoons|tablespoon|tablespoons|clove|cloves|can|cans|slice|slices|bunch)\s+(?:of\s+)?(.+)/i,
+    pattern: new RegExp(`(\\d+(?:\\.\\d+)?)\\s*(${UNIT_PATTERN})\\s+(?:of\\s+)?(.+)`, "i"),
     extract: (m) => ({ quantity: parseFloat(m[1]), unit: normalizeUnit(m[2]), name: m[3].trim() }),
   },
   // "2 chicken breasts"
