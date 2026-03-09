@@ -11,7 +11,7 @@ import PantryInput from "@/components/PantryInput";
 import PantryList from "@/components/PantryList";
 import RecipeResults from "@/components/RecipeResults";
 import RecipeDetail from "@/components/RecipeDetail";
-import { matchIngredients, summarizeMatch, calculateMaxServings } from "@/lib/unitConversion";
+import { matchIngredients, summarizeMatch, calculateMaxServings, UNIT_MAP } from "@/lib/unitConversion";
 import { MOCK_RECIPES } from "@/lib/mockRecipes";
 import { loadPantry, savePantry } from "@/lib/pantryStorage";
 import type { PantryItem } from "@/types/pantry";
