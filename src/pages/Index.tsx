@@ -1,5 +1,5 @@
 import { useState, useCallback, useEffect, useRef } from "react";
-import { ChefHat, Search, FlaskConical, UtensilsCrossed, Trash2, Moon, Sun, List, Sparkles, Camera } from "lucide-react";
+import { ChefHat, Search, FlaskConical, UtensilsCrossed, Trash2, Moon, Sun, List, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
@@ -9,7 +9,6 @@ import { supabase } from "@/integrations/supabase/client";
 import AuthButton from "@/components/AuthButton";
 import PantryInput from "@/components/PantryInput";
 import PantryAiInput from "@/components/PantryAiInput";
-import PantryImageInput from "@/components/PantryImageInput";
 import PantryList from "@/components/PantryList";
 import RecipeResults from "@/components/RecipeResults";
 import RecipeDetail from "@/components/RecipeDetail";
@@ -28,7 +27,7 @@ const Index = () => {
   const [selectedRecipe, setSelectedRecipe] = useState<Recipe | null>(null);
   const [demoMode, setDemoMode] = useState(true);
   const [pantryId, setPantryId] = useState<string | undefined>();
-  const [inputMode, setInputMode] = useState<"manual" | "ai" | "photo">("manual");
+  const [inputMode, setInputMode] = useState<"manual" | "ai">("manual");
   const [pantryLoaded, setPantryLoaded] = useState(false);
   const [darkMode, setDarkMode] = useState(() => {
     if (typeof window !== "undefined") {
@@ -363,24 +362,12 @@ const Index = () => {
               }`}
             >
               <Sparkles className="h-3.5 w-3.5" />
-              Describe
-            </button>
-            <button
-              onClick={() => setInputMode("photo")}
-              className={`flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium transition-colors ${
-                inputMode === "photo"
-                  ? "bg-primary text-primary-foreground"
-                  : "bg-card text-muted-foreground hover:text-foreground"
-              }`}
-            >
-              <Camera className="h-3.5 w-3.5" />
-              Photo
+              Describe or snap
             </button>
           </div>
 
           {inputMode === "manual" && <PantryInput onAdd={handleAdd} />}
           {inputMode === "ai" && <PantryAiInput onAdd={handleAdd} />}
-          {inputMode === "photo" && <PantryImageInput onAdd={handleAdd} />}
 
           {items.length > 0 && (
             <div className="pt-5 space-y-4">
