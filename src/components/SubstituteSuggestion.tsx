@@ -187,6 +187,7 @@ const SubstituteSuggestion = ({
   }
 
   const hasPantryMatch = suggestion.fromPantry.length > 0;
+  const hasSubstitute = suggestion.substitute.trim().length > 0;
 
   return (
     <div className="mt-2 ml-6 rounded-lg border border-primary/20 bg-primary/5 p-3 text-xs space-y-1.5">
@@ -194,13 +195,21 @@ const SubstituteSuggestion = ({
         <div className="flex items-center gap-1.5 font-medium text-primary">
           <Sparkles className="h-3 w-3 shrink-0" />
           <span>
-            Use <strong>{suggestion.substitute}</strong>
-            {hasPantryMatch && suggestion.sufficientInPantry && (
-              <span className="ml-1 text-success font-normal">(you have enough ✓)</span>
-            )}
-            {hasPantryMatch && !suggestion.sufficientInPantry && (
-              <span className="ml-1 text-warning font-normal inline-flex items-center gap-0.5">
-                <AlertTriangle className="h-3 w-3" /> not enough on hand
+            {hasSubstitute ? (
+              <>
+                Use <strong>{suggestion.substitute}</strong>
+                {hasPantryMatch && suggestion.sufficientInPantry && (
+                  <span className="ml-1 text-success font-normal">(you have enough ✓)</span>
+                )}
+                {hasPantryMatch && !suggestion.sufficientInPantry && (
+                  <span className="ml-1 text-warning font-normal inline-flex items-center gap-0.5">
+                    <AlertTriangle className="h-3 w-3" /> not enough on hand
+                  </span>
+                )}
+              </>
+            ) : (
+              <span className="text-warning inline-flex items-center gap-0.5">
+                <AlertTriangle className="h-3 w-3" /> No good substitute
               </span>
             )}
           </span>

@@ -54,7 +54,7 @@ serve(async (req) => {
       : "an unspecified amount";
 
     const haveLine = body.reason === "insufficient" && body.haveAmount != null && body.haveUnit
-      ? `The user only has ${body.haveAmount} ${body.haveUnit} of ${body.ingredientName} — they need more.`
+      ? `The user has ONLY ${body.haveAmount} ${body.haveUnit} of ${body.ingredientName} — that is not enough.`
       : `The user is missing ${body.ingredientName} entirely.`;
 
     const userPrompt = `Recipe: "${body.recipeName}"
@@ -64,7 +64,11 @@ ${haveLine}
 User's pantry (with quantities):
 ${pantryList}
 
-Suggest the best substitute. Strongly prefer something already in their pantry. If you suggest a pantry item, you MUST check whether they have ENOUGH of it (after applying the conversion ratio) to cover the required amount. If they don't have enough, say so explicitly and either suggest combining it with another pantry item, scaling the recipe down, or recommend a non-pantry substitute.`;
+Suggest the best DIFFERENT ingredient to substitute for "${body.ingredientName}". The substitute MUST be a different ingredient — never recommend "${body.ingredientName}" itself as its own substitute.
+
+Strongly prefer something already in their pantry. If you suggest a pantry item, you MUST check whether they have ENOUGH of it (after applying the conversion ratio) to cover the required amount. If they don't have enough, say so explicitly and either suggest combining it with another pantry item, scaling the recipe down, or recommend a non-pantry substitute.
+
+If no reasonable substitute exists, return substitute = "" and explain in the instruction (e.g., "There's no good substitute for kale here — try spinach or chard from the store, or skip this ingredient.").`;
 
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
@@ -78,14 +82,20 @@ Suggest the best substitute. Strongly prefer something already in their pantry. 
           {
             role: "system",
             content: `You are a pragmatic kitchen substitutions expert. You help home cooks finish a recipe using what they already have.
-Rules:
-- Always reason about quantities and units. Convert between units as needed (e.g. 1 lemon ≈ 3 tbsp juice ≈ 45 ml).
-- Strongly prefer substitutes already in the user's pantry. Only suggest a non-pantry item if nothing in the pantry works.
-- If a pantry-based substitute exists but the user doesn't have enough of it, be honest: state the shortfall and propose a workable plan (combine with another pantry item, halve the recipe, etc.).
-- The "instruction" field should be 1-2 short sentences with the exact amount to use as the substitute.
-- "fromPantry" lists the EXACT names from the user's pantry list that the substitute relies on. Use [] if the substitute isn't from the pantry.
-- "sufficientInPantry" is true only when the suggested pantry-based substitute is in the pantry AND there is enough of it for the required amount. Use false otherwise (including when the substitute isn't from the pantry at all).
-- "confidence": "high" for classic 1:1 swaps, "medium" for reasonable swaps, "low" for last-resort.`,
+
+ABSOLUTE RULES (do not violate):
+1. NEVER suggest the same ingredient as its own substitute. If the user is short on olive oil, do NOT recommend olive oil. Recommend a DIFFERENT fat (butter, avocado oil, etc.).
+2. Always reason about quantities and units. Convert between units as needed (e.g. 1 lemon ≈ 3 tbsp juice ≈ 45 ml).
+3. Strongly prefer substitutes already in the user's pantry. Only suggest a non-pantry item if nothing in the pantry works.
+4. If a pantry-based substitute exists but the user doesn't have enough of it, be honest: state the shortfall and propose a workable plan (combine with another pantry item, halve the recipe, etc.).
+5. If you genuinely cannot find a good substitute, return substitute = "" and put a helpful note in the instruction. Never invent a bad substitute just to fill the field.
+
+OUTPUT FIELDS:
+- "substitute": short name of the substitute (e.g. "Butter", "Apple cider vinegar", "Milk + lemon juice"). MUST be different from the original ingredient. Empty string if no substitute works.
+- "instruction": 1-2 sentences with the exact amount to use. If no substitute works, use this field to explain why and suggest next steps.
+- "fromPantry": exact pantry item names this substitute relies on. Empty array if not from pantry.
+- "sufficientInPantry": true ONLY when the suggested pantry-based substitute is in the pantry AND there is enough of it. False otherwise (including when the substitute isn't from pantry, or when substitute is empty).
+- "confidence": "high" for classic 1:1 swaps, "medium" for reasonable swaps, "low" for last-resort or when no substitute is found.`,
           },
           { role: "user", content: userPrompt },
         ],
@@ -94,17 +104,17 @@ Rules:
             type: "function",
             function: {
               name: "return_substitute",
-              description: "Return the recommended substitute for the missing/insufficient ingredient.",
+              description: "Return the recommended substitute for the missing/insufficient ingredient. The substitute must be a different ingredient than the original.",
               parameters: {
                 type: "object",
                 properties: {
                   substitute: {
                     type: "string",
-                    description: "Short name of the substitute ingredient or combo (e.g. 'Apple cider vinegar', 'Milk + lemon juice').",
+                    description: "Short name of the substitute. MUST be different from the original ingredient. Empty string if no substitute works.",
                   },
                   instruction: {
                     type: "string",
-                    description: "1-2 sentence instruction with exact quantity to use as the substitute, including any quantity caveats.",
+                    description: "1-2 sentence instruction with exact quantity. If no substitute, explain why.",
                   },
                   fromPantry: {
                     type: "array",
@@ -160,6 +170,41 @@ Rules:
     }
 
     const parsed = JSON.parse(toolCall.function.arguments);
+
+    // Guardrail: reject self-substitutions. The AI sometimes returns the same ingredient
+    // back (e.g. "use olive oil for olive oil") which is nonsense — catch it here.
+    const norm = (s: string) =>
+      s.toLowerCase().replace(/[^a-z0-9 ]/g, "").replace(/\s+/g, " ").trim();
+    const originalNorm = norm(body.ingredientName);
+    const subNorm = norm(parsed.substitute ?? "");
+    const isSelfSub =
+      subNorm.length > 0 &&
+      (subNorm === originalNorm ||
+        subNorm.includes(originalNorm) ||
+        originalNorm.includes(subNorm));
+
+    if (isSelfSub) {
+      console.warn("Rejected self-substitution:", body.ingredientName, "->", parsed.substitute);
+      const fallback = body.reason === "insufficient"
+        ? {
+            substitute: "",
+            instruction: `No good substitute for ${body.ingredientName} here. Try halving the recipe to fit what you have, or pick up more ${body.ingredientName} before cooking.`,
+            fromPantry: [],
+            sufficientInPantry: false,
+            confidence: "low" as const,
+          }
+        : {
+            substitute: "",
+            instruction: `No close substitute for ${body.ingredientName} from your pantry. Consider skipping it or adding it to your shopping list.`,
+            fromPantry: [],
+            sufficientInPantry: false,
+            confidence: "low" as const,
+          };
+      return new Response(JSON.stringify(fallback), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
     return new Response(
       JSON.stringify(parsed),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } },
