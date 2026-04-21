@@ -170,6 +170,41 @@ OUTPUT FIELDS:
     }
 
     const parsed = JSON.parse(toolCall.function.arguments);
+
+    // Guardrail: reject self-substitutions. The AI sometimes returns the same ingredient
+    // back (e.g. "use olive oil for olive oil") which is nonsense — catch it here.
+    const norm = (s: string) =>
+      s.toLowerCase().replace(/[^a-z0-9 ]/g, "").replace(/\s+/g, " ").trim();
+    const originalNorm = norm(body.ingredientName);
+    const subNorm = norm(parsed.substitute ?? "");
+    const isSelfSub =
+      subNorm.length > 0 &&
+      (subNorm === originalNorm ||
+        subNorm.includes(originalNorm) ||
+        originalNorm.includes(subNorm));
+
+    if (isSelfSub) {
+      console.warn("Rejected self-substitution:", body.ingredientName, "->", parsed.substitute);
+      const fallback = body.reason === "insufficient"
+        ? {
+            substitute: "",
+            instruction: `No good substitute for ${body.ingredientName} here. Try halving the recipe to fit what you have, or pick up more ${body.ingredientName} before cooking.`,
+            fromPantry: [],
+            sufficientInPantry: false,
+            confidence: "low" as const,
+          }
+        : {
+            substitute: "",
+            instruction: `No close substitute for ${body.ingredientName} from your pantry. Consider skipping it or adding it to your shopping list.`,
+            fromPantry: [],
+            sufficientInPantry: false,
+            confidence: "low" as const,
+          };
+      return new Response(JSON.stringify(fallback), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
     return new Response(
       JSON.stringify(parsed),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } },
