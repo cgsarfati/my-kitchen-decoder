@@ -73,4 +73,9 @@ export const AnalyticsEvents = {
   AI_SUB_REQUESTED: "ai_sub_requested",
   AI_SUB_SHOWN: "ai_sub_shown",
   AI_SUB_FAILED: "ai_sub_failed",
+
+  // AI Image Pantry Input
+  AI_IMAGE_UPLOADED: "ai_image_uploaded",
+  AI_IMAGE_ANALYZED: "ai_image_analyzed",
+  AI_IMAGE_ITEMS_ADDED: "ai_image_items_added",
 } as const;
