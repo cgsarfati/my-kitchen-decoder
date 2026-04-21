@@ -5,3 +5,6 @@ verify_jwt = false
 
 [functions.parse-ingredients]
 verify_jwt = false
+
+[functions.suggest-substitute]
+verify_jwt = false

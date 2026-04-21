@@ -68,4 +68,9 @@ export const AnalyticsEvents = {
   // AI Parser
   AI_PARSE_COMPLETE: "ai_parse_complete",
   AI_ITEMS_ADDED: "ai_items_added",
+
+  // AI Substitutions
+  AI_SUB_REQUESTED: "ai_sub_requested",
+  AI_SUB_SHOWN: "ai_sub_shown",
+  AI_SUB_FAILED: "ai_sub_failed",
 } as const;

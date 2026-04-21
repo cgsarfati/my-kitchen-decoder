@@ -281,7 +281,8 @@ const Index = () => {
             <RecipeDetail
               recipe={selectedRecipe}
               onBack={() => setSelectedRecipe(null)}
-              pantryItemNames={items.map((i) => i.name)}
+              pantryItems={items}
+              demoMode={demoMode}
             />
           </div>
         </main>

@@ -61,10 +61,11 @@ const InstructionSteps = ({ raw }: { raw: string }) => {
 interface RecipeDetailProps {
   recipe: Recipe;
   onBack: () => void;
-  pantryItemNames?: string[];
+  pantryItems?: import("@/types/pantry").PantryItem[];
+  demoMode?: boolean;
 }
 
-const RecipeDetail = ({ recipe, onBack, pantryItemNames = [] }: RecipeDetailProps) => {
+const RecipeDetail = ({ recipe, onBack, pantryItems = [], demoMode = false }: RecipeDetailProps) => {
   const isFullMatch = recipe.missedIngredientCount === 0 && (recipe.insufficientCount ?? 0) === 0;
 
   return (
@@ -152,7 +153,11 @@ const RecipeDetail = ({ recipe, onBack, pantryItemNames = [] }: RecipeDetailProp
                     <SubstituteSuggestion
                       ingredientName={ing.name}
                       recipeName={recipe.title}
-                      pantryItems={pantryItemNames}
+                      pantryItems={pantryItems}
+                      requiredAmount={ing.amount}
+                      requiredUnit={ing.unit}
+                      reason={ing.status}
+                      demoMode={demoMode}
                     />
                   )}
                 </span>
