@@ -1,61 +1,161 @@
 import { useState } from "react";
-import { Sparkles, Loader2, ChevronDown, ChevronUp } from "lucide-react";
+import { Sparkles, Loader2, ChevronDown, ChevronUp, AlertTriangle } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "@/hooks/use-toast";
+import { trackEvent, AnalyticsEvents } from "@/lib/analytics";
+import type { PantryItem } from "@/types/pantry";
 
 interface SubstituteSuggestionProps {
   ingredientName: string;
   recipeName: string;
-  pantryItems: string[];
+  pantryItems: PantryItem[];
+  requiredAmount?: number;
+  requiredUnit?: string;
+  reason: "missing" | "insufficient";
+  haveAmount?: number;
+  haveUnit?: string;
+  /** When true, use hardcoded mocks instead of hitting the AI gateway. */
+  demoMode?: boolean;
 }
 
-// Mock substitution data keyed by ingredient name (lowercase)
-const MOCK_SUBSTITUTES: Record<string, { substitute: string; instruction: string; fromPantry: string[] }> = {
+/** Demo Mode fallback — keeps cert-class walkthrough deterministic and quota-free. */
+const MOCK_SUBSTITUTES: Record<
+  string,
+  { substitute: string; instruction: string; fromPantry: string[]; sufficientInPantry: boolean }
+> = {
   lemon: {
     substitute: "Apple cider vinegar",
     instruction:
-      "Use 1½ tbsp apple cider vinegar in place of 1 lemon's juice. It adds a similar tartness and acidity that works well in this marinade.",
+      "Use 1½ tbsp apple cider vinegar in place of 1 lemon's juice. It adds a similar tartness for this marinade.",
     fromPantry: ["apple cider vinegar"],
+    sufficientInPantry: true,
   },
   "fresh thyme": {
     substitute: "Dried thyme",
     instruction:
-      "Use ½ tsp dried thyme instead of 2 sprigs fresh thyme. Dried herbs are more concentrated — crumble it between your fingers first to release the oils.",
+      "Use ½ tsp dried thyme instead of 2 sprigs fresh thyme. Crumble it between your fingers first to release the oils.",
     fromPantry: ["dried thyme"],
+    sufficientInPantry: true,
   },
   buttermilk: {
     substitute: "Milk + lemon juice",
     instruction:
-      "Mix 1 cup of milk with 1 tbsp lemon juice or vinegar. Stir and let it sit for 5 minutes to curdle — works perfectly as a buttermilk substitute.",
+      "Mix 1 cup milk with 1 tbsp lemon juice or vinegar. Let it sit 5 minutes to curdle.",
     fromPantry: ["milk"],
+    sufficientInPantry: true,
   },
   "soy sauce": {
     substitute: "Worcestershire sauce + salt",
     instruction:
-      "Use 1 tbsp Worcestershire sauce + a pinch of salt per 2 tbsp soy sauce needed. It won't be identical but gives a similar umami depth.",
+      "Use 1 tbsp Worcestershire sauce + a pinch of salt per 2 tbsp soy sauce needed. Similar umami depth.",
     fromPantry: [],
+    sufficientInPantry: false,
   },
 };
 
-const SubstituteSuggestion = ({ ingredientName, recipeName, pantryItems }: SubstituteSuggestionProps) => {
-  const [state, setState] = useState<"idle" | "loading" | "shown">("idle");
+interface Suggestion {
+  substitute: string;
+  instruction: string;
+  fromPantry: string[];
+  sufficientInPantry: boolean;
+  confidence?: "high" | "medium" | "low";
+}
+
+const SubstituteSuggestion = ({
+  ingredientName,
+  recipeName,
+  pantryItems,
+  requiredAmount,
+  requiredUnit,
+  reason,
+  haveAmount,
+  haveUnit,
+  demoMode = false,
+}: SubstituteSuggestionProps) => {
+  const [state, setState] = useState<"idle" | "loading" | "shown" | "error">("idle");
   const [isExpanded, setIsExpanded] = useState(true);
+  const [suggestion, setSuggestion] = useState<Suggestion | null>(null);
 
-  const key = ingredientName.toLowerCase();
-  const mock = MOCK_SUBSTITUTES[key];
-
-  // Check if any pantry item overlaps with what the mock uses
-  const pantryLower = pantryItems.map((p) => p.toLowerCase());
-  const hasPantryMatch =
-    mock?.fromPantry.length === 0 ||
-    mock?.fromPantry.some((sub) => pantryLower.some((p) => p.includes(sub) || sub.includes(p)));
-
-  const handleSuggest = () => {
+  const handleSuggest = async () => {
     setState("loading");
-    // Simulate a short AI call delay
-    setTimeout(() => setState("shown"), 1200);
+    trackEvent(AnalyticsEvents.AI_SUB_REQUESTED, {
+      ingredient: ingredientName,
+      recipe: recipeName,
+      reason,
+      demo: demoMode,
+    });
+
+    if (demoMode) {
+      await new Promise((r) => setTimeout(r, 900));
+      const mock = MOCK_SUBSTITUTES[ingredientName.toLowerCase()] ?? null;
+      if (!mock) {
+        setSuggestion(null);
+        setState("shown");
+        return;
+      }
+      setSuggestion({ ...mock, confidence: "high" });
+      setState("shown");
+      trackEvent(AnalyticsEvents.AI_SUB_SHOWN, { ingredient: ingredientName, source: "mock" });
+      return;
+    }
+
+    try {
+      const { data, error } = await supabase.functions.invoke("suggest-substitute", {
+        body: {
+          ingredientName,
+          recipeName,
+          reason,
+          requiredAmount,
+          requiredUnit,
+          haveAmount,
+          haveUnit,
+          pantryItems: pantryItems.map((p) => ({
+            name: p.name,
+            quantity: p.quantity,
+            unit: p.unit,
+          })),
+        },
+      });
+
+      if (error) {
+        const status = (error as unknown as { context?: { status?: number } })?.context?.status;
+        if (status === 429) {
+          toast({ title: "AI rate limit", description: "Try again in a moment.", variant: "destructive" });
+        } else if (status === 402) {
+          toast({ title: "AI usage limit reached", description: "Add credits to keep going.", variant: "destructive" });
+        } else {
+          toast({ title: "Couldn't get a substitute", description: error.message, variant: "destructive" });
+        }
+        trackEvent(AnalyticsEvents.AI_SUB_FAILED, { ingredient: ingredientName, status: status ?? "unknown" });
+        setState("error");
+        return;
+      }
+
+      if (!data || data.error) {
+        toast({ title: "No substitute found", description: data?.message ?? "Try another ingredient.", variant: "destructive" });
+        trackEvent(AnalyticsEvents.AI_SUB_FAILED, { ingredient: ingredientName, reason: data?.error });
+        setState("error");
+        return;
+      }
+
+      setSuggestion(data as Suggestion);
+      setState("shown");
+      trackEvent(AnalyticsEvents.AI_SUB_SHOWN, {
+        ingredient: ingredientName,
+        source: "ai",
+        from_pantry: (data as Suggestion).fromPantry?.length > 0,
+        sufficient: (data as Suggestion).sufficientInPantry,
+      });
+    } catch (e) {
+      console.error("suggest-substitute invoke failed:", e);
+      toast({ title: "Couldn't get a substitute", description: "Please try again.", variant: "destructive" });
+      trackEvent(AnalyticsEvents.AI_SUB_FAILED, { ingredient: ingredientName, error: String(e) });
+      setState("error");
+    }
   };
 
-  if (state === "idle") {
+  if (state === "idle" || state === "error") {
     return (
       <Button
         variant="ghost"
@@ -64,7 +164,7 @@ const SubstituteSuggestion = ({ ingredientName, recipeName, pantryItems }: Subst
         onClick={handleSuggest}
       >
         <Sparkles className="h-3 w-3" />
-        Suggest sub
+        {state === "error" ? "Try again" : "Suggest sub"}
       </Button>
     );
   }
@@ -78,8 +178,7 @@ const SubstituteSuggestion = ({ ingredientName, recipeName, pantryItems }: Subst
     );
   }
 
-  // shown state
-  if (!mock) {
+  if (!suggestion) {
     return (
       <span className="inline-block mt-1 text-xs text-muted-foreground italic ml-1">
         No substitute found for this ingredient.
@@ -87,27 +186,35 @@ const SubstituteSuggestion = ({ ingredientName, recipeName, pantryItems }: Subst
     );
   }
 
+  const hasPantryMatch = suggestion.fromPantry.length > 0;
+
   return (
     <div className="mt-2 ml-6 rounded-lg border border-primary/20 bg-primary/5 p-3 text-xs space-y-1.5">
       <div className="flex items-center justify-between gap-2">
         <div className="flex items-center gap-1.5 font-medium text-primary">
           <Sparkles className="h-3 w-3 shrink-0" />
           <span>
-            Use <strong>{mock.substitute}</strong>
-            {hasPantryMatch && mock.fromPantry.length > 0 && (
-              <span className="ml-1 text-success font-normal">(you have this ✓)</span>
+            Use <strong>{suggestion.substitute}</strong>
+            {hasPantryMatch && suggestion.sufficientInPantry && (
+              <span className="ml-1 text-success font-normal">(you have enough ✓)</span>
+            )}
+            {hasPantryMatch && !suggestion.sufficientInPantry && (
+              <span className="ml-1 text-warning font-normal inline-flex items-center gap-0.5">
+                <AlertTriangle className="h-3 w-3" /> not enough on hand
+              </span>
             )}
           </span>
         </div>
         <button
           onClick={() => setIsExpanded((e) => !e)}
           className="text-muted-foreground hover:text-foreground transition-colors shrink-0"
+          aria-label={isExpanded ? "Collapse" : "Expand"}
         >
           {isExpanded ? <ChevronUp className="h-3.5 w-3.5" /> : <ChevronDown className="h-3.5 w-3.5" />}
         </button>
       </div>
       {isExpanded && (
-        <p className="text-foreground/80 leading-relaxed">{mock.instruction}</p>
+        <p className="text-foreground/80 leading-relaxed">{suggestion.instruction}</p>
       )}
     </div>
   );
