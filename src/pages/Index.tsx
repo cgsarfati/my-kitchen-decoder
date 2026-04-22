@@ -362,12 +362,15 @@ const Index = () => {
               }`}
             >
               <Sparkles className="h-3.5 w-3.5" />
-              Describe or snap
+              Describe
             </button>
           </div>
 
-          {inputMode === "manual" && <PantryInput onAdd={handleAdd} />}
-          {inputMode === "ai" && <PantryAiInput onAdd={handleAdd} />}
+          {inputMode === "manual" ? (
+            <PantryInput onAdd={handleAdd} />
+          ) : (
+            <PantryAiInput onAdd={handleAdd} />
+          )}
 
           {items.length > 0 && (
             <div className="pt-5 space-y-4">
