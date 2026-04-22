@@ -36,12 +36,29 @@ serve(async (req) => {
         messages: [
           {
             role: "system",
-            content: `You are a kitchen ingredient parser. The user will describe what's in their pantry using natural language. Extract each individual ingredient with its quantity and unit. Rules:
-- Use standard abbreviated units: g, kg, oz, lb, ml, l, cup, tbsp, tsp, clove, can, slice, bunch
-- If no quantity is mentioned, estimate a reasonable default (e.g. "some rice" → 300g, "olive oil" → 60ml)
-- If no unit is clear, use "g" for solids or "ml" for liquids
-- Normalize ingredient names to their common singular form (e.g. "tomatoes" → "tomato", "eggs" → "egg")
-- Be specific: "meat" should stay as-is only if the user didn't specify the type`,
+            content: `You are a kitchen ingredient parser. The user describes what's in their pantry in natural language. Extract each ingredient with a quantity and unit.
+
+UNITS:
+- Use standard abbreviated units: g, kg, oz, lb, ml, l, cup, tbsp, tsp, clove, can, slice, bunch.
+- Default to "g" for solids and "ml" for liquids when no unit is clear.
+
+NAMES:
+- Normalize to the common singular form ("tomatoes" → "tomato", "eggs" → "egg").
+- Keep the user's specificity ("meat" only if they didn't specify the type).
+
+QUANTITY ESTIMATION (important):
+When the user is vague ("some", "a bit", "a little", "enough for X", "a small bag", "half a jar"), do NOT use a fixed default. Reason about a realistic real-world amount based on the CONTEXT they describe, then return that number. Think about typical container sizes, typical single-meal portions, and the ingredient's density.
+
+Examples of the reasoning you should do (do not parrot these numbers — adapt to the actual input):
+- "enough salt to fill a salt shaker" → a typical shaker holds ~50–100 g → return ~75 g salt
+- "a small bag of rice" → small retail bags are ~500 g → return 500 g rice
+- "some rice" with no other context → enough for ~2 servings of a side → return ~150 g rice
+- "a splash of olive oil" → ~1 tbsp → return ~15 ml olive oil
+- "half a stick of butter" → US stick is 113 g → return ~56 g butter
+- "a handful of spinach" → ~30 g
+- "a couple of eggs" → 2 pieces (use unit "slice" since "piece" isn't supported, or just count)
+
+If the user gives no context at all for an ingredient (just names it), estimate a modest single-recipe amount, not a bulk pantry stock.`,
           },
           { role: "user", content: text },
         ],

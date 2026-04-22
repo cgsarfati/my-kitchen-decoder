@@ -88,6 +88,18 @@ function toBaseAmount(amount: number, unit: string): { category: UnitCategory; b
   return { category: info.category, baseAmount: amount * info.toBase };
 }
 
+/**
+ * Ingredients we never treat as missing — assumed always available.
+ * Kept intentionally minimal: only items that are universally on tap and free.
+ * Salt, oil, pepper, etc. are NOT here — running out of them is a real cooking blocker.
+ */
+const ALWAYS_AVAILABLE = new Set(["water"]);
+
+function isAlwaysAvailable(name: string): boolean {
+  const n = name.trim().toLowerCase();
+  return ALWAYS_AVAILABLE.has(n);
+}
+
 export type IngredientMatchStatus = "have" | "insufficient" | "missing";
 
 /**
@@ -139,6 +151,11 @@ export function matchIngredients(
 
   return recipeIngredients.map((ing) => {
     const ingNameLower = ing.name.toLowerCase();
+
+    // Always-available ingredients (e.g. water) are never missing
+    if (isAlwaysAvailable(ingNameLower)) {
+      return { ...ing, status: "have" as const };
+    }
 
     // If Spoonacular says it's missing, it's missing
     if (missedSet.has(ingNameLower)) {
@@ -217,6 +234,9 @@ export function calculateMaxServings(
     if (!ing.amount || ing.amount <= 0) continue;
 
     const ingNameLower = ing.name.toLowerCase();
+
+    // Always-available ingredients don't constrain max servings
+    if (isAlwaysAvailable(ingNameLower)) continue;
 
     // Find matching pantry item
     const pantryItem =
