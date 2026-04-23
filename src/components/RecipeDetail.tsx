@@ -69,9 +69,6 @@ interface RecipeDetailProps {
 const RecipeDetail = ({ recipe, onBack, pantryItems = [], demoMode = false }: RecipeDetailProps) => {
   const isFullMatch = recipe.missedIngredientCount === 0 && (recipe.insufficientCount ?? 0) === 0;
 
-  // MOCK: use real pantry if available, otherwise demo data so the prototype is always populated.
-  const panelItems = pantryItems.length > 0 ? pantryItems : MOCK_PANTRY;
-
   return (
     <div className="space-y-6">
       <Button variant="ghost" onClick={onBack} className="gap-2 -ml-2">
