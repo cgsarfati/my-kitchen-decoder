@@ -22,7 +22,13 @@ interface SubstituteSuggestionProps {
 /** Demo Mode fallback — keeps cert-class walkthrough deterministic and quota-free. */
 const MOCK_SUBSTITUTES: Record<
   string,
-  { substitute: string; instruction: string; fromPantry: string[]; sufficientInPantry: boolean }
+  {
+    substitute: string;
+    instruction: string;
+    fromPantry: string[];
+    sufficientInPantry: boolean;
+    pantryUsage: { name: string; needAmount: number; needUnit: string }[];
+  }
 > = {
   lemon: {
     substitute: "Apple cider vinegar",
@@ -30,6 +36,7 @@ const MOCK_SUBSTITUTES: Record<
       "Use 1½ tbsp apple cider vinegar in place of 1 lemon's juice. It adds a similar tartness for this marinade.",
     fromPantry: ["apple cider vinegar"],
     sufficientInPantry: true,
+    pantryUsage: [{ name: "apple cider vinegar", needAmount: 22, needUnit: "ml" }],
   },
   "fresh thyme": {
     substitute: "Dried thyme",
@@ -37,6 +44,7 @@ const MOCK_SUBSTITUTES: Record<
       "Use ½ tsp dried thyme instead of 2 sprigs fresh thyme. Crumble it between your fingers first to release the oils.",
     fromPantry: ["dried thyme"],
     sufficientInPantry: true,
+    pantryUsage: [{ name: "dried thyme", needAmount: 1, needUnit: "g" }],
   },
   buttermilk: {
     substitute: "Milk + lemon juice",
@@ -44,6 +52,7 @@ const MOCK_SUBSTITUTES: Record<
       "Mix 1 cup milk with 1 tbsp lemon juice or vinegar. Let it sit 5 minutes to curdle.",
     fromPantry: ["milk"],
     sufficientInPantry: true,
+    pantryUsage: [{ name: "milk", needAmount: 240, needUnit: "ml" }],
   },
   "soy sauce": {
     substitute: "Worcestershire sauce + salt",
@@ -51,14 +60,22 @@ const MOCK_SUBSTITUTES: Record<
       "Use 1 tbsp Worcestershire sauce + a pinch of salt per 2 tbsp soy sauce needed. Similar umami depth.",
     fromPantry: [],
     sufficientInPantry: false,
+    pantryUsage: [],
   },
 };
+
+interface PantryUsage {
+  name: string;
+  needAmount: number;
+  needUnit: string;
+}
 
 interface Suggestion {
   substitute: string;
   instruction: string;
   fromPantry: string[];
   sufficientInPantry: boolean;
+  pantryUsage?: PantryUsage[];
   confidence?: "high" | "medium" | "low";
 }
 
@@ -189,24 +206,30 @@ const SubstituteSuggestion = ({
   const hasPantryMatch = suggestion.fromPantry.length > 0;
   const hasSubstitute = suggestion.substitute.trim().length > 0;
 
+  // Build the "need vs have" rows for each pantry item the substitute uses.
+  // Prefer structured pantryUsage from the AI; fall back to fromPantry names if missing.
+  const usageRows: { name: string; need?: PantryUsage; have?: PantryItem }[] =
+    (suggestion.pantryUsage && suggestion.pantryUsage.length > 0
+      ? suggestion.pantryUsage
+      : suggestion.fromPantry.map((n) => ({ name: n, needAmount: 0, needUnit: "" }))
+    ).map((u) => {
+      const nameLower = u.name.toLowerCase();
+      const have =
+        pantryItems.find((p) => p.name.toLowerCase() === nameLower) ??
+        pantryItems.find(
+          (p) => p.name.toLowerCase().includes(nameLower) || nameLower.includes(p.name.toLowerCase()),
+        );
+      return { name: u.name, need: u.needAmount > 0 ? u : undefined, have };
+    });
+
   return (
-    <div className="mt-2 ml-6 rounded-lg border border-primary/20 bg-primary/5 p-3 text-xs space-y-1.5">
+    <div className="mt-2 ml-6 rounded-lg border border-primary/20 bg-primary/5 p-3 text-xs space-y-2">
       <div className="flex items-center justify-between gap-2">
         <div className="flex items-center gap-1.5 font-medium text-primary">
           <Sparkles className="h-3 w-3 shrink-0" />
           <span>
             {hasSubstitute ? (
-              <>
-                Use <strong>{suggestion.substitute}</strong>
-                {hasPantryMatch && suggestion.sufficientInPantry && (
-                  <span className="ml-1 text-success font-normal">(you have enough ✓)</span>
-                )}
-                {hasPantryMatch && !suggestion.sufficientInPantry && (
-                  <span className="ml-1 text-warning font-normal inline-flex items-center gap-0.5">
-                    <AlertTriangle className="h-3 w-3" /> not enough on hand
-                  </span>
-                )}
-              </>
+              <>Use <strong>{suggestion.substitute}</strong></>
             ) : (
               <span className="text-warning inline-flex items-center gap-0.5">
                 <AlertTriangle className="h-3 w-3" /> No good substitute
@@ -223,7 +246,44 @@ const SubstituteSuggestion = ({
         </button>
       </div>
       {isExpanded && (
-        <p className="text-foreground/80 leading-relaxed">{suggestion.instruction}</p>
+        <>
+          <p className="text-foreground/80 leading-relaxed">{suggestion.instruction}</p>
+          {hasPantryMatch && usageRows.length > 0 && (
+            <ul className="space-y-1 pt-1 border-t border-primary/10">
+              {usageRows.map((row, i) => {
+                const haveLabel = row.have
+                  ? `${row.have.quantity}${row.have.unit ? ` ${row.have.unit}` : ""}`
+                  : "0";
+                const needLabel = row.need
+                  ? `${row.need.needAmount}${row.need.needUnit ? ` ${row.need.needUnit}` : ""}`
+                  : null;
+                const enough = row.have != null && (suggestion.sufficientInPantry || !needLabel);
+                return (
+                  <li key={i} className="flex items-center justify-between gap-2 text-[11px]">
+                    <span className="text-foreground/70 capitalize truncate">{row.name}</span>
+                    <span className="flex items-center gap-1.5 shrink-0 font-mono">
+                      {needLabel && (
+                        <span className="text-muted-foreground">need {needLabel}</span>
+                      )}
+                      {needLabel && <span className="text-muted-foreground/50">·</span>}
+                      <span
+                        className={
+                          enough
+                            ? "text-success font-medium"
+                            : row.have
+                            ? "text-warning font-medium"
+                            : "text-destructive font-medium"
+                        }
+                      >
+                        have {haveLabel} {enough ? "✓" : row.have ? "⚠" : "✗"}
+                      </span>
+                    </span>
+                  </li>
+                );
+              })}
+            </ul>
+          )}
+        </>
       )}
     </div>
   );

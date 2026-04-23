@@ -95,6 +95,7 @@ OUTPUT FIELDS:
 - "instruction": 1-2 sentences with the exact amount to use. If no substitute works, use this field to explain why and suggest next steps.
 - "fromPantry": exact pantry item names this substitute relies on. Empty array if not from pantry.
 - "sufficientInPantry": true ONLY when the suggested pantry-based substitute is in the pantry AND there is enough of it. False otherwise (including when the substitute isn't from pantry, or when substitute is empty).
+- "pantryUsage": array of objects, one per pantry item used. Each object has { name, needAmount, needUnit } — the EXACT amount of that pantry item required to complete the substitution (after unit conversion). Use the user's pantry units when possible (e.g. if pantry is in "ml", give needUnit "ml"). Empty array if substitute isn't from pantry.
 - "confidence": "high" for classic 1:1 swaps, "medium" for reasonable swaps, "low" for last-resort or when no substitute is found.`,
           },
           { role: "user", content: userPrompt },
@@ -125,12 +126,26 @@ OUTPUT FIELDS:
                     type: "boolean",
                     description: "True only if the pantry-based substitute exists AND the user has enough of it.",
                   },
+                  pantryUsage: {
+                    type: "array",
+                    description: "Per-item amounts needed from the pantry to complete the substitution. Empty if substitute is not from pantry.",
+                    items: {
+                      type: "object",
+                      properties: {
+                        name: { type: "string", description: "Exact pantry item name." },
+                        needAmount: { type: "number", description: "Amount required from this pantry item." },
+                        needUnit: { type: "string", description: "Unit for needAmount, matching the pantry's stored unit when possible." },
+                      },
+                      required: ["name", "needAmount", "needUnit"],
+                      additionalProperties: false,
+                    },
+                  },
                   confidence: {
                     type: "string",
                     enum: ["high", "medium", "low"],
                   },
                 },
-                required: ["substitute", "instruction", "fromPantry", "sufficientInPantry", "confidence"],
+                required: ["substitute", "instruction", "fromPantry", "sufficientInPantry", "pantryUsage", "confidence"],
                 additionalProperties: false,
               },
             },
@@ -191,6 +206,7 @@ OUTPUT FIELDS:
             instruction: `No good substitute for ${body.ingredientName} here. Try halving the recipe to fit what you have, or pick up more ${body.ingredientName} before cooking.`,
             fromPantry: [],
             sufficientInPantry: false,
+            pantryUsage: [],
             confidence: "low" as const,
           }
         : {
@@ -198,6 +214,7 @@ OUTPUT FIELDS:
             instruction: `No close substitute for ${body.ingredientName} from your pantry. Consider skipping it or adding it to your shopping list.`,
             fromPantry: [],
             sufficientInPantry: false,
+            pantryUsage: [],
             confidence: "low" as const,
           };
       return new Response(JSON.stringify(fallback), {
