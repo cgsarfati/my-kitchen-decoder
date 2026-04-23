@@ -22,7 +22,13 @@ interface SubstituteSuggestionProps {
 /** Demo Mode fallback — keeps cert-class walkthrough deterministic and quota-free. */
 const MOCK_SUBSTITUTES: Record<
   string,
-  { substitute: string; instruction: string; fromPantry: string[]; sufficientInPantry: boolean }
+  {
+    substitute: string;
+    instruction: string;
+    fromPantry: string[];
+    sufficientInPantry: boolean;
+    pantryUsage: { name: string; needAmount: number; needUnit: string }[];
+  }
 > = {
   lemon: {
     substitute: "Apple cider vinegar",
@@ -30,6 +36,7 @@ const MOCK_SUBSTITUTES: Record<
       "Use 1½ tbsp apple cider vinegar in place of 1 lemon's juice. It adds a similar tartness for this marinade.",
     fromPantry: ["apple cider vinegar"],
     sufficientInPantry: true,
+    pantryUsage: [{ name: "apple cider vinegar", needAmount: 22, needUnit: "ml" }],
   },
   "fresh thyme": {
     substitute: "Dried thyme",
@@ -37,6 +44,7 @@ const MOCK_SUBSTITUTES: Record<
       "Use ½ tsp dried thyme instead of 2 sprigs fresh thyme. Crumble it between your fingers first to release the oils.",
     fromPantry: ["dried thyme"],
     sufficientInPantry: true,
+    pantryUsage: [{ name: "dried thyme", needAmount: 1, needUnit: "g" }],
   },
   buttermilk: {
     substitute: "Milk + lemon juice",
@@ -44,6 +52,7 @@ const MOCK_SUBSTITUTES: Record<
       "Mix 1 cup milk with 1 tbsp lemon juice or vinegar. Let it sit 5 minutes to curdle.",
     fromPantry: ["milk"],
     sufficientInPantry: true,
+    pantryUsage: [{ name: "milk", needAmount: 240, needUnit: "ml" }],
   },
   "soy sauce": {
     substitute: "Worcestershire sauce + salt",
@@ -51,14 +60,22 @@ const MOCK_SUBSTITUTES: Record<
       "Use 1 tbsp Worcestershire sauce + a pinch of salt per 2 tbsp soy sauce needed. Similar umami depth.",
     fromPantry: [],
     sufficientInPantry: false,
+    pantryUsage: [],
   },
 };
+
+interface PantryUsage {
+  name: string;
+  needAmount: number;
+  needUnit: string;
+}
 
 interface Suggestion {
   substitute: string;
   instruction: string;
   fromPantry: string[];
   sufficientInPantry: boolean;
+  pantryUsage?: PantryUsage[];
   confidence?: "high" | "medium" | "low";
 }
 
