@@ -1,0 +1,553 @@
+import { useState, useMemo } from "react";
+import { Link } from "react-router-dom";
+import { ChefHat, Plus, X, Calendar, DollarSign, AlertTriangle, Clock, Flame, ArrowLeft, ChevronDown } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Badge } from "@/components/ui/badge";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { COMMON_UNITS } from "@/types/pantry";
+
+/* ============================================================
+   MOCKUP-ONLY TYPES (don't touch real PantryItem)
+   ============================================================ */
+interface MockBatch {
+  id: string;
+  name: string;
+  quantity: number;
+  unit: string;
+  cost?: number; // total $ paid
+  expiresAt?: string; // ISO date (YYYY-MM-DD)
+}
+
+interface MockRecipe {
+  id: number;
+  title: string;
+  image: string;
+  readyInMinutes: number;
+  servings: number;
+  /** ingredient names this recipe uses (normalized lowercase) */
+  usesIngredients: string[];
+}
+
+const MOCK_RECIPES: MockRecipe[] = [
+  {
+    id: 1,
+    title: "Garlic Butter Chicken with Rice",
+    image: "https://img.spoonacular.com/recipes/716429-312x231.jpg",
+    readyInMinutes: 35,
+    servings: 4,
+    usesIngredients: ["chicken breast", "garlic", "rice", "olive oil"],
+  },
+  {
+    id: 2,
+    title: "Lemon Herb Salmon",
+    image: "https://img.spoonacular.com/recipes/659135-312x231.jpg",
+    readyInMinutes: 25,
+    servings: 2,
+    usesIngredients: ["salmon", "lemon", "garlic", "olive oil"],
+  },
+  {
+    id: 3,
+    title: "Spinach & Mushroom Pasta",
+    image: "https://img.spoonacular.com/recipes/715594-312x231.jpg",
+    readyInMinutes: 20,
+    servings: 3,
+    usesIngredients: ["pasta", "spinach", "mushroom", "garlic"],
+  },
+  {
+    id: 4,
+    title: "Classic Chicken Stir Fry",
+    image: "https://img.spoonacular.com/recipes/716627-312x231.jpg",
+    readyInMinutes: 30,
+    servings: 4,
+    usesIngredients: ["chicken breast", "garlic", "olive oil"],
+  },
+  {
+    id: 5,
+    title: "Mushroom Risotto",
+    image: "https://img.spoonacular.com/recipes/715415-312x231.jpg",
+    readyInMinutes: 45,
+    servings: 4,
+    usesIngredients: ["rice", "mushroom", "garlic", "olive oil"],
+  },
+];
+
+/* ============================================================
+   SEED DATA — pre-populated to demonstrate batches & expiry
+   ============================================================ */
+const SEED_ITEMS: MockBatch[] = [
+  { id: "s1", name: "chicken breast", quantity: 0.5, unit: "lb", cost: 5.0, expiresAt: daysFromNow(2) },
+  { id: "s2", name: "chicken breast", quantity: 0.75, unit: "lb", cost: 7.5, expiresAt: daysFromNow(6) },
+  { id: "s3", name: "salmon", quantity: 1, unit: "lb", cost: 14.0, expiresAt: daysFromNow(1) },
+  { id: "s4", name: "garlic", quantity: 8, unit: "clove", cost: 1.5 },
+  { id: "s5", name: "rice", quantity: 2, unit: "cup", cost: 3.0 },
+  { id: "s6", name: "spinach", quantity: 200, unit: "g", cost: 4.0, expiresAt: daysFromNow(-1) },
+  { id: "s7", name: "olive oil", quantity: 250, unit: "ml" },
+];
+
+function daysFromNow(days: number): string {
+  const d = new Date();
+  d.setDate(d.getDate() + days);
+  return d.toISOString().slice(0, 10);
+}
+
+/* ============================================================
+   EXPIRY HELPERS
+   ============================================================ */
+type ExpiryStatus = "expired" | "soon" | "fresh" | "unknown";
+
+function getExpiryStatus(expiresAt?: string): ExpiryStatus {
+  if (!expiresAt) return "unknown";
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const exp = new Date(expiresAt);
+  exp.setHours(0, 0, 0, 0);
+  const diffDays = Math.round((exp.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
+  if (diffDays < 0) return "expired";
+  if (diffDays <= 3) return "soon";
+  return "fresh";
+}
+
+function daysUntilExpiry(expiresAt?: string): number | null {
+  if (!expiresAt) return null;
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const exp = new Date(expiresAt);
+  exp.setHours(0, 0, 0, 0);
+  return Math.round((exp.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
+}
+
+function formatExpiryLabel(expiresAt?: string): string {
+  const days = daysUntilExpiry(expiresAt);
+  if (days === null) return "";
+  if (days < 0) return `Expired ${Math.abs(days)}d ago`;
+  if (days === 0) return "Expires today";
+  if (days === 1) return "Expires tomorrow";
+  return `Expires in ${days}d`;
+}
+
+/* ============================================================
+   INGREDIENT ICONS (mini, mockup-local)
+   ============================================================ */
+const ICONS: Record<string, string> = {
+  chicken: "🍗", salmon: "🐟", garlic: "🧄", rice: "🍚",
+  spinach: "🥬", oil: "🫒", mushroom: "🍄", pasta: "🍝",
+  lemon: "🍋",
+};
+function iconFor(name: string): string {
+  const l = name.toLowerCase();
+  for (const k in ICONS) if (l.includes(k)) return ICONS[k];
+  return "🥘";
+}
+
+/* ============================================================
+   MAIN MOCKUP PAGE
+   ============================================================ */
+type SortKey = "best-match" | "expiring-soon" | "ready-time";
+
+const PantryVaultMockup = () => {
+  const [items, setItems] = useState<MockBatch[]>(SEED_ITEMS);
+  const [sortKey, setSortKey] = useState<SortKey>("best-match");
+
+  // Form state
+  const [name, setName] = useState("");
+  const [qty, setQty] = useState("");
+  const [unit, setUnit] = useState("g");
+  const [cost, setCost] = useState("");
+  const [expiresAt, setExpiresAt] = useState("");
+
+  const handleAdd = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!name.trim() || !qty || parseFloat(qty) <= 0) return;
+    const newItem: MockBatch = {
+      id: crypto.randomUUID(),
+      name: name.trim().toLowerCase(),
+      quantity: parseFloat(qty),
+      unit,
+      cost: cost ? parseFloat(cost) : undefined,
+      expiresAt: expiresAt || undefined,
+    };
+    // NOTE: no dedup — every add creates a new batch row
+    setItems((prev) => [...prev, newItem]);
+    setName(""); setQty(""); setCost(""); setExpiresAt("");
+  };
+
+  const handleRemove = (id: string) => {
+    setItems((prev) => prev.filter((i) => i.id !== id));
+  };
+
+  // Sort items alphabetically so same-name batches sit adjacent
+  const sortedItems = useMemo(
+    () => [...items].sort((a, b) => a.name.localeCompare(b.name)),
+    [items]
+  );
+
+  // Show "Expiring soon" sort option only if at least one item has a date
+  const hasAnyExpiry = items.some((i) => !!i.expiresAt);
+
+  // Build a map of normalized ingredient name → soonest expiry days (or null)
+  const ingredientUrgency = useMemo(() => {
+    const map = new Map<string, number | null>();
+    for (const item of items) {
+      const days = daysUntilExpiry(item.expiresAt);
+      const existing = map.get(item.name);
+      if (days === null) {
+        if (!map.has(item.name)) map.set(item.name, null);
+      } else {
+        if (existing === undefined || existing === null || days < existing) {
+          map.set(item.name, days);
+        }
+      }
+    }
+    return map;
+  }, [items]);
+
+  // Filter recipes to those that use at least one pantry ingredient
+  const matchingRecipes = useMemo(() => {
+    const pantryNames = new Set(items.map((i) => i.name));
+    return MOCK_RECIPES.filter((r) =>
+      r.usesIngredients.some((ing) =>
+        Array.from(pantryNames).some((p) => ing.includes(p) || p.includes(ing))
+      )
+    );
+  }, [items]);
+
+  // Sort recipes per active sort key
+  const sortedRecipes = useMemo(() => {
+    const list = [...matchingRecipes];
+    if (sortKey === "ready-time") {
+      return list.sort((a, b) => a.readyInMinutes - b.readyInMinutes);
+    }
+    if (sortKey === "expiring-soon") {
+      // Score each recipe by the soonest-expiring dated ingredient it uses.
+      // Recipes using only undated items get pushed to the bottom (Infinity).
+      const score = (r: MockRecipe) => {
+        let min: number | null = null;
+        for (const ing of r.usesIngredients) {
+          for (const [pname, days] of ingredientUrgency.entries()) {
+            if ((ing.includes(pname) || pname.includes(ing)) && days !== null) {
+              if (min === null || days < min) min = days;
+            }
+          }
+        }
+        return min === null ? Number.POSITIVE_INFINITY : min;
+      };
+      return list.sort((a, b) => score(a) - score(b));
+    }
+    // best-match: by # of pantry ingredients used (desc)
+    const pantryNames = new Set(items.map((i) => i.name));
+    const matched = (r: MockRecipe) =>
+      r.usesIngredients.filter((ing) =>
+        Array.from(pantryNames).some((p) => ing.includes(p) || p.includes(ing))
+      ).length;
+    return list.sort((a, b) => matched(b) - matched(a));
+  }, [matchingRecipes, sortKey, ingredientUrgency, items]);
+
+  // For badges on recipe cards: which dated ingredient drives the urgency
+  const recipeUrgencyMeta = (r: MockRecipe): { days: number | null; ingredient: string | null } => {
+    let best: { days: number; ingredient: string } | null = null;
+    for (const ing of r.usesIngredients) {
+      for (const [pname, days] of ingredientUrgency.entries()) {
+        if ((ing.includes(pname) || pname.includes(ing)) && days !== null) {
+          if (!best || days < best.days) best = { days, ingredient: pname };
+        }
+      }
+    }
+    return best ? { days: best.days, ingredient: best.ingredient } : { days: null, ingredient: null };
+  };
+
+  const expiringCount = items.filter((i) => {
+    const s = getExpiryStatus(i.expiresAt);
+    return s === "expired" || s === "soon";
+  }).length;
+
+  return (
+    <div className="min-h-screen bg-kitchen-counter">
+      {/* Header */}
+      <header className="border-b-2 border-kitchen bg-wood-grain sticky top-0 z-10">
+        <div className="container max-w-3xl mx-auto flex items-center justify-between py-4 px-4">
+          <div className="flex items-center gap-3">
+            <Link to="/" className="inline-flex items-center text-muted-foreground hover:text-foreground">
+              <ArrowLeft className="h-4 w-4 mr-1" />
+              <span className="text-sm">Back</span>
+            </Link>
+            <div className="h-px w-px bg-border mx-1" />
+            <div className="h-9 w-9 rounded-xl bg-primary flex items-center justify-center shadow-kitchen">
+              <ChefHat className="h-4 w-4 text-primary-foreground" />
+            </div>
+            <h1 className="text-xl text-foreground">Pantry Vault — Mockup</h1>
+          </div>
+          <Badge variant="outline" className="text-xs">Demo Mode</Badge>
+        </div>
+      </header>
+
+      <main className="container max-w-3xl mx-auto px-4 py-8 space-y-8">
+        {/* Mockup banner */}
+        <div className="rounded-lg border border-primary/30 bg-primary/10 px-4 py-3 text-sm text-foreground flex items-start gap-2">
+          <Flame className="h-4 w-4 shrink-0 text-primary mt-0.5" />
+          <div>
+            <strong>Pantry-first MVP mockup.</strong> Add cost + expiry, see batches, and try the new "Expiring soon" sort. None of this affects your real pantry.
+          </div>
+        </div>
+
+        {/* SECTION 1 — INTAKE */}
+        <section className="surface-paper-lg rounded-2xl p-6 md:p-8 space-y-5">
+          <div className="space-y-1">
+            <h2 className="text-lg font-semibold flex items-center gap-2">
+              <span className="inline-flex h-7 w-7 items-center justify-center rounded-lg bg-primary/10">🛒</span>
+              Add to Pantry
+            </h2>
+            <p className="text-sm text-muted-foreground">
+              Cost and expiry are optional. Each add creates a new batch — duplicates allowed.
+            </p>
+          </div>
+
+          <form onSubmit={handleAdd} className="space-y-3">
+            {/* Row 1: name */}
+            <Input
+              placeholder="Ingredient (e.g. chicken breast)"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              className="bg-card"
+            />
+
+            {/* Row 2: qty + unit */}
+            <div className="flex gap-2">
+              <Input
+                type="number"
+                placeholder="Qty"
+                value={qty}
+                onChange={(e) => setQty(e.target.value)}
+                className="w-24 bg-card"
+                min="0"
+                step="any"
+              />
+              <Select value={unit} onValueChange={setUnit}>
+                <SelectTrigger className="w-28 bg-card"><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  {COMMON_UNITS.map((u) => (
+                    <SelectItem key={u} value={u}>{u}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* Row 3: cost + expiry (optional) */}
+            <div className="flex flex-col sm:flex-row gap-2">
+              <div className="relative flex-1">
+                <DollarSign className="absolute left-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
+                <Input
+                  type="number"
+                  placeholder="Cost (optional)"
+                  value={cost}
+                  onChange={(e) => setCost(e.target.value)}
+                  className="bg-card pl-8"
+                  min="0"
+                  step="0.01"
+                />
+              </div>
+              <div className="relative flex-1">
+                <Calendar className="absolute left-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
+                <Input
+                  type="date"
+                  placeholder="Expires (optional)"
+                  value={expiresAt}
+                  onChange={(e) => setExpiresAt(e.target.value)}
+                  className="bg-card pl-8"
+                />
+              </div>
+              <Button type="submit" variant="hero" size="icon" className="shrink-0 self-stretch sm:self-auto">
+                <Plus className="h-5 w-5" />
+              </Button>
+            </div>
+          </form>
+        </section>
+
+        {/* SECTION 2 — PANTRY LIST WITH BATCHES & BADGES */}
+        <section className="surface-paper rounded-2xl p-6 md:p-8 space-y-5">
+          <div className="flex items-center justify-between flex-wrap gap-2">
+            <div className="space-y-1">
+              <h2 className="text-lg font-semibold flex items-center gap-2">
+                <span className="inline-flex h-7 w-7 items-center justify-center rounded-lg bg-primary/10">🧺</span>
+                Your Pantry ({items.length})
+              </h2>
+              <p className="text-sm text-muted-foreground">Sorted by name. Same-name batches sit adjacent.</p>
+            </div>
+            {expiringCount > 0 && (
+              <Badge variant="outline" className="border-warning/50 text-warning bg-warning/5 gap-1">
+                <AlertTriangle className="h-3 w-3" />
+                {expiringCount} item{expiringCount !== 1 ? "s" : ""} need attention
+              </Badge>
+            )}
+          </div>
+
+          {sortedItems.length === 0 ? (
+            <p className="text-center text-muted-foreground py-8">Pantry is empty. Add an item above.</p>
+          ) : (
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+              {sortedItems.map((item) => {
+                const status = getExpiryStatus(item.expiresAt);
+                return (
+                  <div
+                    key={item.id}
+                    className={`group flex items-start justify-between gap-2 rounded-xl px-3 py-2.5 border transition-all hover:shadow-kitchen ${
+                      status === "expired"
+                        ? "bg-destructive/5 border-destructive/30"
+                        : status === "soon"
+                        ? "bg-warning/5 border-warning/30"
+                        : "bg-surface-warm border-border"
+                    }`}
+                  >
+                    <div className="flex items-start gap-2.5 min-w-0 flex-1">
+                      <span className="text-lg leading-none mt-0.5">{iconFor(item.name)}</span>
+                      <div className="min-w-0 flex-1 space-y-0.5">
+                        <div className="font-medium text-foreground capitalize text-sm truncate">{item.name}</div>
+                        <div className="text-xs text-muted-foreground">
+                          {item.quantity} {item.unit}
+                          {item.cost !== undefined && (
+                            <span className="ml-1.5">· ${item.cost.toFixed(2)}</span>
+                          )}
+                        </div>
+                        {status === "expired" && (
+                          <div className="text-[11px] font-medium text-destructive flex items-center gap-1 pt-0.5">
+                            <AlertTriangle className="h-3 w-3" />
+                            {formatExpiryLabel(item.expiresAt)}
+                          </div>
+                        )}
+                        {status === "soon" && (
+                          <div className="text-[11px] font-medium text-warning flex items-center gap-1 pt-0.5">
+                            <Clock className="h-3 w-3" />
+                            {formatExpiryLabel(item.expiresAt)}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => handleRemove(item.id)}
+                      className="h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity text-muted-foreground hover:text-destructive shrink-0"
+                    >
+                      <X className="h-3.5 w-3.5" />
+                    </Button>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </section>
+
+        {/* SECTION 3 — RECIPE LIST WITH NEW SORT */}
+        <section className="surface-paper rounded-2xl p-6 md:p-8 space-y-5">
+          <div className="flex items-center justify-between flex-wrap gap-3">
+            <div className="space-y-1">
+              <h2 className="text-lg font-semibold flex items-center gap-2">
+                <span className="inline-flex h-7 w-7 items-center justify-center rounded-lg bg-primary/10">📖</span>
+                Recipes ({sortedRecipes.length})
+              </h2>
+              <p className="text-sm text-muted-foreground">
+                {hasAnyExpiry
+                  ? `"Expiring soon" sort is available — pantry has ${items.filter(i => i.expiresAt).length} dated item(s).`
+                  : "Add expiry dates to unlock the \"Expiring soon\" sort."}
+              </p>
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="text-xs text-muted-foreground">Sort:</span>
+              <Select value={sortKey} onValueChange={(v) => setSortKey(v as SortKey)}>
+                <SelectTrigger className="w-44 bg-card text-sm h-9">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="best-match">Best match</SelectItem>
+                  <SelectItem value="ready-time">Quickest to make</SelectItem>
+                  {hasAnyExpiry && (
+                    <SelectItem value="expiring-soon">
+                      <span className="flex items-center gap-1.5">
+                        <Flame className="h-3.5 w-3.5 text-warning" />
+                        Expiring soon
+                      </span>
+                    </SelectItem>
+                  )}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+
+          <div className="space-y-3">
+            {sortedRecipes.map((r) => {
+              const meta = sortKey === "expiring-soon" ? recipeUrgencyMeta(r) : { days: null, ingredient: null };
+              const urgent = meta.days !== null && meta.days <= 3;
+              return (
+                <div
+                  key={r.id}
+                  className="flex gap-3 rounded-xl border border-border bg-card overflow-hidden hover:shadow-kitchen transition-all"
+                >
+                  <img
+                    src={r.image}
+                    alt={r.title}
+                    className="w-24 h-24 sm:w-32 sm:h-32 object-cover shrink-0"
+                  />
+                  <div className="flex-1 py-3 pr-3 min-w-0 space-y-1.5">
+                    <div className="flex items-start justify-between gap-2">
+                      <h3 className="font-semibold text-foreground leading-tight truncate">{r.title}</h3>
+                      {sortKey === "expiring-soon" && meta.days !== null && (
+                        <Badge
+                          variant="outline"
+                          className={`shrink-0 text-[11px] gap-1 ${
+                            urgent
+                              ? meta.days < 0
+                                ? "border-destructive/50 bg-destructive/10 text-destructive"
+                                : "border-warning/50 bg-warning/10 text-warning"
+                              : "border-border text-muted-foreground"
+                          }`}
+                        >
+                          <Flame className="h-3 w-3" />
+                          {meta.days < 0
+                            ? `Expired ${Math.abs(meta.days)}d ago`
+                            : meta.days === 0
+                            ? "Use today"
+                            : `Use in ${meta.days}d`}
+                        </Badge>
+                      )}
+                    </div>
+                    <div className="text-xs text-muted-foreground flex items-center gap-2 flex-wrap">
+                      <span className="inline-flex items-center gap-1"><Clock className="h-3 w-3" /> {r.readyInMinutes} min</span>
+                      <span>·</span>
+                      <span>{r.servings} servings</span>
+                    </div>
+                    {sortKey === "expiring-soon" && meta.ingredient && (
+                      <p className="text-xs text-muted-foreground capitalize">
+                        Uses your <span className="font-medium text-foreground">{meta.ingredient}</span>
+                      </p>
+                    )}
+                    {sortKey !== "expiring-soon" && (
+                      <p className="text-xs text-muted-foreground capitalize truncate">
+                        Uses: {r.usesIngredients.slice(0, 3).join(", ")}
+                      </p>
+                    )}
+                  </div>
+                </div>
+              );
+            })}
+            {sortedRecipes.length === 0 && (
+              <p className="text-center text-muted-foreground py-8">No matching recipes — add ingredients to your pantry.</p>
+            )}
+          </div>
+        </section>
+
+        {/* Footer note */}
+        <div className="text-center text-xs text-muted-foreground pb-4">
+          This is a visual mockup. No data is saved. <Link to="/" className="underline">Back to live app</Link>
+        </div>
+      </main>
+    </div>
+  );
+};
+
+export default PantryVaultMockup;

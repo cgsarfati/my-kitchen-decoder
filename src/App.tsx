@@ -6,6 +6,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/hooks/useAuth";
 import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
+import PantryVaultMockup from "./pages/PantryVaultMockup";
 
 const queryClient = new QueryClient();
 
@@ -18,6 +19,7 @@ const App = () => (
         <BrowserRouter>
           <Routes>
             <Route path="/" element={<Index />} />
+            <Route path="/pantry-vault-mockup" element={<PantryVaultMockup />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>
