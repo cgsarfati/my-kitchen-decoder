@@ -247,7 +247,7 @@ const SubstituteSuggestion = ({
       </div>
       {isExpanded && (
         <>
-          <p className="text-foreground/80 leading-relaxed min-h-[2.5rem]">{suggestion.instruction}</p>
+          <p className="text-foreground/80 leading-relaxed min-h-[3rem]">{suggestion.instruction}</p>
           {hasPantryMatch && usageRows.length > 0 && (
             <ul className="space-y-1 pt-1 border-t border-primary/10">
               {usageRows.map((row, i) => {
