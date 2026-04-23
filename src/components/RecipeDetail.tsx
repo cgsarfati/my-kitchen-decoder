@@ -139,22 +139,6 @@ const RecipeDetail = ({ recipe, onBack, pantryItems = [], demoMode = false }: Re
         </div>
       </div>
 
-      {/* Ingredients */}
-      <div className="space-y-3">
-        <h3 className="text-xl text-foreground font-body font-semibold">Ingredients</h3>
-        <ul className="space-y-2">
-          {(recipe.matchedIngredients ?? recipe.extendedIngredients.map((i) => ({ ...i, status: "have" as const }))).map((ing, idx) => (
-            <li
-              key={`${ing.id}-${idx}`}
-              className="text-sm"
-            >
-              <div className={`flex items-start gap-2 ${
-                ing.status === "have"
-                  ? "text-foreground"
-                  : ing.status === "insufficient"
-                  ? "text-warning"
-                  : "text-destructive"
-              }`}>
       {/* Two-column layout: recipe content + sticky mini-pantry panel */}
       <div className="grid grid-cols-1 lg:grid-cols-[1fr_280px] gap-6 lg:gap-8 items-start">
         <div className="space-y-6 min-w-0">
