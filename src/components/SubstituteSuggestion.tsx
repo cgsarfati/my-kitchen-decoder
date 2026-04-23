@@ -223,7 +223,7 @@ const SubstituteSuggestion = ({
     });
 
   return (
-    <div className="mt-2 ml-6 rounded-lg border border-primary/20 bg-primary/5 p-3 text-xs space-y-2">
+    <div className="mt-2 ml-6 basis-full w-[calc(100%-1.5rem)] max-w-[calc(100%-1.5rem)] rounded-lg border border-primary/20 bg-primary/5 p-3 text-xs space-y-2">
       <div className="flex items-center justify-between gap-2">
         <div className="flex items-center gap-1.5 font-medium text-primary">
           <Sparkles className="h-3 w-3 shrink-0" />
