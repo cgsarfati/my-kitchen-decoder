@@ -155,73 +155,95 @@ const RecipeDetail = ({ recipe, onBack, pantryItems = [], demoMode = false }: Re
                   ? "text-warning"
                   : "text-destructive"
               }`}>
-                {ing.status === "have" ? (
-                  <CheckCircle2 className="h-4 w-4 mt-0.5 text-success shrink-0" />
-                ) : ing.status === "insufficient" ? (
-                  <AlertTriangle className="h-4 w-4 mt-0.5 text-warning shrink-0" />
-                ) : (
-                  <XCircle className="h-4 w-4 mt-0.5 text-destructive shrink-0" />
-                )}
-                <span className="flex items-center flex-wrap gap-x-1">
-                  {ing.original}
-                  {ing.status === "insufficient" && (
-                    <span className="text-xs text-warning font-medium">(not enough)</span>
-                  )}
-                  {ing.status === "missing" && (
-                    <span className="text-xs text-destructive font-medium">(missing)</span>
-                  )}
-                  {(ing.status === "missing" || ing.status === "insufficient") && (() => {
-                    // For "insufficient", look up how much of THIS ingredient the user actually has,
-                    // so the AI can reason about the shortfall instead of hallucinating "you have enough".
-                    const ingNameLower = ing.name.toLowerCase();
-                    const matched =
-                      ing.status === "insufficient"
-                        ? pantryItems.find((p) => p.name.toLowerCase() === ingNameLower) ??
-                          pantryItems.find(
-                            (p) =>
-                              ingNameLower.includes(p.name.toLowerCase()) ||
-                              p.name.toLowerCase().includes(ingNameLower),
-                          )
-                        : undefined;
-                    return (
-                      <SubstituteSuggestion
-                        ingredientName={ing.name}
-                        recipeName={recipe.title}
-                        pantryItems={pantryItems}
-                        requiredAmount={ing.amount}
-                        requiredUnit={ing.unit}
-                        reason={ing.status}
-                        haveAmount={matched?.quantity}
-                        haveUnit={matched?.unit}
-                        demoMode={demoMode}
-                      />
-                    );
-                  })()}
-                </span>
-              </div>
-            </li>
-          ))}
-        </ul>
-      </div>
+      {/* Two-column layout: recipe content + sticky mini-pantry panel */}
+      <div className="grid grid-cols-1 lg:grid-cols-[1fr_280px] gap-6 lg:gap-8 items-start">
+        <div className="space-y-6 min-w-0">
+          {/* Ingredients */}
+          <div className="space-y-3">
+            <h3 className="text-xl text-foreground font-body font-semibold">Ingredients</h3>
+            <ul className="space-y-2">
+              {(recipe.matchedIngredients ?? recipe.extendedIngredients.map((i) => ({ ...i, status: "have" as const }))).map((ing, idx) => (
+                <li
+                  key={`${ing.id}-${idx}`}
+                  className="text-sm"
+                >
+                  <div className={`flex items-start gap-2 ${
+                    ing.status === "have"
+                      ? "text-foreground"
+                      : ing.status === "insufficient"
+                      ? "text-warning"
+                      : "text-destructive"
+                  }`}>
+                    {ing.status === "have" ? (
+                      <CheckCircle2 className="h-4 w-4 mt-0.5 text-success shrink-0" />
+                    ) : ing.status === "insufficient" ? (
+                      <AlertTriangle className="h-4 w-4 mt-0.5 text-warning shrink-0" />
+                    ) : (
+                      <XCircle className="h-4 w-4 mt-0.5 text-destructive shrink-0" />
+                    )}
+                    <span className="flex items-center flex-wrap gap-x-1">
+                      {ing.original}
+                      {ing.status === "insufficient" && (
+                        <span className="text-xs text-warning font-medium">(not enough)</span>
+                      )}
+                      {ing.status === "missing" && (
+                        <span className="text-xs text-destructive font-medium">(missing)</span>
+                      )}
+                      {(ing.status === "missing" || ing.status === "insufficient") && (() => {
+                        const ingNameLower = ing.name.toLowerCase();
+                        const matched =
+                          ing.status === "insufficient"
+                            ? pantryItems.find((p) => p.name.toLowerCase() === ingNameLower) ??
+                              pantryItems.find(
+                                (p) =>
+                                  ingNameLower.includes(p.name.toLowerCase()) ||
+                                  p.name.toLowerCase().includes(ingNameLower),
+                              )
+                            : undefined;
+                        return (
+                          <SubstituteSuggestion
+                            ingredientName={ing.name}
+                            recipeName={recipe.title}
+                            pantryItems={pantryItems}
+                            requiredAmount={ing.amount}
+                            requiredUnit={ing.unit}
+                            reason={ing.status}
+                            haveAmount={matched?.quantity}
+                            haveUnit={matched?.unit}
+                            demoMode={demoMode}
+                          />
+                        );
+                      })()}
+                    </span>
+                  </div>
+                </li>
+              ))}
+            </ul>
+          </div>
 
-      {/* Instructions */}
-      {recipe.instructions && (
-        <div className="space-y-3">
-          <h3 className="text-xl text-foreground font-body font-semibold">Instructions</h3>
-          <InstructionSteps raw={recipe.instructions} />
+          {/* Instructions */}
+          {recipe.instructions && (
+            <div className="space-y-3">
+              <h3 className="text-xl text-foreground font-body font-semibold">Instructions</h3>
+              <InstructionSteps raw={recipe.instructions} />
+            </div>
+          )}
+
+          {recipe.sourceUrl && (
+            <a
+              href={recipe.sourceUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-1 text-primary hover:underline text-sm"
+            >
+              View original recipe <ExternalLink className="h-3 w-3" />
+            </a>
+          )}
         </div>
-      )}
 
-      {recipe.sourceUrl && (
-        <a
-          href={recipe.sourceUrl}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="inline-flex items-center gap-1 text-primary hover:underline text-sm"
-        >
-          View original recipe <ExternalLink className="h-3 w-3" />
-        </a>
-      )}
+        {/* MOCK: pantry panel — wired to mock highlights for now */}
+        <MiniPantryPanel items={panelItems} highlightedNames={MOCK_HIGHLIGHTED} />
+      </div>
     </div>
   );
 };
