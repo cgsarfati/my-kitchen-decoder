@@ -206,6 +206,7 @@ OUTPUT FIELDS:
             instruction: `No good substitute for ${body.ingredientName} here. Try halving the recipe to fit what you have, or pick up more ${body.ingredientName} before cooking.`,
             fromPantry: [],
             sufficientInPantry: false,
+            pantryUsage: [],
             confidence: "low" as const,
           }
         : {
@@ -213,6 +214,7 @@ OUTPUT FIELDS:
             instruction: `No close substitute for ${body.ingredientName} from your pantry. Consider skipping it or adding it to your shopping list.`,
             fromPantry: [],
             sufficientInPantry: false,
+            pantryUsage: [],
             confidence: "low" as const,
           };
       return new Response(JSON.stringify(fallback), {
