@@ -2,25 +2,8 @@ import { ArrowLeft, Clock, Users, ExternalLink, CheckCircle2, XCircle, AlertTria
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import SubstituteSuggestion from "@/components/SubstituteSuggestion";
-import MiniPantryPanel from "@/components/MiniPantryPanel";
 import type { Recipe } from "@/types/recipe";
-import type { PantryItem } from "@/types/pantry";
 
-/** MOCK ONLY — used to demonstrate highlighted items in the pantry panel.
- *  Real wiring will read fromPantry off the active SubstituteSuggestion later. */
-const MOCK_HIGHLIGHTED = ["apple cider vinegar", "milk", "dried thyme"];
-
-/** MOCK ONLY — fallback pantry for the prototype when none is passed in. */
-const MOCK_PANTRY: PantryItem[] = [
-  { id: "m1", name: "apple cider vinegar", quantity: 250, unit: "ml" },
-  { id: "m2", name: "milk", quantity: 1, unit: "l" },
-  { id: "m3", name: "dried thyme", quantity: 30, unit: "g" },
-  { id: "m4", name: "olive oil", quantity: 500, unit: "ml" },
-  { id: "m5", name: "garlic", quantity: 6, unit: "clove" },
-  { id: "m6", name: "white rice", quantity: 800, unit: "g" },
-  { id: "m7", name: "chicken breast", quantity: 600, unit: "g" },
-  { id: "m8", name: "yellow onion", quantity: 3, unit: "" },
-];
 
 /** Parse raw HTML/text instructions into clean numbered steps */
 function parseSteps(raw: string): string[] {
