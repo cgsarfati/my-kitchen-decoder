@@ -1,7 +1,6 @@
 import { ArrowLeft, Clock, Users, ExternalLink, CheckCircle2, XCircle, AlertTriangle, Sparkles, UtensilsCrossed } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import SubstituteSuggestion from "@/components/SubstituteSuggestion";
 import RecipeAdaptation from "@/components/RecipeAdaptation";
 import type { Recipe } from "@/types/recipe";
 
@@ -172,31 +171,6 @@ const RecipeDetail = ({ recipe, onBack, pantryItems = [], demoMode = false }: Re
                   {ing.status === "missing" && (
                     <span className="text-xs text-destructive font-medium">(missing)</span>
                   )}
-                  {(ing.status === "missing" || ing.status === "insufficient") && (() => {
-                    const ingNameLower = ing.name.toLowerCase();
-                    const matched =
-                      ing.status === "insufficient"
-                        ? pantryItems.find((p) => p.name.toLowerCase() === ingNameLower) ??
-                          pantryItems.find(
-                            (p) =>
-                              ingNameLower.includes(p.name.toLowerCase()) ||
-                              p.name.toLowerCase().includes(ingNameLower),
-                          )
-                        : undefined;
-                    return (
-                      <SubstituteSuggestion
-                        ingredientName={ing.name}
-                        recipeName={recipe.title}
-                        pantryItems={pantryItems}
-                        requiredAmount={ing.amount}
-                        requiredUnit={ing.unit}
-                        reason={ing.status}
-                        haveAmount={matched?.quantity}
-                        haveUnit={matched?.unit}
-                        demoMode={demoMode}
-                      />
-                    );
-                  })()}
                 </span>
               </div>
             </li>
