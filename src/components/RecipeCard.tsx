@@ -54,17 +54,21 @@ const RecipeCard = ({ recipe, onClick, pantryItems = [], demoMode = false }: Rec
         {hasImage && (
           <div className="absolute inset-0 bg-gradient-to-t from-black/30 via-transparent to-transparent" />
         )}
-        {recipe.isAiGenerated && (
-          <Badge className="absolute top-3 right-3 bg-primary text-primary-foreground gap-1 shadow-sm">
-            <Sparkles className="h-3 w-3" />
-            AI idea
-          </Badge>
-        )}
-        {!recipe.isAiGenerated && urgencyLabel && (
-          <Badge className="absolute top-3 right-3 bg-warning text-warning-foreground gap-1 shadow-sm backdrop-blur-sm">
-            <Clock className="h-3 w-3" />
-            {urgencyLabel}
-          </Badge>
+        {(recipe.isAiGenerated || urgencyLabel) && (
+          <div className="absolute top-3 right-3 flex flex-col items-end gap-2">
+            {recipe.isAiGenerated && (
+              <Badge className="bg-primary text-primary-foreground gap-1 shadow-sm">
+                <Sparkles className="h-3 w-3" />
+                AI idea
+              </Badge>
+            )}
+            {urgencyLabel && (
+              <Badge className="bg-warning text-warning-foreground gap-1 shadow-sm backdrop-blur-sm">
+                <Clock className="h-3 w-3" />
+                {urgencyLabel}
+              </Badge>
+            )}
+          </div>
         )}
         {isFullMatch ? (
           <Badge className="absolute top-3 left-3 bg-success text-success-foreground gap-1 shadow-sm">
