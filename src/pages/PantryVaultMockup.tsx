@@ -394,19 +394,6 @@ const PantryVaultMockup = () => {
     });
   }, [cookableRecipeCards, sortKey, ingredientUrgency]);
 
-  // For badges on recipe cards: which dated ingredient drives the urgency
-  const recipeUrgencyMeta = (r: Recipe): { days: number | null; ingredient: string | null } => {
-    let best: { days: number; ingredient: string } | null = null;
-    for (const ing of r.extendedIngredients.map((ingredient) => ingredient.name)) {
-      for (const [pname, days] of ingredientUrgency.entries()) {
-        if ((ing.includes(pname) || pname.includes(ing)) && days !== null) {
-          if (!best || days < best.days) best = { days, ingredient: pname };
-        }
-      }
-    }
-    return best ? { days: best.days, ingredient: best.ingredient } : { days: null, ingredient: null };
-  };
-
   const expiringCount = items.filter((i) => {
     const s = getExpiryStatus(i.expiresAt);
     return s === "expired" || s === "soon";
