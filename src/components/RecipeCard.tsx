@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Clock, Users, CheckCircle2, AlertCircle, AlertTriangle, XCircle, UtensilsCrossed } from "lucide-react";
+import { Clock, Users, CheckCircle2, AlertCircle, AlertTriangle, XCircle, UtensilsCrossed, Sparkles } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import RecipeAdaptation from "@/components/RecipeAdaptation";
@@ -54,7 +54,13 @@ const RecipeCard = ({ recipe, onClick, pantryItems = [], demoMode = false }: Rec
         {hasImage && (
           <div className="absolute inset-0 bg-gradient-to-t from-black/30 via-transparent to-transparent" />
         )}
-        {urgencyLabel && (
+        {recipe.isAiGenerated && (
+          <Badge className="absolute top-3 right-3 bg-primary text-primary-foreground gap-1 shadow-sm">
+            <Sparkles className="h-3 w-3" />
+            AI idea
+          </Badge>
+        )}
+        {!recipe.isAiGenerated && urgencyLabel && (
           <Badge className="absolute top-3 right-3 bg-warning text-warning-foreground gap-1 shadow-sm backdrop-blur-sm">
             <Clock className="h-3 w-3" />
             {urgencyLabel}
@@ -81,6 +87,9 @@ const RecipeCard = ({ recipe, onClick, pantryItems = [], demoMode = false }: Rec
         <h3 className="font-semibold text-foreground text-lg leading-tight line-clamp-2 font-body">
           {recipe.title}
         </h3>
+        {recipe.generationNote && (
+          <p className="text-xs text-muted-foreground leading-relaxed line-clamp-2">{recipe.generationNote}</p>
+        )}
 
         <div className="flex items-center gap-4 text-sm text-muted-foreground">
           <span className="flex items-center gap-1">
