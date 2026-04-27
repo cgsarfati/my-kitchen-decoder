@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from "react";
-import { Plus, AlertTriangle, SpellCheck } from "lucide-react";
+import { Plus, AlertTriangle, SpellCheck, DollarSign, Calendar } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { COMMON_UNITS, type PantryItem } from "@/types/pantry";
@@ -15,6 +15,8 @@ const PantryInput = ({ onAdd }: PantryInputProps) => {
   const [name, setName] = useState("");
   const [quantity, setQuantity] = useState("");
   const [unit, setUnit] = useState("g");
+  const [cost, setCost] = useState("");
+  const [expiresAt, setExpiresAt] = useState("");
   const [genericSuggestions, setGenericSuggestions] = useState<string[] | null>(null);
   const [spellSuggestions, setSpellSuggestions] = useState<string[] | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -140,9 +142,11 @@ const PantryInput = ({ onAdd }: PantryInputProps) => {
       return;
     }
 
-    onAdd({ name: trimmed, quantity: parseFloat(quantity), unit });
+    onAdd({ name: trimmed, quantity: parseFloat(quantity), unit, cost: cost ? parseFloat(cost) : undefined, expiresAt: expiresAt || undefined });
     setName("");
     setQuantity("");
+    setCost("");
+    setExpiresAt("");
     setUnit("g");
     setGenericSuggestions(null);
     setSpellSuggestions(null);
@@ -161,9 +165,11 @@ const PantryInput = ({ onAdd }: PantryInputProps) => {
     const trimmed = name.trim();
     if (!trimmed || !quantity) return;
     trackEvent(AnalyticsEvents.SPELL_ADD_ANYWAY, { ingredient: trimmed });
-    onAdd({ name: trimmed, quantity: parseFloat(quantity), unit });
+    onAdd({ name: trimmed, quantity: parseFloat(quantity), unit, cost: cost ? parseFloat(cost) : undefined, expiresAt: expiresAt || undefined });
     setName("");
     setQuantity("");
+    setCost("");
+    setExpiresAt("");
     setUnit("g");
     setSpellSuggestions(null);
   };
