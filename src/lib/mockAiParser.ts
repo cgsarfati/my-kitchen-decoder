@@ -10,6 +10,8 @@ interface ParsedIngredient {
   name: string;
   quantity: number;
   unit: string;
+  cost?: number;
+  expiresAt?: string;
 }
 
 // Pattern-based mock parser that handles common natural language formats
@@ -63,6 +65,10 @@ function guessUnit(text: string): string {
 
 function cleanName(text: string): string {
   return text
+    .replace(/\b(?:worth|for)\s+\$?\d+(?:\.\d{1,2})?\b/gi, "")
+    .replace(/\$\d+(?:\.\d{1,2})?/g, "")
+    .replace(/\bexpires?\s+(?:on\s+)?\d{1,2}[/-]\d{1,2}(?:[/-]\d{2,4})?\b/gi, "")
+    .replace(/\bexpires?\s+in\s+\d+\s+(?:day|days|week|weeks)\b/gi, "")
     .replace(/^(cloves?\s+of|cans?\s+of|slices?\s+of|bunch\s+of)\s+/i, "")
     .replace(/\b(cloves?|cans?|slices?|bunch(es)?)\b/gi, "")
     .trim()
@@ -72,12 +78,14 @@ function cleanName(text: string): string {
 function parseLine(line: string): ParsedIngredient | null {
   const trimmed = line.trim();
   if (!trimmed || trimmed.length < 2) return null;
+  const costMatch = trimmed.match(/(?:\$|\bworth\s+\$?|\bfor\s+\$?)(\d+(?:\.\d{1,2})?)/i);
+  const cost = costMatch ? parseFloat(costMatch[1]) : undefined;
 
   for (const { pattern, extract } of MOCK_PATTERNS) {
     const match = trimmed.match(pattern);
     if (match) {
       const result = extract(match);
-      if (result && result.name.length > 0) return result;
+      if (result && result.name.length > 0) return { ...result, cost };
     }
   }
   return null;
