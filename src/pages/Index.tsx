@@ -179,6 +179,73 @@ const Index = () => {
     });
   };
 
+  const buildAiRecipeCards = (aiRecipes: any[] = []): Recipe[] => aiRecipes.slice(0, 2).map((recipe, recipeIndex) => {
+    const ingredients = (recipe.ingredients || []).map((ingredient: any, ingredientIndex: number) => ({
+      id: 9000 + recipeIndex * 100 + ingredientIndex,
+      name: ingredient.name,
+      amount: Number(ingredient.amount) || 1,
+      unit: ingredient.unit || "piece",
+      original: ingredient.original || `${ingredient.amount || 1} ${ingredient.unit || ""} ${ingredient.name}`.trim(),
+    }));
+    const used = ingredients.filter((_, index) => recipe.ingredients?.[index]?.fromPantry !== false);
+    const missed = ingredients.filter((_, index) => recipe.ingredients?.[index]?.fromPantry === false);
+    return {
+      id: 800000 + Date.now() + recipeIndex,
+      title: recipe.title || "AI Pantry Recipe",
+      image: "",
+      isAiGenerated: true,
+      generationNote: recipe.generationNote || "Created from your pantry ingredients.",
+      usedIngredientCount: used.length,
+      missedIngredientCount: missed.length,
+      usedIngredients: used,
+      missedIngredients: missed,
+      servings: Number(recipe.servings) || 2,
+      readyInMinutes: Number(recipe.readyInMinutes) || 30,
+      instructions: `<ol>${(recipe.steps || []).map((step: string) => `<li>${step}</li>`).join("")}</ol>`,
+      sourceUrl: "",
+      extendedIngredients: ingredients,
+    };
+  });
+
+  const getDemoAiRecipeCards = (): Recipe[] => buildAiRecipeCards([
+    {
+      title: "AI Chicken, Bean & Tortilla Skillet",
+      generationNote: "A quick generated idea using the same pantry staples in a new format.",
+      servings: 3,
+      readyInMinutes: 25,
+      ingredients: [
+        { name: "chicken breast", amount: 1, unit: "piece", original: "1 chicken breast, sliced", fromPantry: true },
+        { name: "black beans", amount: 1, unit: "cup", original: "1 cup black beans", fromPantry: true },
+        { name: "tortillas", amount: 3, unit: "piece", original: "3 tortillas, torn", fromPantry: true },
+        { name: "cheddar cheese", amount: 0.5, unit: "cup", original: "1/2 cup cheddar cheese", fromPantry: true },
+      ],
+      steps: ["Brown sliced chicken in a skillet with salt and pepper.", "Add black beans and torn tortillas until warmed through.", "Top with cheddar and cover until melted."],
+    },
+    {
+      title: "AI Lemon Yogurt Taco Bowls",
+      generationNote: "A lighter pantry-created bowl that turns taco ingredients into dinner.",
+      servings: 2,
+      readyInMinutes: 20,
+      ingredients: [
+        { name: "rice", amount: 1, unit: "cup", original: "1 cup cooked rice", fromPantry: true },
+        { name: "Greek yogurt", amount: 0.5, unit: "cup", original: "1/2 cup Greek yogurt", fromPantry: true },
+        { name: "lemon", amount: 1, unit: "piece", original: "1 lemon", fromPantry: true },
+        { name: "black beans", amount: 0.75, unit: "cup", original: "3/4 cup black beans", fromPantry: true },
+      ],
+      steps: ["Warm rice and black beans together with salt and pepper.", "Stir lemon juice into Greek yogurt for a quick sauce.", "Serve beans over rice and spoon the sauce on top."],
+    },
+  ]);
+
+  const fetchAiRecipeCards = async (): Promise<Recipe[]> => {
+    trackEvent(AnalyticsEvents.AI_RECIPES_REQUESTED, { ingredient_count: items.length, demo: demoMode });
+    if (demoMode) return getDemoAiRecipeCards();
+    const { data, error } = await supabase.functions.invoke("generate-ai-recipes", {
+      body: { pantryItems: items.map((i) => ({ name: i.name, quantity: i.quantity, unit: i.unit })) },
+    });
+    if (error || data?.error) throw new Error(data?.error || error?.message || "Could not generate recipes");
+    return buildAiRecipeCards(data.recipes || []);
+  };
+
   const handleSearch = async () => {
     if (items.length === 0) return;
     const ingredientNames = items.map((i) => i.name);
@@ -205,8 +272,14 @@ const Index = () => {
           missedIngredients: missed.map((i) => ({ id: i.id, name: i.name, amount: i.amount, unit: i.unit, original: i.original })),
         };
       }).filter((r) => r.usedIngredientCount > 0);
-      const enriched = enrichRecipesWithQuantityMatch(filtered, items).filter((recipe) => !recipeUsesExpiredItem(recipe, items));
+      const aiRecipeCards = await fetchAiRecipeCards().catch((error) => {
+        console.error("AI recipe generation error:", error);
+        trackEvent(AnalyticsEvents.AI_RECIPES_FAILED, { demo: true });
+        return [];
+      });
+      const enriched = enrichRecipesWithQuantityMatch([...filtered, ...aiRecipeCards], items).filter((recipe) => !recipeUsesExpiredItem(recipe, items));
       setRecipes(enriched);
+      if (aiRecipeCards.length > 0) trackEvent(AnalyticsEvents.AI_RECIPES_SHOWN, { count: aiRecipeCards.length, demo: true });
       trackEvent(AnalyticsEvents.SEARCH_RESULTS, { result_count: enriched.length, full_matches: enriched.filter(r => r.missedIngredientCount === 0).length, demo: true });
       setIsLoading(false);
       return;
@@ -223,8 +296,15 @@ const Index = () => {
       }
       if (data?.error === "RATE_LIMIT") throw new Error("RATE_LIMIT");
       if (data?.error) throw new Error(data.error);
-      const enriched = enrichRecipesWithQuantityMatch(data.recipes || [], items).filter((recipe) => !recipeUsesExpiredItem(recipe, items));
+      const aiRecipeCards = await fetchAiRecipeCards().catch((error) => {
+        console.error("AI recipe generation error:", error);
+        trackEvent(AnalyticsEvents.AI_RECIPES_FAILED, { demo: false });
+        toast({ title: "AI recipe ideas unavailable", description: "Recipe search still worked, but AI-created ideas could not load." });
+        return [];
+      });
+      const enriched = enrichRecipesWithQuantityMatch([...(data.recipes || []), ...aiRecipeCards], items).filter((recipe) => !recipeUsesExpiredItem(recipe, items));
       setRecipes(enriched);
+      if (aiRecipeCards.length > 0) trackEvent(AnalyticsEvents.AI_RECIPES_SHOWN, { count: aiRecipeCards.length, demo: false });
       trackEvent(AnalyticsEvents.SEARCH_RESULTS, { result_count: enriched.length, full_matches: enriched.filter(r => r.missedIngredientCount === 0).length, demo: false });
     } catch (err: any) {
       console.error("Search error:", err);
