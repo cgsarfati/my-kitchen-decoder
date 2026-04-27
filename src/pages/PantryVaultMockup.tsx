@@ -570,59 +570,32 @@ const PantryVaultMockup = () => {
             </div>
           </div>
 
-          <div className="space-y-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             {sortedRecipes.map((r) => {
               const meta = sortKey === "expiring-soon" ? recipeUrgencyMeta(r) : { days: null, ingredient: null };
               const urgent = meta.days !== null && meta.days <= 3;
               return (
-                <div
-                  key={r.id}
-                  className="flex gap-3 rounded-xl border border-border bg-card overflow-hidden hover:shadow-kitchen transition-all"
-                >
-                  <img
-                    src={r.image}
-                    alt={r.title}
-                    className="w-24 h-24 sm:w-32 sm:h-32 object-cover shrink-0"
-                  />
-                  <div className="flex-1 py-3 pr-3 min-w-0 space-y-1.5">
-                    <div className="flex items-start justify-between gap-2">
-                      <h3 className="font-semibold text-foreground leading-tight truncate">{r.title}</h3>
-                      {sortKey === "expiring-soon" && meta.days !== null && (
-                        <Badge
-                          variant="outline"
-                          className={`shrink-0 text-[11px] gap-1 ${
-                            urgent
-                              ? meta.days < 0
-                                ? "border-destructive/50 bg-destructive/10 text-destructive"
-                                : "border-warning/50 bg-warning/10 text-warning"
-                              : "border-border text-muted-foreground"
-                          }`}
-                        >
-                          <Flame className="h-3 w-3" />
-                          {meta.days < 0
-                            ? `Expired ${Math.abs(meta.days)}d ago`
-                            : meta.days === 0
-                            ? "Use today"
-                            : `Use in ${meta.days}d`}
-                        </Badge>
-                      )}
-                    </div>
-                    <div className="text-xs text-muted-foreground flex items-center gap-2 flex-wrap">
-                      <span className="inline-flex items-center gap-1"><Clock className="h-3 w-3" /> {r.readyInMinutes} min</span>
-                      <span>·</span>
-                      <span>{r.servings} servings</span>
-                    </div>
-                    {sortKey === "expiring-soon" && meta.ingredient && (
-                      <p className="text-xs text-muted-foreground capitalize">
-                        Uses your <span className="font-medium text-foreground">{meta.ingredient}</span>
-                      </p>
-                    )}
-                    {sortKey !== "expiring-soon" && (
-                      <p className="text-xs text-muted-foreground capitalize truncate">
-                        Uses: {r.usesIngredients.slice(0, 3).join(", ")}
-                      </p>
-                    )}
-                  </div>
+                <div key={r.id} className="relative">
+                  <RecipeCard recipe={r} onClick={setSelectedRecipe} />
+                  {sortKey === "expiring-soon" && meta.days !== null && (
+                    <Badge
+                      variant="outline"
+                      className={`absolute top-3 right-3 z-10 shrink-0 text-[11px] gap-1 ${
+                        urgent
+                          ? meta.days < 0
+                            ? "border-destructive/50 bg-destructive/10 text-destructive"
+                            : "border-warning/50 bg-warning/10 text-warning"
+                          : "border-border bg-card text-muted-foreground"
+                      }`}
+                    >
+                      <Flame className="h-3 w-3" />
+                      {meta.days < 0
+                        ? `Expired ${Math.abs(meta.days)}d ago`
+                        : meta.days === 0
+                        ? "Use today"
+                        : `Use in ${meta.days}d`}
+                    </Badge>
+                  )}
                 </div>
               );
             })}
