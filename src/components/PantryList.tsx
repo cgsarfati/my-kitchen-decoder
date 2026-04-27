@@ -1,11 +1,15 @@
 import { useState } from "react";
-import { X, Pencil, Check, AlertTriangle, Clock } from "lucide-react";
+import { X, Pencil, Check, AlertTriangle, Clock, DollarSign, Calendar } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Calendar as CalendarPicker } from "@/components/ui/calendar";
 import { COMMON_UNITS } from "@/types/pantry";
 import type { PantryItem } from "@/types/pantry";
-import { daysUntilDate } from "@/lib/dateUtils";
+import { daysUntilDate, formatIsoDateForDisplay, isoDateToLocalDate } from "@/lib/dateUtils";
+import { cn } from "@/lib/utils";
+import { format } from "date-fns";
 
 /** Map ingredient keywords to emoji icons */
 const INGREDIENT_ICONS: Record<string, string> = {
@@ -53,7 +57,7 @@ function formatExpiryLabel(expiresAt?: string): string {
 interface PantryListProps {
   items: PantryItem[];
   onRemove: (id: string) => void;
-  onUpdate?: (id: string, quantity: number, unit: string) => void;
+  onUpdate?: (id: string, updates: Partial<Omit<PantryItem, "id" | "name">>) => void;
 }
 
 const PantryList = ({ items, onRemove, onUpdate }: PantryListProps) => {
