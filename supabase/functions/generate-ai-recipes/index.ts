@@ -6,7 +6,7 @@ const corsHeaders = {
     "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
-type PantryItemPayload = { name: string; quantity: number; unit: string };
+type PantryItemPayload = { name: string; quantity: number; unit: string; expiresAt?: string };
 
 type GeneratedRecipe = {
   title: string;
@@ -65,7 +65,9 @@ serve(async (req) => {
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY is not configured");
 
-    const pantryList = pantryItems.map((item) => `- ${item.name} (${item.quantity} ${item.unit})`).join("\n");
+    const pantryList = pantryItems
+      .map((item) => `- ${item.name} (${item.quantity} ${item.unit}${item.expiresAt ? `, expires ${item.expiresAt}` : ""})`)
+      .join("\n");
 
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
@@ -75,6 +77,7 @@ serve(async (req) => {
       },
       body: JSON.stringify({
         model: "google/gemini-3-flash-preview",
+        max_tokens: 8192,
         messages: [
           {
             role: "system",
@@ -86,6 +89,8 @@ Rules:
 - Pantry basics are limited to water, salt, and pepper; do not assume oil, butter, broth, spices, or dairy unless listed.
 - If a small missing ingredient would materially improve the recipe, include it as a missing ingredient, but keep missing ingredients to 0-2 total.
 - Respect listed quantities as much as possible. Do not intentionally require much more of a pantry ingredient than the user has.
+- Do not use any pantry item whose expiration date has already passed.
+- Prefer recipes that use pantry items expiring soon, but only if the dish remains realistic.
 - Keep instructions concise and safe.
 - No dietary or medical claims.`, 
           },
