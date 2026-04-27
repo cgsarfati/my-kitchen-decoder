@@ -5,6 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { COMMON_UNITS } from "@/types/pantry";
 import type { PantryItem } from "@/types/pantry";
+import { daysUntilDate } from "@/lib/dateUtils";
 
 /** Map ingredient keywords to emoji icons */
 const INGREDIENT_ICONS: Record<string, string> = {
@@ -40,17 +41,8 @@ function getIngredientIcon(name: string): string {
   return "🥘";
 }
 
-function daysUntilExpiry(expiresAt?: string): number | null {
-  if (!expiresAt) return null;
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-  const exp = new Date(expiresAt);
-  exp.setHours(0, 0, 0, 0);
-  return Math.round((exp.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
-}
-
 function formatExpiryLabel(expiresAt?: string): string {
-  const days = daysUntilExpiry(expiresAt);
+  const days = daysUntilDate(expiresAt);
   if (days === null) return "";
   if (days < 0) return `Expired ${Math.abs(days)}d ago`;
   if (days === 0) return "Expires today";
@@ -95,7 +87,7 @@ const PantryList = ({ items, onRemove, onUpdate }: PantryListProps) => {
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
       {items.map((item) => {
-        const expiryDays = daysUntilExpiry(item.expiresAt);
+        const expiryDays = daysUntilDate(item.expiresAt);
         const isExpired = expiryDays !== null && expiryDays < 0;
         const isSoon = expiryDays !== null && expiryDays >= 0 && expiryDays <= 3;
         return (
