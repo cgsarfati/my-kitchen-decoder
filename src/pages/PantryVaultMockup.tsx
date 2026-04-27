@@ -634,7 +634,7 @@ const PantryVaultMockup = () => {
               const urgent = meta.days !== null && meta.days <= 3;
               return (
                 <div key={r.id} className="relative h-full">
-                  <RecipeCard recipe={r} onClick={setSelectedRecipe} pantryItems={pantryItemsForRecipes} demoMode />
+                  <RecipeCard recipe={r} onClick={setSelectedRecipe} />
                   {sortKey === "expiring-soon" && meta.days !== null && (
                     <Badge
                       variant="outline"
