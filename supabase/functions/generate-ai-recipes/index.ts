@@ -8,11 +8,50 @@ const corsHeaders = {
 
 type PantryItemPayload = { name: string; quantity: number; unit: string };
 
+type GeneratedRecipe = {
+  title: string;
+  generationNote: string;
+  servings: number;
+  readyInMinutes: number;
+  ingredients: Array<{ name: string; amount: number; unit: string; original: string; fromPantry: boolean }>;
+  steps: string[];
+  imageUrl?: string;
+};
+
 const jsonResponse = (body: unknown, status = 200) =>
   new Response(JSON.stringify(body), {
     status,
     headers: { ...corsHeaders, "Content-Type": "application/json" },
   });
+
+const generateRecipeImage = async (recipe: GeneratedRecipe, apiKey: string): Promise<string | undefined> => {
+  const ingredientList = recipe.ingredients.map((ingredient) => ingredient.name).join(", ");
+  const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${apiKey}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      model: "google/gemini-2.5-flash-image",
+      messages: [
+        {
+          role: "user",
+          content: `Realistic overhead food photography of ${recipe.title}. Main visible ingredients: ${ingredientList}. Warm natural kitchen light, simple home-cooked weeknight meal, appetizing and accurate to the recipe, no text, no hands.`,
+        },
+      ],
+      modalities: ["image", "text"],
+    }),
+  });
+
+  if (!response.ok) {
+    console.error("AI image generation error:", response.status, await response.text());
+    return undefined;
+  }
+
+  const data = await response.json();
+  return data.choices?.[0]?.message?.images?.[0]?.image_url?.url;
+};
 
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
@@ -116,7 +155,18 @@ Rules:
     const toolCall = data.choices?.[0]?.message?.tool_calls?.[0];
     if (!toolCall?.function?.arguments) return jsonResponse({ error: "NO_RECIPES" }, 502);
 
-    return jsonResponse(JSON.parse(toolCall.function.arguments));
+    const parsed = JSON.parse(toolCall.function.arguments) as { recipes?: GeneratedRecipe[] };
+    const recipesWithImages = await Promise.all(
+      (parsed.recipes || []).map(async (recipe) => ({
+        ...recipe,
+        imageUrl: await generateRecipeImage(recipe, LOVABLE_API_KEY).catch((error) => {
+          console.error("Recipe image generation failed:", error);
+          return undefined;
+        }),
+      }))
+    );
+
+    return jsonResponse({ recipes: recipesWithImages });
   } catch (error) {
     console.error("generate-ai-recipes error:", error);
     return jsonResponse({ error: error instanceof Error ? error.message : "Unknown error" }, 500);
