@@ -14,8 +14,10 @@ import RecipeResults from "@/components/RecipeResults";
 import RecipeDetail from "@/components/RecipeDetail";
 import { matchIngredients, summarizeMatch, calculateMaxServings } from "@/lib/unitConversion";
 import { MOCK_RECIPES } from "@/lib/mockRecipes";
-import aiChickenBlackBeanTacos from "@/assets/ai-chicken-black-bean-tacos.jpg";
-import aiCheesyGarlicRicePilaf from "@/assets/ai-cheesy-garlic-rice-pilaf.jpg";
+import aiDemoChickenBeanTortillaSkillet from "@/assets/ai-demo-chicken-bean-tortilla-skillet.jpg";
+import aiDemoLemonYogurtTacoBowls from "@/assets/ai-demo-lemon-yogurt-taco-bowls.jpg";
+import aiDemoCheddarBlackBeanRiceMelt from "@/assets/ai-demo-cheddar-black-bean-rice-melt.jpg";
+import aiDemoChickenTortillaSoupBowls from "@/assets/ai-demo-chicken-tortilla-soup-bowls.jpg";
 import { loadPantry, savePantry } from "@/lib/pantryStorage";
 import type { PantryItem } from "@/types/pantry";
 import type { Recipe } from "@/types/recipe";
@@ -184,13 +186,13 @@ const Index = () => {
 
   const buildAiRecipeCards = (aiRecipes: any[] = []): Recipe[] => aiRecipes.slice(0, 4).map((recipe, recipeIndex) => {
     const title = String(recipe.title || "").toLowerCase();
-    const image = title.includes("rice") || title.includes("pilaf")
-      ? aiCheesyGarlicRicePilaf
-      : title.includes("chicken") || title.includes("taco") || title.includes("bean")
-      ? aiChickenBlackBeanTacos
-      : recipeIndex === 0
-      ? aiChickenBlackBeanTacos
-      : aiCheesyGarlicRicePilaf;
+    const image = recipe.imageUrl || (title.includes("lemon") || title.includes("yogurt")
+      ? aiDemoLemonYogurtTacoBowls
+      : title.includes("rice melt") || title.includes("cheddar")
+      ? aiDemoCheddarBlackBeanRiceMelt
+      : title.includes("soup")
+      ? aiDemoChickenTortillaSoupBowls
+      : aiDemoChickenBeanTortillaSkillet);
     const ingredients = (recipe.ingredients || []).map((ingredient: any, ingredientIndex: number) => ({
       id: 9000 + recipeIndex * 100 + ingredientIndex,
       name: ingredient.name,
