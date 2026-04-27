@@ -46,7 +46,7 @@ const RecipeCard = ({ recipe, onClick }: RecipeCardProps) => {
           <div className="absolute inset-0 bg-gradient-to-t from-black/30 via-transparent to-transparent" />
         )}
         {urgencyLabel && (
-          <Badge className="absolute bottom-3 left-3 bg-warning text-warning-foreground gap-1 shadow-sm backdrop-blur-sm">
+          <Badge className="absolute top-3 right-3 bg-warning text-warning-foreground gap-1 shadow-sm backdrop-blur-sm">
             <Clock className="h-3 w-3" />
             {urgencyLabel}
           </Badge>
