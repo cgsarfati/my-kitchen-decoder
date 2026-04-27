@@ -225,7 +225,19 @@ const PantryInput = ({ onAdd }: PantryInputProps) => {
           </div>
           <div className="relative flex-1">
             <Calendar className="absolute left-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
-            <Input type="date" value={expiresAt} onChange={(e) => setExpiresAt(e.target.value)} className="bg-card pl-8" />
+            <Input
+              type="date"
+              value={expiresAt}
+              onChange={(e) => setExpiresAt(e.target.value)}
+              aria-label="Expiration date optional"
+              title="Expiration date (optional)"
+              className="bg-card pl-8 text-foreground dark:[color-scheme:dark]"
+            />
+            {!expiresAt && (
+              <span className="pointer-events-none absolute left-8 top-1/2 -translate-y-1/2 text-sm text-muted-foreground sm:hidden">
+                Expires (optional)
+              </span>
+            )}
           </div>
           <Button type="submit" variant="hero" size="icon" className="shrink-0 self-stretch sm:self-auto">
             <Plus className="h-5 w-5" />
