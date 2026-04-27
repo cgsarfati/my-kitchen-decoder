@@ -1,5 +1,5 @@
 import { useState, useCallback, useEffect, useRef } from "react";
-import { ChefHat, Search, FlaskConical, UtensilsCrossed, Trash2, Moon, Sun, List, Sparkles } from "lucide-react";
+import { ChefHat, Search, FlaskConical, UtensilsCrossed, Trash2, Moon, Sun, List, Sparkles, Globe2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
@@ -29,6 +29,7 @@ const Index = () => {
   const [hasSearched, setHasSearched] = useState(false);
   const [selectedRecipe, setSelectedRecipe] = useState<Recipe | null>(null);
   const [demoMode, setDemoMode] = useState(true);
+  const [recipeSource, setRecipeSource] = useState<"ai" | "web">("ai");
   const [pantryId, setPantryId] = useState<string | undefined>();
   const [inputMode, setInputMode] = useState<"manual" | "ai">("ai");
   const [pantryLoaded, setPantryLoaded] = useState(false);
