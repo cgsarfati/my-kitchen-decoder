@@ -182,7 +182,7 @@ const Index = () => {
     });
   };
 
-  const buildAiRecipeCards = (aiRecipes: any[] = []): Recipe[] => aiRecipes.slice(0, 2).map((recipe, recipeIndex) => {
+  const buildAiRecipeCards = (aiRecipes: any[] = []): Recipe[] => aiRecipes.slice(0, 4).map((recipe, recipeIndex) => {
     const title = String(recipe.title || "").toLowerCase();
     const image = title.includes("rice") || title.includes("pilaf")
       ? aiCheesyGarlicRicePilaf
@@ -244,6 +244,32 @@ const Index = () => {
         { name: "black beans", amount: 0.75, unit: "cup", original: "3/4 cup black beans", fromPantry: true },
       ],
       steps: ["Warm rice and black beans together with salt and pepper.", "Stir lemon juice into Greek yogurt for a quick sauce.", "Serve beans over rice and spoon the sauce on top."],
+    },
+    {
+      title: "AI Cheddar Black Bean Rice Melt",
+      generationNote: "A pantry-first rice dinner with one optional fresh topping.",
+      servings: 3,
+      readyInMinutes: 22,
+      ingredients: [
+        { name: "rice", amount: 1.5, unit: "cups", original: "1 1/2 cups cooked rice", fromPantry: true },
+        { name: "black beans", amount: 1, unit: "cup", original: "1 cup black beans", fromPantry: true },
+        { name: "cheddar cheese", amount: 0.75, unit: "cup", original: "3/4 cup cheddar cheese", fromPantry: true },
+        { name: "green onion", amount: 2, unit: "pieces", original: "2 green onions, sliced", fromPantry: false },
+      ],
+      steps: ["Warm rice and black beans in a skillet with salt and pepper.", "Fold in cheddar until melted and creamy.", "Top with sliced green onion if you have it."],
+    },
+    {
+      title: "AI Chicken Tortilla Soup-ish Bowls",
+      generationNote: "A simple generated bowl that uses water instead of assuming broth.",
+      servings: 2,
+      readyInMinutes: 30,
+      ingredients: [
+        { name: "chicken breast", amount: 1, unit: "piece", original: "1 chicken breast", fromPantry: true },
+        { name: "tortillas", amount: 2, unit: "pieces", original: "2 tortillas, toasted in strips", fromPantry: true },
+        { name: "black beans", amount: 0.75, unit: "cup", original: "3/4 cup black beans", fromPantry: true },
+        { name: "tomato", amount: 1, unit: "piece", original: "1 tomato, chopped", fromPantry: false },
+      ],
+      steps: ["Simmer chicken in water with salt and pepper until cooked through.", "Shred the chicken, then warm it with black beans and chopped tomato.", "Serve with crisp tortilla strips on top."],
     },
   ]);
 
