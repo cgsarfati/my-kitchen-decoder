@@ -634,7 +634,7 @@ const PantryVaultMockup = () => {
               const meta = sortKey === "expiring-soon" ? getRecipeUrgencyMeta(r) : { days: null, ingredient: null };
               const urgent = meta.days !== null && meta.days <= 3;
               return (
-                <div key={r.id} className="relative">
+                <div key={r.id} className="relative h-full">
                   <RecipeCard recipe={r} onClick={setSelectedRecipe} />
                   {sortKey === "expiring-soon" && meta.days !== null && (
                     <Badge
@@ -642,8 +642,8 @@ const PantryVaultMockup = () => {
                       className={`absolute top-3 right-3 z-10 shrink-0 text-[11px] gap-1 shadow-kitchen bg-card/95 backdrop-blur-sm ${
                         urgent
                           ? meta.days < 0
-                            ? "border-destructive/50 bg-destructive/10 text-destructive"
-                            : "border-warning/50 bg-warning/10 text-warning"
+                            ? "border-destructive bg-destructive text-destructive-foreground"
+                            : "border-warning bg-warning text-warning-foreground"
                           : "border-border bg-card text-muted-foreground"
                       }`}
                     >
