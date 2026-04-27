@@ -75,11 +75,11 @@ const RecipeCard = ({ recipe, onClick }: RecipeCardProps) => {
         )}
       </div>
       <CardContent className="p-4 space-y-3 flex flex-col flex-1">
-        <h3 className="font-semibold text-foreground text-lg leading-tight line-clamp-2 font-body">
+        <h3 className="font-semibold text-foreground text-lg leading-tight line-clamp-2 font-body min-h-[2.75rem]">
           {recipe.title}
         </h3>
         {recipe.generationNote && (
-          <p className="text-xs text-muted-foreground leading-relaxed line-clamp-2">{recipe.generationNote}</p>
+          <p className="text-xs text-muted-foreground leading-relaxed line-clamp-2 min-h-[2.5rem]">{recipe.generationNote}</p>
         )}
 
         <div className="flex items-center gap-4 text-sm text-muted-foreground">
