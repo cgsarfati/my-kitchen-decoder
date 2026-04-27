@@ -20,6 +20,10 @@ const RecipeCard = ({ recipe, onClick }: RecipeCardProps) => {
     : typeof recipe.expiringSoonDays === "number"
     ? `Use in ${recipe.expiringSoonDays} days`
     : null;
+  const expiringSoonSet = new Set(recipe.expiringSoonIngredients?.map((name) => name.toLowerCase()) ?? []);
+  const haveIngredients = recipe.matchedIngredients?.filter(
+    (item) => item.status === "have" && !expiringSoonSet.has(item.name.toLowerCase())
+  ) ?? [];
 
   return (
     <Card
@@ -92,10 +96,10 @@ const RecipeCard = ({ recipe, onClick }: RecipeCardProps) => {
         <div className="space-y-1 border-t border-dashed border-border pt-3 mt-auto">
           {recipe.matchedIngredients ? (
             <>
-              {recipe.matchedIngredients.filter((i) => i.status === "have").length > 0 && (
+              {haveIngredients.length > 0 && (
                 <p className="text-xs font-medium text-success flex items-start gap-1.5">
                   <CheckCircle2 className="h-3.5 w-3.5 shrink-0 mt-px" />
-                  <span>You have: {recipe.matchedIngredients.filter((i) => i.status === "have").map((i) => i.name).join(", ")}</span>
+                  <span>You have: {haveIngredients.map((i) => i.name).join(", ")}</span>
                 </p>
               )}
               {recipe.expiringSoonIngredients && recipe.expiringSoonIngredients.length > 0 && (
