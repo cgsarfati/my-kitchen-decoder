@@ -180,7 +180,7 @@ const Index = () => {
       const maxServings = isFullMatch
         ? calculateMaxServings(pantryMapped, recipe.extendedIngredients, recipe.servings)
         : null;
-      return { ...recipe, matchedIngredients: matched, insufficientCount: summary.insufficientCount, maxServings, expiringSoonIngredients: getRecipeExpiringSoonIngredients(recipe, pantryItems), expiringSoonDays: getRecipeExpiringSoonDays(recipe, pantryItems) };
+      return { ...recipe, matchedIngredients: matched, usedIngredientCount: summary.haveCount, missedIngredientCount: summary.missingCount, insufficientCount: summary.insufficientCount, maxServings, expiringSoonIngredients: getRecipeExpiringSoonIngredients(recipe, pantryItems), expiringSoonDays: getRecipeExpiringSoonDays(recipe, pantryItems) };
     });
   };
 
@@ -279,7 +279,7 @@ const Index = () => {
     trackEvent(AnalyticsEvents.AI_RECIPES_REQUESTED, { ingredient_count: items.length, demo: demoMode });
     if (demoMode) return getDemoAiRecipeCards();
     const { data, error } = await supabase.functions.invoke("generate-ai-recipes", {
-      body: { pantryItems: items.map((i) => ({ name: i.name, quantity: i.quantity, unit: i.unit })) },
+      body: { pantryItems: items.map((i) => ({ name: i.name, quantity: i.quantity, unit: i.unit, expiresAt: i.expiresAt })) },
     });
     if (error || data?.error) throw new Error(data?.error || error?.message || "Could not generate recipes");
     return buildAiRecipeCards(data.recipes || []);
