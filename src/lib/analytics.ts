@@ -78,4 +78,9 @@ export const AnalyticsEvents = {
   AI_ADAPT_REQUESTED: "ai_adapt_requested",
   AI_ADAPT_SHOWN: "ai_adapt_shown",
   AI_ADAPT_FAILED: "ai_adapt_failed",
+
+  // AI Recipe Generation
+  AI_RECIPES_REQUESTED: "ai_recipes_requested",
+  AI_RECIPES_SHOWN: "ai_recipes_shown",
+  AI_RECIPES_FAILED: "ai_recipes_failed",
 } as const;
