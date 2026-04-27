@@ -115,6 +115,21 @@ const Index = () => {
     });
   };
 
+  const getRecipeExpiringSoonIngredients = (recipe: Recipe, pantryItems: PantryItem[]) => {
+    const expiringItems = pantryItems.filter((item) => {
+      const days = daysUntilDate(item.expiresAt);
+      return days !== null && days >= 0 && days <= 3;
+    });
+    if (expiringItems.length === 0) return [];
+    const names = recipe.extendedIngredients.flatMap((ing) => {
+      const ingName = ing.name.toLowerCase();
+      return expiringItems
+        .filter((item) => ingName.includes(item.name.toLowerCase()) || item.name.toLowerCase().includes(ingName))
+        .map((item) => item.name);
+    });
+    return Array.from(new Set(names));
+  };
+
   const handleClearAll = useCallback(() => {
     const previousItems = [...items];
     setItems([]);
@@ -149,7 +164,7 @@ const Index = () => {
       const maxServings = isFullMatch
         ? calculateMaxServings(pantryMapped, recipe.extendedIngredients, recipe.servings)
         : null;
-      return { ...recipe, matchedIngredients: matched, insufficientCount: summary.insufficientCount, maxServings };
+      return { ...recipe, matchedIngredients: matched, insufficientCount: summary.insufficientCount, maxServings, expiringSoonIngredients: getRecipeExpiringSoonIngredients(recipe, pantryItems) };
     });
   };
 
