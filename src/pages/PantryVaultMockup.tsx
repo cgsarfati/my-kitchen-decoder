@@ -442,13 +442,17 @@ const PantryVaultMockup = () => {
 
         {/* SECTION 1 — INTAKE */}
         <section className="surface-paper-lg rounded-2xl p-6 md:p-8 space-y-5">
-          <div className="space-y-1">
-            <h2 className="text-lg font-semibold flex items-center gap-2">
-              <span className="inline-flex h-7 w-7 items-center justify-center rounded-lg bg-primary/10">🛒</span>
-              Add to Pantry
-            </h2>
-          </div>
+          <h2 className="text-lg font-semibold flex items-center gap-2">
+            <span className="inline-flex h-7 w-7 items-center justify-center rounded-lg bg-primary/10">🛒</span>
+            Add to Pantry
+          </h2>
 
+          <Tabs value={inputMode} onValueChange={(value) => setInputMode(value as InputMode)}>
+            <TabsList className="grid w-full grid-cols-2">
+              <TabsTrigger value="manual">Manual</TabsTrigger>
+              <TabsTrigger value="describe">Describe</TabsTrigger>
+            </TabsList>
+            <TabsContent value="manual" className="mt-4">
           <form onSubmit={handleAdd} className="space-y-3">
             <div className="grid grid-cols-[minmax(0,1fr)_5.5rem_7rem] gap-2">
               <Input
@@ -504,13 +508,21 @@ const PantryVaultMockup = () => {
                 <Plus className="h-5 w-5" />
               </Button>
             </div>
-            <Textarea
-              placeholder="AI add: 1 lb chicken breast expiring Friday, $7.50; 2 cups rice"
-              value={aiInput}
-              onChange={(e) => setAiInput(e.target.value)}
-              className="min-h-20 bg-card resize-none"
-            />
           </form>
+            </TabsContent>
+            <TabsContent value="describe" className="mt-4 space-y-3">
+              <Textarea
+                placeholder={'Describe what\'s in your pantry, e.g.\n"1 lb chicken breast expiring Friday, $7.50; 2 cups rice"'}
+                value={aiInput}
+                onChange={(e) => setAiInput(e.target.value)}
+                className="min-h-[100px] bg-card resize-none"
+              />
+              <Button type="button" variant="hero" className="w-full gap-2" onClick={handleAiAdd} disabled={!aiInput.trim()}>
+                <Plus className="h-4 w-4" />
+                Add described items
+              </Button>
+            </TabsContent>
+          </Tabs>
         </section>
 
         {/* SECTION 2 — PANTRY LIST WITH BATCHES & BADGES */}
