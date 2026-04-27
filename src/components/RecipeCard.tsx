@@ -2,20 +2,15 @@ import { useState } from "react";
 import { Clock, Users, CheckCircle2, AlertCircle, AlertTriangle, XCircle, UtensilsCrossed, Sparkles } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import RecipeAdaptation from "@/components/RecipeAdaptation";
-import type { PantryItem } from "@/types/pantry";
 import type { Recipe } from "@/types/recipe";
 
 interface RecipeCardProps {
   recipe: Recipe;
   onClick: (recipe: Recipe) => void;
-  pantryItems?: PantryItem[];
-  demoMode?: boolean;
 }
 
-const RecipeCard = ({ recipe, onClick, pantryItems = [], demoMode = false }: RecipeCardProps) => {
+const RecipeCard = ({ recipe, onClick }: RecipeCardProps) => {
   const isFullMatch = recipe.missedIngredientCount === 0 && (recipe.insufficientCount ?? 0) === 0;
-  const canShowAdaptation = !isFullMatch && pantryItems.length > 0;
   const [imgError, setImgError] = useState(false);
   const hasImage = recipe.image && !imgError;
   const urgencyLabel = recipe.expiringSoonDays === 0
@@ -154,9 +149,6 @@ const RecipeCard = ({ recipe, onClick, pantryItems = [], demoMode = false }: Rec
             </>
           )}
         </div>
-        {canShowAdaptation && (
-          <RecipeAdaptation recipe={recipe} pantryItems={pantryItems} demoMode={demoMode} placement="card" />
-        )}
       </CardContent>
     </Card>
   );
