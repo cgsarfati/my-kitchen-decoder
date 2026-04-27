@@ -12,7 +12,8 @@ serve(async (req) => {
   }
 
   try {
-    const { text } = await req.json();
+    const { text, today } = await req.json();
+    const todayIso = typeof today === "string" && /^\d{4}-\d{2}-\d{2}$/.test(today) ? today : new Date().toISOString().slice(0, 10);
     if (!text || typeof text !== "string" || text.trim().length < 2) {
       return new Response(
         JSON.stringify({ error: "Please provide ingredient text." }),
@@ -38,6 +39,8 @@ serve(async (req) => {
             role: "system",
             content: `You are a kitchen ingredient parser. The user describes what's in their pantry in natural language. Extract each ingredient with a quantity, unit, and optional cost and expiration date when mentioned.
 
+TODAY: ${todayIso}. Use this exact date as the anchor for every relative expiration phrase.
+
 UNITS:
 - Use standard abbreviated units: g, kg, oz, lb, ml, l, cup, tbsp, tsp, clove, can, slice, bunch.
 - Default to "g" for solids and "ml" for liquids when no unit is clear.
@@ -49,7 +52,7 @@ NAMES:
 COST AND EXPIRATION:
 - If the user mentions a price or value for an ingredient, return cost as a number in dollars, without currency symbols.
 - If the user mentions an expiration date or freshness window, return expiresAt in YYYY-MM-DD format.
-- Resolve relative expiration phrases like "expires tomorrow", "expires in 2 weeks", or "good until Friday" using today's date.
+- Resolve relative expiration phrases like "expires tomorrow", "expired yesterday", "expires in 2 weeks", or "good until Friday" using TODAY above, not your training date.
 - If cost or expiration is not mentioned for an ingredient, omit that field.
 
 QUANTITY ESTIMATION (important):
