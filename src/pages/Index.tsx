@@ -283,6 +283,40 @@ const Index = () => {
     return buildAiRecipeCards(data.recipes || []);
   };
 
+  const fetchWebRecipeCards = async (): Promise<Recipe[]> => {
+    if (demoMode) {
+      await new Promise((r) => setTimeout(r, 800));
+      const pantryNames = items.map((i) => i.name.toLowerCase());
+      return MOCK_RECIPES.map((recipe) => {
+        const used = recipe.extendedIngredients.filter((ing) =>
+          pantryNames.some((p) => ing.name.toLowerCase().includes(p) || p.includes(ing.name.toLowerCase()))
+        );
+        const missed = recipe.extendedIngredients.filter((ing) =>
+          !pantryNames.some((p) => ing.name.toLowerCase().includes(p) || p.includes(ing.name.toLowerCase()))
+        );
+        return {
+          ...recipe,
+          usedIngredientCount: used.length,
+          missedIngredientCount: missed.length,
+          usedIngredients: used.map((i) => ({ id: i.id, name: i.name, amount: i.amount, unit: i.unit, original: i.original })),
+          missedIngredients: missed.map((i) => ({ id: i.id, name: i.name, amount: i.amount, unit: i.unit, original: i.original })),
+        };
+      }).filter((r) => r.usedIngredientCount > 0);
+    }
+
+    const { data, error } = await supabase.functions.invoke("search-recipes", {
+      body: { ingredients: items.map((i) => ({ name: i.name, quantity: i.quantity, unit: i.unit })) },
+    });
+    if (error) {
+      const errorBody = typeof error === 'object' && error?.context?.body ? await error.context.json?.() : null;
+      if (errorBody?.error === "RATE_LIMIT" || error?.message?.includes("429")) throw new Error("RATE_LIMIT");
+      throw error;
+    }
+    if (data?.error === "RATE_LIMIT") throw new Error("RATE_LIMIT");
+    if (data?.error) throw new Error(data.error);
+    return data.recipes || [];
+  };
+
   const handleSearch = async () => {
     if (items.length === 0) return;
     const ingredientNames = items.map((i) => i.name);
