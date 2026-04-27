@@ -42,7 +42,8 @@ serve(async (req) => {
 TODAY: ${todayIso}. Use this exact date as the anchor for every relative expiration phrase.
 
 UNITS:
-- Use standard abbreviated units: g, kg, oz, lb, ml, l, cup, tbsp, tsp, clove, can, slice, bunch.
+- Use standard abbreviated units: g, kg, oz, lb, ml, l, cup, tbsp, tsp, piece, clove, can, slice, bunch.
+- Use "piece" for countable whole items like eggs, chicken breasts, tomatoes, lemons, potatoes, apples, bananas, and onions. Use "slice" only when the user specifically describes slices.
 - Default to "g" for solids and "ml" for liquids when no unit is clear.
 
 NAMES:
@@ -65,7 +66,7 @@ Examples of the reasoning you should do (do not parrot these numbers — adapt t
 - "a splash of olive oil" → ~1 tbsp → return ~15 ml olive oil
 - "half a stick of butter" → US stick is 113 g → return ~56 g butter
 - "a handful of spinach" → ~30 g
-- "a couple of eggs" → 2 pieces (use unit "slice" since "piece" isn't supported, or just count)
+- "a couple of eggs" → 2 piece
 
 If the user gives no context at all for an ingredient (just names it), estimate a modest single-recipe amount, not a bulk pantry stock.`,
           },
@@ -89,7 +90,7 @@ If the user gives no context at all for an ingredient (just names it), estimate 
                         quantity: { type: "number", description: "Numeric quantity" },
                         unit: {
                           type: "string",
-                          description: "Unit of measurement (g, kg, oz, lb, ml, l, cup, tbsp, tsp, clove, can, slice, bunch)",
+                          description: "Unit of measurement (g, kg, oz, lb, ml, l, cup, tbsp, tsp, piece, clove, can, slice, bunch)",
                         },
                         cost: { type: "number", description: "Optional ingredient cost in dollars, if mentioned" },
                         expiresAt: { type: "string", description: "Optional expiration date in YYYY-MM-DD format, if mentioned" },
