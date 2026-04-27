@@ -1,5 +1,5 @@
 import { useState, useCallback, useEffect, useRef } from "react";
-import { ChefHat, Search, FlaskConical, UtensilsCrossed, Trash2, Moon, Sun, List, Sparkles } from "lucide-react";
+import { ChefHat, Search, FlaskConical, UtensilsCrossed, Trash2, Moon, Sun, List, Sparkles, Globe2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
@@ -29,6 +29,7 @@ const Index = () => {
   const [hasSearched, setHasSearched] = useState(false);
   const [selectedRecipe, setSelectedRecipe] = useState<Recipe | null>(null);
   const [demoMode, setDemoMode] = useState(true);
+  const [recipeSource, setRecipeSource] = useState<"ai" | "web">("ai");
   const [pantryId, setPantryId] = useState<string | undefined>();
   const [inputMode, setInputMode] = useState<"manual" | "ai">("ai");
   const [pantryLoaded, setPantryLoaded] = useState(false);
@@ -181,7 +182,7 @@ const Index = () => {
     });
   };
 
-  const buildAiRecipeCards = (aiRecipes: any[] = []): Recipe[] => aiRecipes.slice(0, 2).map((recipe, recipeIndex) => {
+  const buildAiRecipeCards = (aiRecipes: any[] = []): Recipe[] => aiRecipes.slice(0, 4).map((recipe, recipeIndex) => {
     const title = String(recipe.title || "").toLowerCase();
     const image = title.includes("rice") || title.includes("pilaf")
       ? aiCheesyGarlicRicePilaf
@@ -244,6 +245,32 @@ const Index = () => {
       ],
       steps: ["Warm rice and black beans together with salt and pepper.", "Stir lemon juice into Greek yogurt for a quick sauce.", "Serve beans over rice and spoon the sauce on top."],
     },
+    {
+      title: "AI Cheddar Black Bean Rice Melt",
+      generationNote: "A pantry-first rice dinner with one optional fresh topping.",
+      servings: 3,
+      readyInMinutes: 22,
+      ingredients: [
+        { name: "rice", amount: 1.5, unit: "cups", original: "1 1/2 cups cooked rice", fromPantry: true },
+        { name: "black beans", amount: 1, unit: "cup", original: "1 cup black beans", fromPantry: true },
+        { name: "cheddar cheese", amount: 0.75, unit: "cup", original: "3/4 cup cheddar cheese", fromPantry: true },
+        { name: "green onion", amount: 2, unit: "pieces", original: "2 green onions, sliced", fromPantry: false },
+      ],
+      steps: ["Warm rice and black beans in a skillet with salt and pepper.", "Fold in cheddar until melted and creamy.", "Top with sliced green onion if you have it."],
+    },
+    {
+      title: "AI Chicken Tortilla Soup-ish Bowls",
+      generationNote: "A simple generated bowl that uses water instead of assuming broth.",
+      servings: 2,
+      readyInMinutes: 30,
+      ingredients: [
+        { name: "chicken breast", amount: 1, unit: "piece", original: "1 chicken breast", fromPantry: true },
+        { name: "tortillas", amount: 2, unit: "pieces", original: "2 tortillas, toasted in strips", fromPantry: true },
+        { name: "black beans", amount: 0.75, unit: "cup", original: "3/4 cup black beans", fromPantry: true },
+        { name: "tomato", amount: 1, unit: "piece", original: "1 tomato, chopped", fromPantry: false },
+      ],
+      steps: ["Simmer chicken in water with salt and pepper until cooked through.", "Shred the chicken, then warm it with black beans and chopped tomato.", "Serve with crisp tortilla strips on top."],
+    },
   ]);
 
   const fetchAiRecipeCards = async (): Promise<Recipe[]> => {
@@ -256,18 +283,11 @@ const Index = () => {
     return buildAiRecipeCards(data.recipes || []);
   };
 
-  const handleSearch = async () => {
-    if (items.length === 0) return;
-    const ingredientNames = items.map((i) => i.name);
-    trackEvent(AnalyticsEvents.SEARCH_RECIPES, { ingredient_count: items.length, ingredients: ingredientNames, demo: demoMode });
-    setIsLoading(true);
-    setHasSearched(true);
-    setSelectedRecipe(null);
-
+  const fetchWebRecipeCards = async (): Promise<Recipe[]> => {
     if (demoMode) {
       await new Promise((r) => setTimeout(r, 800));
       const pantryNames = items.map((i) => i.name.toLowerCase());
-      const filtered = MOCK_RECIPES.map((recipe) => {
+      return MOCK_RECIPES.map((recipe) => {
         const used = recipe.extendedIngredients.filter((ing) =>
           pantryNames.some((p) => ing.name.toLowerCase().includes(p) || p.includes(ing.name.toLowerCase()))
         );
@@ -282,47 +302,43 @@ const Index = () => {
           missedIngredients: missed.map((i) => ({ id: i.id, name: i.name, amount: i.amount, unit: i.unit, original: i.original })),
         };
       }).filter((r) => r.usedIngredientCount > 0);
-      const aiRecipeCards = await fetchAiRecipeCards().catch((error) => {
-        console.error("AI recipe generation error:", error);
-        trackEvent(AnalyticsEvents.AI_RECIPES_FAILED, { demo: true });
-        return [];
-      });
-      const enriched = enrichRecipesWithQuantityMatch([...filtered, ...aiRecipeCards], items).filter((recipe) => !recipeUsesExpiredItem(recipe, items));
-      setRecipes(enriched);
-      if (aiRecipeCards.length > 0) trackEvent(AnalyticsEvents.AI_RECIPES_SHOWN, { count: aiRecipeCards.length, demo: true });
-      trackEvent(AnalyticsEvents.SEARCH_RESULTS, { result_count: enriched.length, full_matches: enriched.filter(r => r.missedIngredientCount === 0).length, demo: true });
-      setIsLoading(false);
-      return;
     }
 
+    const { data, error } = await supabase.functions.invoke("search-recipes", {
+      body: { ingredients: items.map((i) => ({ name: i.name, quantity: i.quantity, unit: i.unit })) },
+    });
+    if (error) {
+      const errorBody = typeof error === 'object' && error?.context?.body ? await error.context.json?.() : null;
+      if (errorBody?.error === "RATE_LIMIT" || error?.message?.includes("429")) throw new Error("RATE_LIMIT");
+      throw error;
+    }
+    if (data?.error === "RATE_LIMIT") throw new Error("RATE_LIMIT");
+    if (data?.error) throw new Error(data.error);
+    return data.recipes || [];
+  };
+
+  const handleSearch = async () => {
+    if (items.length === 0) return;
+    const ingredientNames = items.map((i) => i.name);
+    trackEvent(AnalyticsEvents.SEARCH_RECIPES, { ingredient_count: items.length, ingredients: ingredientNames, demo: demoMode });
+    setIsLoading(true);
+    setHasSearched(true);
+    setSelectedRecipe(null);
+
     try {
-      const { data, error } = await supabase.functions.invoke("search-recipes", {
-        body: { ingredients: items.map((i) => ({ name: i.name, quantity: i.quantity, unit: i.unit })) },
-      });
-      if (error) {
-        const errorBody = typeof error === 'object' && error?.context?.body ? await error.context.json?.() : null;
-        if (errorBody?.error === "RATE_LIMIT" || error?.message?.includes("429")) throw new Error("RATE_LIMIT");
-        throw error;
-      }
-      if (data?.error === "RATE_LIMIT") throw new Error("RATE_LIMIT");
-      if (data?.error) throw new Error(data.error);
-      const aiRecipeCards = await fetchAiRecipeCards().catch((error) => {
-        console.error("AI recipe generation error:", error);
-        trackEvent(AnalyticsEvents.AI_RECIPES_FAILED, { demo: false });
-        toast({ title: "AI recipe ideas unavailable", description: "Recipe search still worked, but AI-created ideas could not load." });
-        return [];
-      });
-      const enriched = enrichRecipesWithQuantityMatch([...(data.recipes || []), ...aiRecipeCards], items).filter((recipe) => !recipeUsesExpiredItem(recipe, items));
+      const rawRecipes = recipeSource === "ai" ? await fetchAiRecipeCards() : await fetchWebRecipeCards();
+      const enriched = enrichRecipesWithQuantityMatch(rawRecipes, items).filter((recipe) => !recipeUsesExpiredItem(recipe, items));
       setRecipes(enriched);
-      if (aiRecipeCards.length > 0) trackEvent(AnalyticsEvents.AI_RECIPES_SHOWN, { count: aiRecipeCards.length, demo: false });
-      trackEvent(AnalyticsEvents.SEARCH_RESULTS, { result_count: enriched.length, full_matches: enriched.filter(r => r.missedIngredientCount === 0).length, demo: false });
+      if (recipeSource === "ai") trackEvent(AnalyticsEvents.AI_RECIPES_SHOWN, { count: rawRecipes.length, demo: demoMode });
+      trackEvent(AnalyticsEvents.SEARCH_RESULTS, { result_count: enriched.length, full_matches: enriched.filter(r => r.missedIngredientCount === 0).length, demo: demoMode, source: recipeSource });
     } catch (err: any) {
       console.error("Search error:", err);
       const isRateLimit = err.message === "RATE_LIMIT" || err.message?.includes("429") || err.message?.includes("daily points limit");
+      if (recipeSource === "ai") trackEvent(AnalyticsEvents.AI_RECIPES_FAILED, { demo: demoMode });
       toast({
-        title: isRateLimit ? "API limit reached" : "Search failed",
+        title: isRateLimit ? "Recipe source limit reached" : "Search failed",
         description: isRateLimit
-          ? "We've hit our daily recipe search limit. Please try again tomorrow!"
+          ? "This recipe source is temporarily limited. Try switching recipe sources or Demo mode."
           : err.message || "Could not fetch recipes. Please try again.",
         variant: "destructive",
       });
@@ -497,16 +513,44 @@ const Index = () => {
           )}
 
           {items.length > 0 && (
-            <Button
-              variant="hero"
-              size="lg"
-              className="w-full gap-2 shadow-kitchen"
-              onClick={handleSearch}
-              disabled={isLoading}
-            >
-              <Search className="h-5 w-5" />
-              Find Recipes ({items.length} ingredient{items.length !== 1 ? "s" : ""})
-            </Button>
+            <div className="space-y-3">
+              <div className="grid grid-cols-2 rounded-lg border border-border overflow-hidden">
+                <button
+                  type="button"
+                  onClick={() => setRecipeSource("ai")}
+                  className={`flex items-center justify-center gap-1.5 px-3 py-2 text-sm font-medium transition-colors ${
+                    recipeSource === "ai"
+                      ? "bg-primary text-primary-foreground"
+                      : "bg-card text-muted-foreground hover:text-foreground"
+                  }`}
+                >
+                  <Sparkles className="h-4 w-4" />
+                  AI-generated Recipes
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setRecipeSource("web")}
+                  className={`flex items-center justify-center gap-1.5 px-3 py-2 text-sm font-medium transition-colors ${
+                    recipeSource === "web"
+                      ? "bg-primary text-primary-foreground"
+                      : "bg-card text-muted-foreground hover:text-foreground"
+                  }`}
+                >
+                  <Globe2 className="h-4 w-4" />
+                  Web Recipes
+                </button>
+              </div>
+              <Button
+                variant="hero"
+                size="lg"
+                className="w-full gap-2 shadow-kitchen"
+                onClick={handleSearch}
+                disabled={isLoading}
+              >
+                <Search className="h-5 w-5" />
+                Find Recipes ({items.length} ingredient{items.length !== 1 ? "s" : ""})
+              </Button>
+            </div>
           )}
         </section>
 
