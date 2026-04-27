@@ -400,33 +400,27 @@ const PantryVaultMockup = () => {
               <span className="inline-flex h-7 w-7 items-center justify-center rounded-lg bg-primary/10">🛒</span>
               Add to Pantry
             </h2>
-            <p className="text-sm text-muted-foreground">
-              Cost and expiry are optional. Each add creates a new batch — duplicates allowed.
-            </p>
           </div>
 
           <form onSubmit={handleAdd} className="space-y-3">
-            {/* Row 1: name */}
-            <Input
-              placeholder="Ingredient (e.g. chicken breast)"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              className="bg-card"
-            />
-
-            {/* Row 2: qty + unit */}
-            <div className="flex gap-2">
+            <div className="grid grid-cols-[minmax(0,1fr)_5.5rem_7rem] gap-2">
+              <Input
+                placeholder="Ingredient (e.g. chicken breast)"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                className="bg-card"
+              />
               <Input
                 type="number"
                 placeholder="Qty"
                 value={qty}
                 onChange={(e) => setQty(e.target.value)}
-                className="w-24 bg-card"
+                className="bg-card"
                 min="0"
                 step="any"
               />
               <Select value={unit} onValueChange={setUnit}>
-                <SelectTrigger className="w-28 bg-card"><SelectValue /></SelectTrigger>
+                <SelectTrigger className="bg-card"><SelectValue /></SelectTrigger>
                 <SelectContent>
                   {COMMON_UNITS.map((u) => (
                     <SelectItem key={u} value={u}>{u}</SelectItem>
@@ -463,6 +457,12 @@ const PantryVaultMockup = () => {
                 <Plus className="h-5 w-5" />
               </Button>
             </div>
+            <Textarea
+              placeholder="AI add: 1 lb chicken breast expiring Friday, $7.50; 2 cups rice"
+              value={aiInput}
+              onChange={(e) => setAiInput(e.target.value)}
+              className="min-h-20 bg-card resize-none"
+            />
           </form>
         </section>
 
@@ -474,7 +474,6 @@ const PantryVaultMockup = () => {
                 <span className="inline-flex h-7 w-7 items-center justify-center rounded-lg bg-primary/10">🧺</span>
                 Your Pantry ({items.length})
               </h2>
-              <p className="text-sm text-muted-foreground">Sorted by name. Same-name batches sit adjacent.</p>
             </div>
             {expiringCount > 0 && (
               <Badge variant="outline" className="border-warning/50 text-warning bg-warning/5 gap-1">
@@ -548,11 +547,6 @@ const PantryVaultMockup = () => {
                 <span className="inline-flex h-7 w-7 items-center justify-center rounded-lg bg-primary/10">📖</span>
                 Recipes ({sortedRecipes.length})
               </h2>
-              <p className="text-sm text-muted-foreground">
-                {hasAnyExpiry
-                  ? `"Expiring soon" sort is available — pantry has ${items.filter(i => i.expiresAt).length} dated item(s).`
-                  : "Add expiry dates to unlock the \"Expiring soon\" sort."}
-              </p>
             </div>
             <div className="flex items-center gap-2">
               <span className="text-xs text-muted-foreground">Sort:</span>
