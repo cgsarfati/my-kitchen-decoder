@@ -51,6 +51,12 @@ const Index = () => {
     localStorage.setItem("theme", darkMode ? "dark" : "light");
   }, [darkMode]);
 
+  useEffect(() => {
+    if (!demoMode && recipeSource === "web") {
+      setRecipeSource("ai");
+    }
+  }, [demoMode, recipeSource]);
+
   // Load theme preference
   useEffect(() => {
     const saved = localStorage.getItem("theme");
@@ -328,15 +334,16 @@ const Index = () => {
     setSelectedRecipe(null);
 
     try {
-      const rawRecipes = recipeSource === "ai" ? await fetchAiRecipeCards() : await fetchWebRecipeCards();
+      const activeRecipeSource = demoMode ? recipeSource : "ai";
+      const rawRecipes = activeRecipeSource === "ai" ? await fetchAiRecipeCards() : await fetchWebRecipeCards();
       const enriched = enrichRecipesWithQuantityMatch(rawRecipes, items).filter((recipe) => !recipeUsesExpiredItem(recipe, items));
       setRecipes(enriched);
-      if (recipeSource === "ai") trackEvent(AnalyticsEvents.AI_RECIPES_SHOWN, { count: rawRecipes.length, demo: demoMode });
-      trackEvent(AnalyticsEvents.SEARCH_RESULTS, { result_count: enriched.length, full_matches: enriched.filter(r => r.missedIngredientCount === 0).length, demo: demoMode, source: recipeSource });
+      if (activeRecipeSource === "ai") trackEvent(AnalyticsEvents.AI_RECIPES_SHOWN, { count: rawRecipes.length, demo: demoMode });
+      trackEvent(AnalyticsEvents.SEARCH_RESULTS, { result_count: enriched.length, full_matches: enriched.filter(r => r.missedIngredientCount === 0).length, demo: demoMode, source: activeRecipeSource });
     } catch (err: any) {
       console.error("Search error:", err);
       const isRateLimit = err.message === "RATE_LIMIT" || err.message?.includes("429") || err.message?.includes("daily points limit");
-      if (recipeSource === "ai") trackEvent(AnalyticsEvents.AI_RECIPES_FAILED, { demo: demoMode });
+      if ((!demoMode || recipeSource === "ai")) trackEvent(AnalyticsEvents.AI_RECIPES_FAILED, { demo: demoMode });
       toast({
         title: isRateLimit ? "Recipe source limit reached" : "Search failed",
         description: isRateLimit
@@ -516,32 +523,34 @@ const Index = () => {
 
           {items.length > 0 && (
             <div className="space-y-3">
-              <div className="grid grid-cols-2 rounded-lg border border-border overflow-hidden">
-                <button
-                  type="button"
-                  onClick={() => setRecipeSource("ai")}
-                  className={`flex items-center justify-center gap-1.5 px-3 py-2 text-sm font-medium transition-colors ${
-                    recipeSource === "ai"
-                      ? "bg-primary text-primary-foreground"
-                      : "bg-card text-muted-foreground hover:text-foreground"
-                  }`}
-                >
-                  <Sparkles className="h-4 w-4" />
-                  AI-generated Recipes
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setRecipeSource("web")}
-                  className={`flex items-center justify-center gap-1.5 px-3 py-2 text-sm font-medium transition-colors ${
-                    recipeSource === "web"
-                      ? "bg-primary text-primary-foreground"
-                      : "bg-card text-muted-foreground hover:text-foreground"
-                  }`}
-                >
-                  <Globe2 className="h-4 w-4" />
-                  Web Recipes
-                </button>
-              </div>
+              {demoMode && (
+                <div className="grid grid-cols-2 rounded-lg border border-border overflow-hidden">
+                  <button
+                    type="button"
+                    onClick={() => setRecipeSource("ai")}
+                    className={`flex items-center justify-center gap-1.5 px-3 py-2 text-sm font-medium transition-colors ${
+                      recipeSource === "ai"
+                        ? "bg-primary text-primary-foreground"
+                        : "bg-card text-muted-foreground hover:text-foreground"
+                    }`}
+                  >
+                    <Sparkles className="h-4 w-4" />
+                    AI-generated Recipes
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setRecipeSource("web")}
+                    className={`flex items-center justify-center gap-1.5 px-3 py-2 text-sm font-medium transition-colors ${
+                      recipeSource === "web"
+                        ? "bg-primary text-primary-foreground"
+                        : "bg-card text-muted-foreground hover:text-foreground"
+                    }`}
+                  >
+                    <Globe2 className="h-4 w-4" />
+                    Web Recipes
+                  </button>
+                </div>
+              )}
               <Button
                 variant="hero"
                 size="lg"
@@ -550,7 +559,7 @@ const Index = () => {
                 disabled={isLoading}
               >
                 <Search className="h-5 w-5" />
-                Find Recipes ({items.length} ingredient{items.length !== 1 ? "s" : ""})
+                {demoMode ? "Find Recipes" : "Find AI-generated Recipes"} ({items.length} ingredient{items.length !== 1 ? "s" : ""})
               </Button>
             </div>
           )}
