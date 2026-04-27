@@ -8,6 +8,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import RecipeCard from "@/components/RecipeCard";
+import type { PantryItem } from "@/types/pantry";
 import type { Recipe } from "@/types/recipe";
 
 type SortOption = "match" | "expires_soon" | "time" | "servings" | "fewest_missing";
@@ -19,6 +20,7 @@ interface RecipeResultsProps {
   isLoading: boolean;
   hasSearched: boolean;
   onRecipeClick: (recipe: Recipe) => void;
+  pantryItems?: PantryItem[];
   demoMode?: boolean;
 }
 
@@ -64,7 +66,7 @@ const SORT_LABELS: Record<SortOption, { label: string; icon: React.ReactNode }> 
   servings: { label: "Most Servings", icon: <Users className="h-4 w-4" /> },
 };
 
-const RecipeResults = ({ recipes, isLoading, hasSearched, onRecipeClick, demoMode }: RecipeResultsProps) => {
+const RecipeResults = ({ recipes, isLoading, hasSearched, onRecipeClick, pantryItems = [], demoMode }: RecipeResultsProps) => {
   const [sortBy, setSortBy] = useState<SortOption>("match");
   const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
 
@@ -158,7 +160,7 @@ const RecipeResults = ({ recipes, isLoading, hasSearched, onRecipeClick, demoMod
           </h3>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             {fullMatches.map((recipe) => (
-              <RecipeCard key={recipe.id} recipe={recipe} onClick={onRecipeClick} />
+              <RecipeCard key={recipe.id} recipe={recipe} onClick={onRecipeClick} pantryItems={pantryItems} demoMode={demoMode} />
             ))}
           </div>
         </div>
@@ -171,7 +173,7 @@ const RecipeResults = ({ recipes, isLoading, hasSearched, onRecipeClick, demoMod
           </h3>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             {visiblePartial.map((recipe) => (
-              <RecipeCard key={recipe.id} recipe={recipe} onClick={onRecipeClick} />
+              <RecipeCard key={recipe.id} recipe={recipe} onClick={onRecipeClick} pantryItems={pantryItems} demoMode={demoMode} />
             ))}
           </div>
         </div>
