@@ -1,6 +1,6 @@
 import { useState, useMemo } from "react";
 import { Link } from "react-router-dom";
-import { ChefHat, Plus, X, Calendar, DollarSign, AlertTriangle, Clock, Flame, ArrowLeft, Moon, Sun, CheckCircle2, XCircle } from "lucide-react";
+import { ChefHat, Plus, X, Calendar, DollarSign, AlertTriangle, Clock, Flame, ArrowLeft, Moon, Sun } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -310,7 +310,7 @@ const PantryVaultMockup = () => {
     if (sortKey === "expiring-soon") {
       // Score each recipe by the soonest-expiring dated ingredient it uses.
       // Recipes using only undated items get pushed to the bottom (Infinity).
-      const score = (r: MockRecipe) => {
+      const score = (r: Recipe) => {
         let min: number | null = null;
         for (const ing of r.extendedIngredients.map((ingredient) => ingredient.name)) {
           for (const [pname, days] of ingredientUrgency.entries()) {
@@ -368,7 +368,19 @@ const PantryVaultMockup = () => {
             </div>
             <h1 className="text-xl text-foreground">Pantry Vault — Mockup</h1>
           </div>
-          <Badge variant="outline" className="text-xs">Demo Mode</Badge>
+          <div className="flex items-center gap-2">
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={() => setDarkPreview((prev) => !prev)}
+              className="gap-2 text-xs"
+            >
+              {darkPreview ? <Sun className="h-3.5 w-3.5" /> : <Moon className="h-3.5 w-3.5" />}
+              {darkPreview ? "Light" : "Dark"}
+            </Button>
+            <Badge variant="outline" className="text-xs">Demo Mode</Badge>
+          </div>
         </div>
       </header>
 
