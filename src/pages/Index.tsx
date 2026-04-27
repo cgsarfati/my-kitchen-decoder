@@ -51,6 +51,12 @@ const Index = () => {
     localStorage.setItem("theme", darkMode ? "dark" : "light");
   }, [darkMode]);
 
+  useEffect(() => {
+    if (!demoMode && recipeSource === "web") {
+      setRecipeSource("ai");
+    }
+  }, [demoMode, recipeSource]);
+
   // Load theme preference
   useEffect(() => {
     const saved = localStorage.getItem("theme");
@@ -328,15 +334,16 @@ const Index = () => {
     setSelectedRecipe(null);
 
     try {
-      const rawRecipes = recipeSource === "ai" ? await fetchAiRecipeCards() : await fetchWebRecipeCards();
+      const activeRecipeSource = demoMode ? recipeSource : "ai";
+      const rawRecipes = activeRecipeSource === "ai" ? await fetchAiRecipeCards() : await fetchWebRecipeCards();
       const enriched = enrichRecipesWithQuantityMatch(rawRecipes, items).filter((recipe) => !recipeUsesExpiredItem(recipe, items));
       setRecipes(enriched);
-      if (recipeSource === "ai") trackEvent(AnalyticsEvents.AI_RECIPES_SHOWN, { count: rawRecipes.length, demo: demoMode });
-      trackEvent(AnalyticsEvents.SEARCH_RESULTS, { result_count: enriched.length, full_matches: enriched.filter(r => r.missedIngredientCount === 0).length, demo: demoMode, source: recipeSource });
+      if (activeRecipeSource === "ai") trackEvent(AnalyticsEvents.AI_RECIPES_SHOWN, { count: rawRecipes.length, demo: demoMode });
+      trackEvent(AnalyticsEvents.SEARCH_RESULTS, { result_count: enriched.length, full_matches: enriched.filter(r => r.missedIngredientCount === 0).length, demo: demoMode, source: activeRecipeSource });
     } catch (err: any) {
       console.error("Search error:", err);
       const isRateLimit = err.message === "RATE_LIMIT" || err.message?.includes("429") || err.message?.includes("daily points limit");
-      if (recipeSource === "ai") trackEvent(AnalyticsEvents.AI_RECIPES_FAILED, { demo: demoMode });
+      if ((!demoMode || recipeSource === "ai")) trackEvent(AnalyticsEvents.AI_RECIPES_FAILED, { demo: demoMode });
       toast({
         title: isRateLimit ? "Recipe source limit reached" : "Search failed",
         description: isRateLimit
