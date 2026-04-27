@@ -73,4 +73,9 @@ export const AnalyticsEvents = {
   AI_SUB_REQUESTED: "ai_sub_requested",
   AI_SUB_SHOWN: "ai_sub_shown",
   AI_SUB_FAILED: "ai_sub_failed",
+
+  // AI Recipe Adaptation
+  AI_ADAPT_REQUESTED: "ai_adapt_requested",
+  AI_ADAPT_SHOWN: "ai_adapt_shown",
+  AI_ADAPT_FAILED: "ai_adapt_failed",
 } as const;
