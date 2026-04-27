@@ -330,7 +330,7 @@ const Index = () => {
                 Your Pantry
               </h3>
               <p className="text-sm text-muted-foreground">
-                Add ingredients with quantities, optional cost, and optional expiration dates to find matching recipes
+                Add ingredients to find matching recipes — quantities required, cost and expiration optional
               </p>
             </div>
           </div>
