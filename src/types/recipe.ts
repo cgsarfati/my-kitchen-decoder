@@ -30,4 +30,6 @@ export interface Recipe {
   insufficientCount?: number;
   /** Max servings user can make based on pantry quantities (full matches only) */
   maxServings?: number | null;
+  /** Pantry ingredients in this recipe that expire soon */
+  expiringSoonIngredients?: string[];
 }

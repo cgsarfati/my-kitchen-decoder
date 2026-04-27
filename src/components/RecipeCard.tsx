@@ -85,6 +85,12 @@ const RecipeCard = ({ recipe, onClick }: RecipeCardProps) => {
                   <span>You have: {recipe.matchedIngredients.filter((i) => i.status === "have").map((i) => i.name).join(", ")}</span>
                 </p>
               )}
+              {recipe.expiringSoonIngredients && recipe.expiringSoonIngredients.length > 0 && (
+                <p className="text-xs font-medium text-warning flex items-start gap-1.5">
+                  <Clock className="h-3.5 w-3.5 shrink-0 mt-px" />
+                  <span>Use soon: {recipe.expiringSoonIngredients.join(", ")}</span>
+                </p>
+              )}
               {recipe.matchedIngredients.filter((i) => i.status === "insufficient").length > 0 && (
                 <p className="text-xs font-medium text-warning flex items-start gap-1.5">
                   <AlertTriangle className="h-3.5 w-3.5 shrink-0 mt-px" />
