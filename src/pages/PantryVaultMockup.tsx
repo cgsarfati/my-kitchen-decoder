@@ -15,6 +15,7 @@ import {
 import { COMMON_UNITS } from "@/types/pantry";
 import RecipeCard from "@/components/RecipeCard";
 import RecipeDetail from "@/components/RecipeDetail";
+import type { PantryItem } from "@/types/pantry";
 import type { Recipe, RecipeIngredientWithStatus } from "@/types/recipe";
 
 /* ============================================================
@@ -352,6 +353,10 @@ const PantryVaultMockup = () => {
   }, [items]);
 
   const recipeCards = useMemo(() => matchingRecipes.map((r) => toRecipe(r, items)), [matchingRecipes, items]);
+  const pantryItemsForRecipes = useMemo<PantryItem[]>(
+    () => items.map((item) => ({ id: item.id, name: item.name, quantity: item.quantity, unit: item.unit, addedAt: new Date() })),
+    [items]
+  );
   const cookableRecipeCards = useMemo(
     () => recipeCards.filter((r) => {
       const days = getRecipeUrgencyMeta(r).days;
@@ -629,7 +634,7 @@ const PantryVaultMockup = () => {
               const urgent = meta.days !== null && meta.days <= 3;
               return (
                 <div key={r.id} className="relative h-full">
-                  <RecipeCard recipe={r} onClick={setSelectedRecipe} />
+                  <RecipeCard recipe={r} onClick={setSelectedRecipe} pantryItems={pantryItemsForRecipes} demoMode />
                   {sortKey === "expiring-soon" && meta.days !== null && (
                     <Badge
                       variant="outline"
@@ -661,7 +666,7 @@ const PantryVaultMockup = () => {
         {selectedRecipe && (
           <div className="fixed inset-0 z-50 bg-background/80 backdrop-blur-sm p-4 overflow-y-auto" onClick={() => setSelectedRecipe(null)}>
             <div className="mx-auto my-6 max-w-2xl surface-paper rounded-2xl p-5 md:p-6" onClick={(e) => e.stopPropagation()}>
-              <RecipeDetail recipe={selectedRecipe} onBack={() => setSelectedRecipe(null)} demoMode />
+              <RecipeDetail recipe={selectedRecipe} onBack={() => setSelectedRecipe(null)} pantryItems={pantryItemsForRecipes} demoMode />
             </div>
           </div>
         )}
