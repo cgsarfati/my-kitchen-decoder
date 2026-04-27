@@ -12,6 +12,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { COMMON_UNITS, type PantryItem } from "@/types/pantry";
 import { trackEvent, AnalyticsEvents } from "@/lib/analytics";
 import { cn } from "@/lib/utils";
+import { formatIsoDateForDisplay, isoDateToLocalDate, todayIsoDate } from "@/lib/dateUtils";
 
 interface PantryAiInputProps {
   onAdd: (item: Omit<PantryItem, "id">) => void;
@@ -39,7 +40,7 @@ const PantryAiInput = ({ onAdd }: PantryAiInputProps) => {
 
     try {
       const { data, error } = await supabase.functions.invoke("parse-ingredients", {
-        body: { text: text.trim() },
+        body: { text: text.trim(), today: todayIsoDate() },
       });
 
       if (error) {
@@ -254,13 +255,13 @@ const PantryAiInput = ({ onAdd }: PantryAiInputProps) => {
                           )}
                         >
                           <Calendar className="mr-1 h-3 w-3 shrink-0 text-muted-foreground" />
-                          {item.expiresAt ? format(new Date(`${item.expiresAt}T00:00:00`), "MM/dd/yyyy") : "Expires"}
+                          {item.expiresAt ? `Expires on ${formatIsoDateForDisplay(item.expiresAt)}` : "Expires on dd/mm/yyyy"}
                         </Button>
                       </PopoverTrigger>
                       <PopoverContent className="w-auto p-0" align="start">
                         <CalendarPicker
                           mode="single"
-                          selected={item.expiresAt ? new Date(`${item.expiresAt}T00:00:00`) : undefined}
+                          selected={isoDateToLocalDate(item.expiresAt)}
                           onSelect={(date) => updateItem(i, "expiresAt", date ? format(date, "yyyy-MM-dd") : "")}
                           initialFocus
                         />
