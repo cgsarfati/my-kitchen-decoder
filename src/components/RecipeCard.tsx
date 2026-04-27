@@ -13,6 +13,13 @@ const RecipeCard = ({ recipe, onClick }: RecipeCardProps) => {
   const isFullMatch = recipe.missedIngredientCount === 0 && (recipe.insufficientCount ?? 0) === 0;
   const [imgError, setImgError] = useState(false);
   const hasImage = recipe.image && !imgError;
+  const urgencyLabel = recipe.expiringSoonDays === 0
+    ? "Use today"
+    : recipe.expiringSoonDays === 1
+    ? "Use in 1 day"
+    : typeof recipe.expiringSoonDays === "number"
+    ? `Use in ${recipe.expiringSoonDays} days`
+    : null;
 
   return (
     <Card
@@ -37,6 +44,12 @@ const RecipeCard = ({ recipe, onClick }: RecipeCardProps) => {
         {/* Gradient overlay for better badge contrast */}
         {hasImage && (
           <div className="absolute inset-0 bg-gradient-to-t from-black/30 via-transparent to-transparent" />
+        )}
+        {urgencyLabel && (
+          <Badge className="absolute bottom-3 left-3 bg-warning text-warning-foreground gap-1 shadow-sm backdrop-blur-sm">
+            <Clock className="h-3 w-3" />
+            {urgencyLabel}
+          </Badge>
         )}
         {isFullMatch ? (
           <Badge className="absolute top-3 left-3 bg-success text-success-foreground gap-1 shadow-sm">

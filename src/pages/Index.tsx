@@ -130,6 +130,17 @@ const Index = () => {
     return Array.from(new Set(names));
   };
 
+  const getRecipeExpiringSoonDays = (recipe: Recipe, pantryItems: PantryItem[]) => {
+    const days = recipe.extendedIngredients.flatMap((ing) => {
+      const ingName = ing.name.toLowerCase();
+      return pantryItems
+        .filter((item) => ingName.includes(item.name.toLowerCase()) || item.name.toLowerCase().includes(ingName))
+        .map((item) => daysUntilDate(item.expiresAt))
+        .filter((day): day is number => day !== null && day >= 0 && day <= 3);
+    });
+    return days.length > 0 ? Math.min(...days) : null;
+  };
+
   const handleClearAll = useCallback(() => {
     const previousItems = [...items];
     setItems([]);
@@ -164,7 +175,7 @@ const Index = () => {
       const maxServings = isFullMatch
         ? calculateMaxServings(pantryMapped, recipe.extendedIngredients, recipe.servings)
         : null;
-      return { ...recipe, matchedIngredients: matched, insufficientCount: summary.insufficientCount, maxServings, expiringSoonIngredients: getRecipeExpiringSoonIngredients(recipe, pantryItems) };
+      return { ...recipe, matchedIngredients: matched, insufficientCount: summary.insufficientCount, maxServings, expiringSoonIngredients: getRecipeExpiringSoonIngredients(recipe, pantryItems), expiringSoonDays: getRecipeExpiringSoonDays(recipe, pantryItems) };
     });
   };
 

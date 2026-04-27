@@ -32,4 +32,5 @@ export interface Recipe {
   maxServings?: number | null;
   /** Pantry ingredients in this recipe that expire soon */
   expiringSoonIngredients?: string[];
+  expiringSoonDays?: number | null;
 }
