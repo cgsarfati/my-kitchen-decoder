@@ -325,65 +325,20 @@ const Index = () => {
     setHasSearched(true);
     setSelectedRecipe(null);
 
-    if (demoMode) {
-      await new Promise((r) => setTimeout(r, 800));
-      const pantryNames = items.map((i) => i.name.toLowerCase());
-      const filtered = MOCK_RECIPES.map((recipe) => {
-        const used = recipe.extendedIngredients.filter((ing) =>
-          pantryNames.some((p) => ing.name.toLowerCase().includes(p) || p.includes(ing.name.toLowerCase()))
-        );
-        const missed = recipe.extendedIngredients.filter((ing) =>
-          !pantryNames.some((p) => ing.name.toLowerCase().includes(p) || p.includes(ing.name.toLowerCase()))
-        );
-        return {
-          ...recipe,
-          usedIngredientCount: used.length,
-          missedIngredientCount: missed.length,
-          usedIngredients: used.map((i) => ({ id: i.id, name: i.name, amount: i.amount, unit: i.unit, original: i.original })),
-          missedIngredients: missed.map((i) => ({ id: i.id, name: i.name, amount: i.amount, unit: i.unit, original: i.original })),
-        };
-      }).filter((r) => r.usedIngredientCount > 0);
-      const aiRecipeCards = await fetchAiRecipeCards().catch((error) => {
-        console.error("AI recipe generation error:", error);
-        trackEvent(AnalyticsEvents.AI_RECIPES_FAILED, { demo: true });
-        return [];
-      });
-      const enriched = enrichRecipesWithQuantityMatch([...filtered, ...aiRecipeCards], items).filter((recipe) => !recipeUsesExpiredItem(recipe, items));
-      setRecipes(enriched);
-      if (aiRecipeCards.length > 0) trackEvent(AnalyticsEvents.AI_RECIPES_SHOWN, { count: aiRecipeCards.length, demo: true });
-      trackEvent(AnalyticsEvents.SEARCH_RESULTS, { result_count: enriched.length, full_matches: enriched.filter(r => r.missedIngredientCount === 0).length, demo: true });
-      setIsLoading(false);
-      return;
-    }
-
     try {
-      const { data, error } = await supabase.functions.invoke("search-recipes", {
-        body: { ingredients: items.map((i) => ({ name: i.name, quantity: i.quantity, unit: i.unit })) },
-      });
-      if (error) {
-        const errorBody = typeof error === 'object' && error?.context?.body ? await error.context.json?.() : null;
-        if (errorBody?.error === "RATE_LIMIT" || error?.message?.includes("429")) throw new Error("RATE_LIMIT");
-        throw error;
-      }
-      if (data?.error === "RATE_LIMIT") throw new Error("RATE_LIMIT");
-      if (data?.error) throw new Error(data.error);
-      const aiRecipeCards = await fetchAiRecipeCards().catch((error) => {
-        console.error("AI recipe generation error:", error);
-        trackEvent(AnalyticsEvents.AI_RECIPES_FAILED, { demo: false });
-        toast({ title: "AI recipe ideas unavailable", description: "Recipe search still worked, but AI-created ideas could not load." });
-        return [];
-      });
-      const enriched = enrichRecipesWithQuantityMatch([...(data.recipes || []), ...aiRecipeCards], items).filter((recipe) => !recipeUsesExpiredItem(recipe, items));
+      const rawRecipes = recipeSource === "ai" ? await fetchAiRecipeCards() : await fetchWebRecipeCards();
+      const enriched = enrichRecipesWithQuantityMatch(rawRecipes, items).filter((recipe) => !recipeUsesExpiredItem(recipe, items));
       setRecipes(enriched);
-      if (aiRecipeCards.length > 0) trackEvent(AnalyticsEvents.AI_RECIPES_SHOWN, { count: aiRecipeCards.length, demo: false });
-      trackEvent(AnalyticsEvents.SEARCH_RESULTS, { result_count: enriched.length, full_matches: enriched.filter(r => r.missedIngredientCount === 0).length, demo: false });
+      if (recipeSource === "ai") trackEvent(AnalyticsEvents.AI_RECIPES_SHOWN, { count: rawRecipes.length, demo: demoMode });
+      trackEvent(AnalyticsEvents.SEARCH_RESULTS, { result_count: enriched.length, full_matches: enriched.filter(r => r.missedIngredientCount === 0).length, demo: demoMode, source: recipeSource });
     } catch (err: any) {
       console.error("Search error:", err);
       const isRateLimit = err.message === "RATE_LIMIT" || err.message?.includes("429") || err.message?.includes("daily points limit");
+      if (recipeSource === "ai") trackEvent(AnalyticsEvents.AI_RECIPES_FAILED, { demo: demoMode });
       toast({
-        title: isRateLimit ? "API limit reached" : "Search failed",
+        title: isRateLimit ? "Recipe source limit reached" : "Search failed",
         description: isRateLimit
-          ? "We've hit our daily recipe search limit. Please try again tomorrow!"
+          ? "This recipe source is temporarily limited. Try switching recipe sources or Demo mode."
           : err.message || "Could not fetch recipes. Please try again.",
         variant: "destructive",
       });
