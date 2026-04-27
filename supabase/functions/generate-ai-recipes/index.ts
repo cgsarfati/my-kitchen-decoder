@@ -39,13 +39,14 @@ serve(async (req) => {
         messages: [
           {
             role: "system",
-            content: `You are a practical home-cooking recipe creator. Generate exactly 2 simple recipes that mostly use the user's pantry.
+            content: `You are a practical home-cooking recipe creator. Generate exactly 4 simple recipes that mostly use the user's pantry.
 
 Rules:
 - Keep recipes realistic, weeknight-friendly, and tasty.
 - Prefer using 3-6 pantry ingredients per recipe.
 - Pantry basics are limited to water, salt, and pepper; do not assume oil, butter, broth, spices, or dairy unless listed.
 - If a small missing ingredient would materially improve the recipe, include it as a missing ingredient, but keep missing ingredients to 0-2 total.
+- Respect listed quantities as much as possible. Do not intentionally require much more of a pantry ingredient than the user has.
 - Keep instructions concise and safe.
 - No dietary or medical claims.`, 
           },
@@ -56,14 +57,14 @@ Rules:
             type: "function",
             function: {
               name: "return_generated_recipes",
-              description: "Return two pantry-aware generated recipe cards.",
+                  description: "Return four pantry-aware generated recipe cards.",
               parameters: {
                 type: "object",
                 properties: {
                   recipes: {
                     type: "array",
-                    minItems: 2,
-                    maxItems: 2,
+                    minItems: 4,
+                    maxItems: 4,
                     items: {
                       type: "object",
                       properties: {
