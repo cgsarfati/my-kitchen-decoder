@@ -64,17 +64,26 @@ const PantryList = ({ items, onRemove, onUpdate }: PantryListProps) => {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editQty, setEditQty] = useState("");
   const [editUnit, setEditUnit] = useState("");
+  const [editCost, setEditCost] = useState("");
+  const [editExpiresAt, setEditExpiresAt] = useState("");
 
   const startEdit = (item: PantryItem) => {
     setEditingId(item.id);
     setEditQty(String(item.quantity));
     setEditUnit(item.unit);
+    setEditCost(item.cost !== undefined ? String(item.cost) : "");
+    setEditExpiresAt(item.expiresAt ?? "");
   };
 
   const saveEdit = (id: string) => {
     const qty = parseFloat(editQty);
     if (!isNaN(qty) && qty > 0 && onUpdate) {
-      onUpdate(id, qty, editUnit);
+      onUpdate(id, {
+        quantity: qty,
+        unit: editUnit,
+        cost: editCost ? parseFloat(editCost) : undefined,
+        expiresAt: editExpiresAt || undefined,
+      });
     }
     setEditingId(null);
   };
