@@ -221,7 +221,7 @@ const PantryInput = ({ onAdd }: PantryInputProps) => {
         <div className="flex flex-col sm:flex-row gap-3">
           <div className="relative flex-1">
             <DollarSign className="absolute left-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
-            <Input type="number" placeholder="Cost (optional)" value={cost} onChange={(e) => setCost(e.target.value)} className="bg-card pl-8" min="0" step="0.01" />
+            <Input type="number" placeholder="Cost" value={cost} onChange={(e) => setCost(e.target.value)} className="bg-card pl-8" min="0" step="0.01" />
           </div>
           <div className="relative flex-1">
             <Calendar className="absolute left-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
@@ -231,7 +231,7 @@ const PantryInput = ({ onAdd }: PantryInputProps) => {
               onChange={(e) => setExpiresAt(e.target.value)}
               aria-label="Expiration date optional"
               title="Expiration date (optional)"
-              className="bg-card pl-8 text-foreground dark:[color-scheme:dark]"
+              className="bg-card pl-8 text-foreground dark:[color-scheme:dark] [&::-webkit-calendar-picker-indicator]:opacity-0"
             />
             {!expiresAt && (
               <span className="pointer-events-none absolute left-8 top-1/2 -translate-y-1/2 text-sm text-muted-foreground sm:hidden">

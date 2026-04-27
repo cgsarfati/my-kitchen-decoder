@@ -82,11 +82,11 @@ const RecipeResults = ({ recipes, isLoading, hasSearched, onRecipeClick, demoMod
         </div>
         <div className="space-y-2">
           <h3 className="text-xl text-foreground font-body font-semibold">No recipes found</h3>
-          <p className="text-muted-foreground max-w-md mx-auto">
+          <p className="text-muted-foreground max-w-2xl mx-auto">
             We couldn't find recipes matching your current ingredients. Here are some things to try:
           </p>
         </div>
-        <div className="space-y-2 text-sm text-left max-w-sm mx-auto">
+        <div className="space-y-2 text-sm text-left max-w-2xl mx-auto">
           <div className="flex items-start gap-2 text-muted-foreground">
             <Lightbulb className="h-4 w-4 mt-0.5 text-primary shrink-0" />
             <span>Add more common ingredients like <strong>garlic</strong>, <strong>onion</strong>, or <strong>olive oil</strong></span>

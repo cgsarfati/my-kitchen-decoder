@@ -246,7 +246,7 @@ const PantryAiInput = ({ onAdd }: PantryAiInputProps) => {
                         onChange={(e) => updateItem(i, "expiresAt", e.target.value)}
                         aria-label={`${item.name} expiration date optional`}
                         title="Expiration date (optional)"
-                        className="h-6 w-32 text-xs pl-5 pr-1.5 dark:[color-scheme:dark]"
+                        className="h-6 w-32 text-xs pl-5 pr-1.5 dark:[color-scheme:dark] [&::-webkit-calendar-picker-indicator]:opacity-0"
                       />
                     </div>
                   </div>
