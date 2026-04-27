@@ -176,19 +176,20 @@ const PantryInput = ({ onAdd }: PantryInputProps) => {
 
   return (
     <div className="space-y-3">
-      <form onSubmit={handleSubmit} className="flex flex-col sm:flex-row gap-3">
-        <div className="relative flex-1">
-          <Input
-            ref={inputRef}
-            placeholder="Ingredient (e.g. chicken breast)"
-            value={name}
-            onChange={(e) => handleNameChange(e.target.value)}
-            onFocus={() => { if (autocomplete.length > 0) setShowAutocomplete(true); }}
-            onKeyDown={handleKeyDown}
-            className={`bg-card ${errorFields.name ? "border-destructive ring-1 ring-destructive" : ""}`}
-            autoComplete="off"
-          />
-          {showAutocomplete && autocomplete.length > 0 && (
+      <form onSubmit={handleSubmit} className="space-y-3">
+        <div className="flex flex-col sm:flex-row gap-3">
+          <div className="relative flex-1">
+            <Input
+              ref={inputRef}
+              placeholder="Ingredient (e.g. chicken breast)"
+              value={name}
+              onChange={(e) => handleNameChange(e.target.value)}
+              onFocus={() => { if (autocomplete.length > 0) setShowAutocomplete(true); }}
+              onKeyDown={handleKeyDown}
+              className={`bg-card ${errorFields.name ? "border-destructive ring-1 ring-destructive" : ""}`}
+              autoComplete="off"
+            />
+            {showAutocomplete && autocomplete.length > 0 && (
             <div
               ref={autocompleteRef}
               className="absolute z-20 top-full left-0 right-0 mt-1 rounded-lg border border-border bg-popover shadow-lg overflow-hidden"
@@ -208,31 +209,25 @@ const PantryInput = ({ onAdd }: PantryInputProps) => {
                 </button>
               ))}
             </div>
-          )}
+            )}
+          </div>
+          <div className="flex gap-3">
+            <Input type="number" placeholder="Qty" value={quantity} onChange={(e) => { setQuantity(e.target.value); if (error) { setError(null); setErrorFields({}); } }} className={`w-24 bg-card ${errorFields.qty ? "border-destructive ring-1 ring-destructive" : ""}`} min="0" step="any" />
+            <select value={unit} onChange={(e) => setUnit(e.target.value)} className="h-10 rounded-md border border-input bg-card pl-3 pr-7 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring appearance-none bg-[url('data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2216%22%20height%3D%2216%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22%23888%22%20stroke-width%3D%222%22%3E%3Cpath%20d%3D%22m6%209%206%206%206-6%22%2F%3E%3C%2Fsvg%3E')] bg-[length:16px] bg-[right_6px_center] bg-no-repeat">
+              {COMMON_UNITS.map((u) => <option key={u} value={u}>{u}</option>)}
+            </select>
+          </div>
         </div>
-        <div className="flex gap-3">
-          <Input
-            type="number"
-            placeholder="Qty"
-            value={quantity}
-            onChange={(e) => {
-              setQuantity(e.target.value);
-              if (error) { setError(null); setErrorFields({}); }
-            }}
-            className={`w-24 bg-card ${errorFields.qty ? "border-destructive ring-1 ring-destructive" : ""}`}
-            min="0"
-            step="any"
-          />
-          <select
-            value={unit}
-            onChange={(e) => setUnit(e.target.value)}
-            className="h-10 rounded-md border border-input bg-card pl-3 pr-7 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring appearance-none bg-[url('data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2216%22%20height%3D%2216%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22%23888%22%20stroke-width%3D%222%22%3E%3Cpath%20d%3D%22m6%209%206%206%206-6%22%2F%3E%3C%2Fsvg%3E')] bg-[length:16px] bg-[right_6px_center] bg-no-repeat"
-          >
-            {COMMON_UNITS.map((u) => (
-              <option key={u} value={u}>{u}</option>
-            ))}
-          </select>
-          <Button type="submit" variant="hero" size="icon" className="shrink-0">
+        <div className="flex flex-col sm:flex-row gap-3">
+          <div className="relative flex-1">
+            <DollarSign className="absolute left-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
+            <Input type="number" placeholder="Cost (optional)" value={cost} onChange={(e) => setCost(e.target.value)} className="bg-card pl-8" min="0" step="0.01" />
+          </div>
+          <div className="relative flex-1">
+            <Calendar className="absolute left-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
+            <Input type="date" value={expiresAt} onChange={(e) => setExpiresAt(e.target.value)} className="bg-card pl-8" />
+          </div>
+          <Button type="submit" variant="hero" size="icon" className="shrink-0 self-stretch sm:self-auto">
             <Plus className="h-5 w-5" />
           </Button>
         </div>
