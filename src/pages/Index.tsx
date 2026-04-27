@@ -102,6 +102,27 @@ const Index = () => {
     );
   }, []);
 
+  const daysUntilExpiry = (expiresAt?: string): number | null => {
+    if (!expiresAt) return null;
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const exp = new Date(expiresAt);
+    exp.setHours(0, 0, 0, 0);
+    return Math.round((exp.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
+  };
+
+  const recipeUsesExpiredItem = (recipe: Recipe, pantryItems: PantryItem[]) => {
+    const expiredItems = pantryItems.filter((item) => {
+      const days = daysUntilExpiry(item.expiresAt);
+      return days !== null && days < 0;
+    });
+    if (expiredItems.length === 0) return false;
+    return recipe.extendedIngredients.some((ing) => {
+      const ingName = ing.name.toLowerCase();
+      return expiredItems.some((item) => ingName.includes(item.name.toLowerCase()) || item.name.toLowerCase().includes(ingName));
+    });
+  };
+
   const handleClearAll = useCallback(() => {
     const previousItems = [...items];
     setItems([]);
