@@ -16,7 +16,7 @@ const RecipeCard = ({ recipe, onClick }: RecipeCardProps) => {
 
   return (
     <Card
-      className="overflow-hidden cursor-pointer hover:shadow-kitchen-lg transition-all hover:-translate-y-1 border-border bg-card"
+      className="h-full overflow-hidden cursor-pointer hover:shadow-kitchen-lg transition-all hover:-translate-y-1 border-border bg-card flex flex-col"
       onClick={() => onClick(recipe)}
     >
       <div className="relative">
@@ -55,7 +55,7 @@ const RecipeCard = ({ recipe, onClick }: RecipeCardProps) => {
           </Badge>
         )}
       </div>
-      <CardContent className="p-4 space-y-3">
+      <CardContent className="p-4 space-y-3 flex flex-col flex-1">
         <h3 className="font-semibold text-foreground text-lg leading-tight line-clamp-2 font-body">
           {recipe.title}
         </h3>
@@ -76,7 +76,7 @@ const RecipeCard = ({ recipe, onClick }: RecipeCardProps) => {
         </div>
 
         {/* Ingredient summary */}
-        <div className="space-y-1 border-t border-dashed border-border pt-3">
+        <div className="space-y-1 border-t border-dashed border-border pt-3 mt-auto">
           {recipe.matchedIngredients ? (
             <>
               {recipe.matchedIngredients.filter((i) => i.status === "have").length > 0 && (
