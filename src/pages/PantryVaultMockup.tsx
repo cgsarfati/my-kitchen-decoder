@@ -297,6 +297,13 @@ const PantryVaultMockup = () => {
     setItems((prev) => prev.filter((i) => i.id !== id));
   };
 
+  const handleAiAdd = () => {
+    const parsed = parseMockAiItems(aiInput);
+    if (parsed.length === 0) return;
+    setItems((prev) => [...prev, ...parsed]);
+    setAiInput("");
+  };
+
   // Sort items alphabetically so same-name batches sit adjacent
   const sortedItems = useMemo(
     () => [...items].sort((a, b) => a.name.localeCompare(b.name)),
@@ -334,10 +341,14 @@ const PantryVaultMockup = () => {
   }, [items]);
 
   const recipeCards = useMemo(() => matchingRecipes.map((r) => toRecipe(r, items)), [matchingRecipes, items]);
+  const cookableRecipeCards = useMemo(
+    () => recipeCards.filter((r) => !recipeUrgencyMeta(r).days || recipeUrgencyMeta(r).days! >= 0),
+    [recipeCards, ingredientUrgency]
+  );
 
   // Sort recipes per active sort key
   const sortedRecipes = useMemo(() => {
-    const list = [...recipeCards];
+    const list = [...cookableRecipeCards];
     if (sortKey === "ready-time") {
       return list.sort((a, b) => a.readyInMinutes - b.readyInMinutes);
     }
@@ -366,7 +377,7 @@ const PantryVaultMockup = () => {
       if ((a.insufficientCount ?? 0) !== (b.insufficientCount ?? 0)) return (a.insufficientCount ?? 0) - (b.insufficientCount ?? 0);
       return b.usedIngredientCount - a.usedIngredientCount;
     });
-  }, [recipeCards, sortKey, ingredientUrgency]);
+  }, [cookableRecipeCards, sortKey, ingredientUrgency]);
 
   // For badges on recipe cards: which dated ingredient drives the urgency
   const recipeUrgencyMeta = (r: Recipe): { days: number | null; ingredient: string | null } => {
