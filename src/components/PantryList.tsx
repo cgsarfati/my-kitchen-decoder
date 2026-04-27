@@ -119,7 +119,7 @@ const PantryList = ({ items, onRemove, onUpdate }: PantryListProps) => {
             <div className="min-w-0 flex-1">
               <span className="font-medium text-foreground capitalize text-sm block truncate">{item.name}</span>
               {editingId === item.id ? (
-                <div className="flex items-center gap-1 mt-0.5">
+                <div className="flex flex-wrap items-center gap-1 mt-1">
                   <Input
                     type="number"
                     value={editQty}
@@ -145,6 +145,38 @@ const PantryList = ({ items, onRemove, onUpdate }: PantryListProps) => {
                       ))}
                     </SelectContent>
                   </Select>
+                  <div className="relative">
+                    <DollarSign className="absolute left-1.5 top-1/2 -translate-y-1/2 h-3 w-3 text-muted-foreground pointer-events-none" />
+                    <Input
+                      type="number"
+                      value={editCost}
+                      onChange={(e) => setEditCost(e.target.value)}
+                      placeholder="Cost"
+                      className="h-6 w-20 text-xs pl-5 pr-1.5 placeholder:text-xs"
+                      min="0"
+                      step="0.01"
+                    />
+                  </div>
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        className={cn("h-6 w-44 justify-start px-1.5 text-left text-xs font-normal", !editExpiresAt && "text-muted-foreground")}
+                      >
+                        <Calendar className="mr-1 h-3 w-3 shrink-0 text-muted-foreground" />
+                        {editExpiresAt ? `Expires on ${formatIsoDateForDisplay(editExpiresAt)}` : "Expires on dd/mm/yyyy"}
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0" align="start">
+                      <CalendarPicker
+                        mode="single"
+                        selected={isoDateToLocalDate(editExpiresAt)}
+                        onSelect={(date) => setEditExpiresAt(date ? format(date, "yyyy-MM-dd") : "")}
+                        initialFocus
+                      />
+                    </PopoverContent>
+                  </Popover>
                   <Button
                     variant="ghost"
                     size="icon"
