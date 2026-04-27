@@ -1,9 +1,10 @@
 import { useState, useMemo } from "react";
 import { Link } from "react-router-dom";
-import { ChefHat, Plus, X, Calendar, DollarSign, AlertTriangle, Clock, Flame, ArrowLeft, ChevronDown } from "lucide-react";
+import { ChefHat, Plus, X, Calendar, DollarSign, AlertTriangle, Clock, Flame, ArrowLeft, Moon, Sun, CheckCircle2, XCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
+import { Textarea } from "@/components/ui/textarea";
 import {
   Select,
   SelectContent,
@@ -12,6 +13,9 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { COMMON_UNITS } from "@/types/pantry";
+import RecipeCard from "@/components/RecipeCard";
+import RecipeDetail from "@/components/RecipeDetail";
+import type { Recipe, RecipeIngredientWithStatus } from "@/types/recipe";
 
 /* ============================================================
    MOCKUP-ONLY TYPES (don't touch real PantryItem)
@@ -33,6 +37,7 @@ interface MockRecipe {
   servings: number;
   /** ingredient names this recipe uses (normalized lowercase) */
   usesIngredients: string[];
+  ingredients: Array<{ name: string; amount: number; unit: string }>;
 }
 
 const MOCK_RECIPES: MockRecipe[] = [
@@ -43,6 +48,12 @@ const MOCK_RECIPES: MockRecipe[] = [
     readyInMinutes: 35,
     servings: 4,
     usesIngredients: ["chicken breast", "garlic", "rice", "olive oil"],
+    ingredients: [
+      { name: "chicken breast", amount: 1, unit: "lb" },
+      { name: "garlic", amount: 2, unit: "clove" },
+      { name: "rice", amount: 1, unit: "cup" },
+      { name: "olive oil", amount: 2, unit: "tbsp" },
+    ],
   },
   {
     id: 2,
@@ -51,6 +62,12 @@ const MOCK_RECIPES: MockRecipe[] = [
     readyInMinutes: 25,
     servings: 2,
     usesIngredients: ["salmon", "lemon", "garlic", "olive oil"],
+    ingredients: [
+      { name: "salmon", amount: 1, unit: "lb" },
+      { name: "lemon", amount: 1, unit: "whole" },
+      { name: "garlic", amount: 2, unit: "clove" },
+      { name: "olive oil", amount: 1, unit: "tbsp" },
+    ],
   },
   {
     id: 3,
@@ -59,6 +76,12 @@ const MOCK_RECIPES: MockRecipe[] = [
     readyInMinutes: 20,
     servings: 3,
     usesIngredients: ["pasta", "spinach", "mushroom", "garlic"],
+    ingredients: [
+      { name: "pasta", amount: 200, unit: "g" },
+      { name: "spinach", amount: 100, unit: "g" },
+      { name: "mushroom", amount: 150, unit: "g" },
+      { name: "garlic", amount: 2, unit: "clove" },
+    ],
   },
   {
     id: 4,
@@ -67,6 +90,11 @@ const MOCK_RECIPES: MockRecipe[] = [
     readyInMinutes: 30,
     servings: 4,
     usesIngredients: ["chicken breast", "garlic", "olive oil"],
+    ingredients: [
+      { name: "chicken breast", amount: 1.5, unit: "lb" },
+      { name: "garlic", amount: 3, unit: "clove" },
+      { name: "olive oil", amount: 2, unit: "tbsp" },
+    ],
   },
   {
     id: 5,
@@ -75,6 +103,12 @@ const MOCK_RECIPES: MockRecipe[] = [
     readyInMinutes: 45,
     servings: 4,
     usesIngredients: ["rice", "mushroom", "garlic", "olive oil"],
+    ingredients: [
+      { name: "rice", amount: 1.5, unit: "cup" },
+      { name: "mushroom", amount: 200, unit: "g" },
+      { name: "garlic", amount: 2, unit: "clove" },
+      { name: "olive oil", amount: 2, unit: "tbsp" },
+    ],
   },
 ];
 
