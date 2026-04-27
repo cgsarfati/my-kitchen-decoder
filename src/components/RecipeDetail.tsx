@@ -1,4 +1,4 @@
-import { ArrowLeft, Clock, Users, ExternalLink, CheckCircle2, XCircle, AlertTriangle } from "lucide-react";
+import { ArrowLeft, Clock, Users, ExternalLink, CheckCircle2, XCircle, AlertTriangle, Sparkles, UtensilsCrossed } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import SubstituteSuggestion from "@/components/SubstituteSuggestion";
@@ -78,13 +78,20 @@ const RecipeDetail = ({ recipe, onBack, pantryItems = [], demoMode = false }: Re
         Back to results
       </Button>
 
-      <div className="rounded-xl overflow-hidden">
-        <img
-          src={recipe.image}
-          alt={recipe.title}
-          className="w-full h-64 md:h-80 object-cover"
-        />
-      </div>
+      {recipe.image ? (
+        <div className="rounded-xl overflow-hidden">
+          <img
+            src={recipe.image}
+            alt={recipe.title}
+            className="w-full h-64 md:h-80 object-cover"
+          />
+        </div>
+      ) : (
+        <div className="rounded-xl h-64 md:h-80 bg-muted flex flex-col items-center justify-center gap-2">
+          <UtensilsCrossed className="h-12 w-12 text-muted-foreground/40" />
+          <span className="text-xs text-muted-foreground">No photo available</span>
+        </div>
+      )}
 
       <div className="space-y-2">
         <h2 className="text-3xl text-foreground">{recipe.title}</h2>
@@ -118,7 +125,13 @@ const RecipeDetail = ({ recipe, onBack, pantryItems = [], demoMode = false }: Re
               {recipe.missedIngredientCount} missing
             </Badge>
           )}
+          {recipe.isAiGenerated && (
+            <Badge className="bg-primary text-primary-foreground gap-1">
+              <Sparkles className="h-3 w-3" /> AI idea
+            </Badge>
+          )}
         </div>
+        {recipe.generationNote && <p className="text-sm text-muted-foreground">{recipe.generationNote}</p>}
       </div>
 
       {canShowAdaptation && (
