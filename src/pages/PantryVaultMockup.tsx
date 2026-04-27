@@ -1,11 +1,10 @@
 import { useState, useMemo } from "react";
 import { Link } from "react-router-dom";
-import { ChefHat, Plus, X, Calendar, DollarSign, AlertTriangle, Clock, Flame, ArrowLeft, Moon, Sun } from "lucide-react";
+import { ChefHat, Plus, X, Calendar, DollarSign, AlertTriangle, Clock, Flame, ArrowLeft, Moon, Sun, List, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   Select,
   SelectContent,
@@ -260,7 +259,7 @@ function parseMockAiItems(text: string): MockBatch[] {
    MAIN MOCKUP PAGE
    ============================================================ */
 type SortKey = "best-match" | "expiring-soon" | "ready-time";
-type InputMode = "manual" | "describe";
+type InputMode = "manual" | "ai";
 
 const PantryVaultMockup = () => {
   const [items, setItems] = useState<MockBatch[]>(SEED_ITEMS);
@@ -441,47 +440,42 @@ const PantryVaultMockup = () => {
         </div>
 
         {/* SECTION 1 — INTAKE */}
-        <section className="surface-paper-lg rounded-2xl p-6 md:p-8 space-y-5">
-          <h2 className="text-lg font-semibold flex items-center gap-2">
-            <span className="inline-flex h-7 w-7 items-center justify-center rounded-lg bg-primary/10">🛒</span>
-            Add to Pantry
-          </h2>
+        <section className="surface-paper rounded-2xl p-6 md:p-8 space-y-6 relative">
+          <div className="absolute -top-px left-8 right-8 h-1 bg-gradient-to-r from-transparent via-primary/60 to-transparent rounded-b-full" />
 
-          <Tabs value={inputMode} onValueChange={(value) => setInputMode(value as InputMode)}>
-            <TabsList className="grid w-full grid-cols-2">
-              <TabsTrigger value="manual">Manual</TabsTrigger>
-              <TabsTrigger value="describe">Describe</TabsTrigger>
-            </TabsList>
-            <TabsContent value="manual" className="mt-4">
-          <form onSubmit={handleAdd} className="space-y-3">
-            <div className="grid grid-cols-[minmax(0,1fr)_5.5rem_7rem] gap-2">
-              <Input
-                placeholder="Ingredient (e.g. chicken breast)"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                className="bg-card"
-              />
-              <Input
-                type="number"
-                placeholder="Qty"
-                value={qty}
-                onChange={(e) => setQty(e.target.value)}
-                className="bg-card"
-                min="0"
-                step="any"
-              />
-              <Select value={unit} onValueChange={setUnit}>
-                <SelectTrigger className="bg-card"><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  {COMMON_UNITS.map((u) => (
-                    <SelectItem key={u} value={u}>{u}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+          <div className="flex items-center justify-between">
+            <div className="space-y-1">
+              <h3 className="text-xl text-foreground font-body font-semibold flex items-center gap-2">
+                <span className="inline-flex h-7 w-7 items-center justify-center rounded-lg bg-primary/10">🧺</span>
+                Your Pantry
+              </h3>
+              <p className="text-sm text-muted-foreground">Add ingredients with quantities to find matching recipes</p>
             </div>
+          </div>
 
-            {/* Row 3: cost + expiry (optional) */}
-            <div className="flex flex-col sm:flex-row gap-2">
+          <div className="flex rounded-lg border border-border overflow-hidden w-fit">
+            <button type="button" onClick={() => setInputMode("manual")} className={`flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium transition-colors ${inputMode === "manual" ? "bg-primary text-primary-foreground" : "bg-card text-muted-foreground hover:text-foreground"}`}>
+              <List className="h-3.5 w-3.5" />
+              Manual
+            </button>
+            <button type="button" onClick={() => setInputMode("ai")} className={`flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium transition-colors ${inputMode === "ai" ? "bg-primary text-primary-foreground" : "bg-card text-muted-foreground hover:text-foreground"}`}>
+              <Sparkles className="h-3.5 w-3.5" />
+              Describe
+            </button>
+          </div>
+
+          {inputMode === "manual" ? (
+            <form onSubmit={handleAdd} className="space-y-3">
+              <div className="flex flex-col sm:flex-row gap-3">
+                <Input placeholder="Ingredient (e.g. chicken breast)" value={name} onChange={(e) => setName(e.target.value)} className="bg-card flex-1" />
+                <div className="flex gap-3">
+                  <Input type="number" placeholder="Qty" value={qty} onChange={(e) => setQty(e.target.value)} className="w-24 bg-card" min="0" step="any" />
+                  <select value={unit} onChange={(e) => setUnit(e.target.value)} className="h-10 rounded-md border border-input bg-card pl-3 pr-7 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring appearance-none bg-[url('data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2216%22%20height%3D%2216%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22%23888%22%20stroke-width%3D%222%22%3E%3Cpath%20d%3D%22m6%209%206%206%206-6%22%2F%3E%3C%2Fsvg%3E')] bg-[length:16px] bg-[right_6px_center] bg-no-repeat">
+                    {COMMON_UNITS.map((u) => <option key={u} value={u}>{u}</option>)}
+                  </select>
+                </div>
+              </div>
+              <div className="flex flex-col sm:flex-row gap-3">
               <div className="relative flex-1">
                 <DollarSign className="absolute left-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
                 <Input
@@ -508,9 +502,9 @@ const PantryVaultMockup = () => {
                 <Plus className="h-5 w-5" />
               </Button>
             </div>
-          </form>
-            </TabsContent>
-            <TabsContent value="describe" className="mt-4 space-y-3">
+            </form>
+          ) : (
+            <div className="space-y-3">
               <Textarea
                 placeholder={'Describe what\'s in your pantry, e.g.\n"1 lb chicken breast expiring Friday, $7.50; 2 cups rice"'}
                 value={aiInput}
@@ -521,8 +515,8 @@ const PantryVaultMockup = () => {
                 <Plus className="h-4 w-4" />
                 Add described items
               </Button>
-            </TabsContent>
-          </Tabs>
+            </div>
+          )}
         </section>
 
         {/* SECTION 2 — PANTRY LIST WITH BATCHES & BADGES */}
