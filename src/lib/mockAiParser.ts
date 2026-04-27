@@ -15,7 +15,7 @@ interface ParsedIngredient {
 }
 
 // Pattern-based mock parser that handles common natural language formats
-const UNIT_PATTERN = "g|kg|oz|lb|lbs|ml|l|cup|cups|tbsp|tsp|teaspoon|teaspoons|tablespoon|tablespoons|clove|cloves|can|cans|slice|slices|bunch|gram|grams|kilogram|kilograms|ounce|ounces|pound|pounds|liter|liters|litre|litres|milliliter|milliliters";
+const UNIT_PATTERN = "g|kg|oz|lb|lbs|ml|l|cup|cups|tbsp|tsp|teaspoon|teaspoons|tablespoon|tablespoons|piece|pieces|clove|cloves|can|cans|slice|slices|bunch|gram|grams|kilogram|kilograms|ounce|ounces|pound|pounds|liter|liters|litre|litres|milliliter|milliliters";
 
 const MOCK_PATTERNS: { pattern: RegExp; extract: (m: RegExpMatchArray) => ParsedIngredient | null }[] = [
   // "a teaspoon of paprika" or "an oz of butter"
@@ -42,7 +42,7 @@ const MOCK_PATTERNS: { pattern: RegExp; extract: (m: RegExpMatchArray) => Parsed
 
 function normalizeUnit(unit: string): string {
   const map: Record<string, string> = {
-    cups: "cup", cloves: "clove", cans: "can", slices: "slice",
+    cups: "cup", pieces: "piece", cloves: "clove", cans: "can", slices: "slice",
     gram: "g", grams: "g", kilogram: "kg", kilograms: "kg",
     ounce: "oz", ounces: "oz", pound: "lb", pounds: "lb", lbs: "lb",
     liter: "l", liters: "l", litre: "l", litres: "l",
@@ -58,6 +58,7 @@ function guessUnit(text: string): string {
   if (/cloves?\s+(?:of\s+)?garlic/i.test(lower)) return "clove";
   if (/cans?\s+/i.test(lower)) return "can";
   if (/slices?\s+/i.test(lower)) return "slice";
+  if (/\b(eggs?|chicken breasts?|tomatoes?|lemons?|potatoes?|apples?|bananas?|onions?)\b/i.test(lower)) return "piece";
   if (/bunch/i.test(lower)) return "bunch";
   // Default: grams for meats/veggies, "g" as general default
   return "g";
@@ -98,7 +99,7 @@ const CANNED_RESPONSES: Record<string, ParsedIngredient[]> = {
     { name: "rice", quantity: 300, unit: "g" },
   ],
   "eggs milk butter flour sugar": [
-    { name: "egg", quantity: 6, unit: "slice" },
+    { name: "egg", quantity: 6, unit: "piece" },
     { name: "milk", quantity: 500, unit: "ml" },
     { name: "butter", quantity: 100, unit: "g" },
     { name: "flour", quantity: 500, unit: "g" },
@@ -108,7 +109,7 @@ const CANNED_RESPONSES: Record<string, ParsedIngredient[]> = {
     { name: "garlic", quantity: 4, unit: "clove" },
     { name: "olive oil", quantity: 60, unit: "ml" },
     { name: "pasta", quantity: 400, unit: "g" },
-    { name: "tomato", quantity: 4, unit: "slice" },
+    { name: "tomato", quantity: 4, unit: "piece" },
   ],
 };
 
