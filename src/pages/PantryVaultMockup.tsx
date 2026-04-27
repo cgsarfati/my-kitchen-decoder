@@ -231,6 +231,31 @@ function toRecipe(recipe: MockRecipe, items: MockBatch[]): Recipe {
   };
 }
 
+function parseMockAiItems(text: string): MockBatch[] {
+  return text
+    .split(/[;\n]/)
+    .map((chunk) => chunk.trim())
+    .filter(Boolean)
+    .map((chunk) => {
+      const qtyMatch = chunk.match(/(\d+(?:\.\d+)?)\s*([a-zA-Z]+)/);
+      const costMatch = chunk.match(/\$\s*(\d+(?:\.\d+)?)/);
+      const lower = chunk.toLowerCase();
+      const name = lower
+        .replace(/\$\s*\d+(?:\.\d+)?/g, "")
+        .replace(/expir(?:es|ing)?\s+[^,;]+/g, "")
+        .replace(/\d+(?:\.\d+)?\s*[a-zA-Z]+/g, "")
+        .replace(/[,]/g, "")
+        .trim();
+      return {
+        id: crypto.randomUUID(),
+        name: name || "ingredient",
+        quantity: qtyMatch ? parseFloat(qtyMatch[1]) : 1,
+        unit: qtyMatch ? qtyMatch[2] : "unit",
+        cost: costMatch ? parseFloat(costMatch[1]) : undefined,
+      };
+    });
+}
+
 /* ============================================================
    MAIN MOCKUP PAGE
    ============================================================ */
