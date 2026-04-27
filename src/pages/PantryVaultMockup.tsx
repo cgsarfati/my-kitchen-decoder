@@ -631,7 +631,7 @@ const PantryVaultMockup = () => {
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             {sortedRecipes.map((r) => {
-              const meta = sortKey === "expiring-soon" ? recipeUrgencyMeta(r) : { days: null, ingredient: null };
+              const meta = sortKey === "expiring-soon" ? getRecipeUrgencyMeta(r) : { days: null, ingredient: null };
               const urgent = meta.days !== null && meta.days <= 3;
               return (
                 <div key={r.id} className="relative">
@@ -639,7 +639,7 @@ const PantryVaultMockup = () => {
                   {sortKey === "expiring-soon" && meta.days !== null && (
                     <Badge
                       variant="outline"
-                      className={`absolute top-3 right-3 z-10 shrink-0 text-[11px] gap-1 ${
+                      className={`absolute top-3 right-3 z-10 shrink-0 text-[11px] gap-1 shadow-kitchen bg-card/95 backdrop-blur-sm ${
                         urgent
                           ? meta.days < 0
                             ? "border-destructive/50 bg-destructive/10 text-destructive"
