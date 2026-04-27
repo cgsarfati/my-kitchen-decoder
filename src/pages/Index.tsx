@@ -513,16 +513,44 @@ const Index = () => {
           )}
 
           {items.length > 0 && (
-            <Button
-              variant="hero"
-              size="lg"
-              className="w-full gap-2 shadow-kitchen"
-              onClick={handleSearch}
-              disabled={isLoading}
-            >
-              <Search className="h-5 w-5" />
-              Find Recipes ({items.length} ingredient{items.length !== 1 ? "s" : ""})
-            </Button>
+            <div className="space-y-3">
+              <div className="grid grid-cols-2 rounded-lg border border-border overflow-hidden">
+                <button
+                  type="button"
+                  onClick={() => setRecipeSource("ai")}
+                  className={`flex items-center justify-center gap-1.5 px-3 py-2 text-sm font-medium transition-colors ${
+                    recipeSource === "ai"
+                      ? "bg-primary text-primary-foreground"
+                      : "bg-card text-muted-foreground hover:text-foreground"
+                  }`}
+                >
+                  <Sparkles className="h-4 w-4" />
+                  AI-generated Recipes
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setRecipeSource("web")}
+                  className={`flex items-center justify-center gap-1.5 px-3 py-2 text-sm font-medium transition-colors ${
+                    recipeSource === "web"
+                      ? "bg-primary text-primary-foreground"
+                      : "bg-card text-muted-foreground hover:text-foreground"
+                  }`}
+                >
+                  <Globe2 className="h-4 w-4" />
+                  Web Recipes
+                </button>
+              </div>
+              <Button
+                variant="hero"
+                size="lg"
+                className="w-full gap-2 shadow-kitchen"
+                onClick={handleSearch}
+                disabled={isLoading}
+              >
+                <Search className="h-5 w-5" />
+                Find Recipes ({items.length} ingredient{items.length !== 1 ? "s" : ""})
+              </Button>
+            </div>
           )}
         </section>
 
