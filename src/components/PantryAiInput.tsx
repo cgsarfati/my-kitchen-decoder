@@ -205,7 +205,7 @@ const PantryAiInput = ({ onAdd }: PantryAiInputProps) => {
                   <span className="text-sm font-medium text-foreground capitalize block truncate">
                     {item.name}
                   </span>
-                  <div className="flex items-center gap-1 mt-1">
+                  <div className="flex flex-wrap items-center gap-1 mt-1">
                     <Input
                       type="number"
                       value={item.quantity}
@@ -226,6 +226,29 @@ const PantryAiInput = ({ onAdd }: PantryAiInputProps) => {
                         ))}
                       </SelectContent>
                     </Select>
+                    <div className="relative">
+                      <DollarSign className="absolute left-1.5 top-1/2 -translate-y-1/2 h-3 w-3 text-muted-foreground pointer-events-none" />
+                      <Input
+                        type="number"
+                        value={item.cost ?? ""}
+                        onChange={(e) => updateItem(i, "cost", e.target.value)}
+                        placeholder="Cost"
+                        className="h-6 w-20 text-xs pl-5 pr-1.5"
+                        min="0"
+                        step="0.01"
+                      />
+                    </div>
+                    <div className="relative">
+                      <Calendar className="absolute left-1.5 top-1/2 -translate-y-1/2 h-3 w-3 text-muted-foreground pointer-events-none" />
+                      <Input
+                        type="date"
+                        value={item.expiresAt ?? ""}
+                        onChange={(e) => updateItem(i, "expiresAt", e.target.value)}
+                        aria-label={`${item.name} expiration date optional`}
+                        title="Expiration date (optional)"
+                        className="h-6 w-32 text-xs pl-5 pr-1.5 dark:[color-scheme:dark]"
+                      />
+                    </div>
                   </div>
                 </div>
               </div>
