@@ -180,6 +180,50 @@ function iconFor(name: string): string {
   return "🥘";
 }
 
+function totalsByIngredient(items: MockBatch[]): Map<string, number> {
+  const totals = new Map<string, number>();
+  for (const item of items) {
+    totals.set(item.name, (totals.get(item.name) ?? 0) + item.quantity);
+  }
+  return totals;
+}
+
+function toRecipe(recipe: MockRecipe, items: MockBatch[]): Recipe {
+  const totals = totalsByIngredient(items);
+  const matchedIngredients: RecipeIngredientWithStatus[] = recipe.ingredients.map((ing, index) => {
+    const pantryName = Array.from(totals.keys()).find((p) => ing.name.includes(p) || p.includes(ing.name));
+    const available = pantryName ? totals.get(pantryName) ?? 0 : 0;
+    const status = !pantryName ? "missing" : available >= ing.amount ? "have" : "insufficient";
+    return {
+      id: recipe.id * 100 + index,
+      name: ing.name,
+      amount: ing.amount,
+      unit: ing.unit,
+      original: `${ing.amount} ${ing.unit} ${ing.name}`,
+      status,
+    };
+  });
+  const usedIngredients = matchedIngredients.filter((ing) => ing.status !== "missing");
+  const missedIngredients = matchedIngredients.filter((ing) => ing.status === "missing");
+  const insufficientCount = matchedIngredients.filter((ing) => ing.status === "insufficient").length;
+  return {
+    id: recipe.id,
+    title: recipe.title,
+    image: recipe.image,
+    usedIngredientCount: usedIngredients.length,
+    missedIngredientCount: missedIngredients.length,
+    usedIngredients,
+    missedIngredients,
+    servings: recipe.servings,
+    readyInMinutes: recipe.readyInMinutes,
+    instructions: "Cook ingredients together until done. Season to taste and serve warm.",
+    sourceUrl: "",
+    extendedIngredients: matchedIngredients,
+    matchedIngredients,
+    insufficientCount,
+  };
+}
+
 /* ============================================================
    MAIN MOCKUP PAGE
    ============================================================ */
@@ -188,6 +232,8 @@ type SortKey = "best-match" | "expiring-soon" | "ready-time";
 const PantryVaultMockup = () => {
   const [items, setItems] = useState<MockBatch[]>(SEED_ITEMS);
   const [sortKey, setSortKey] = useState<SortKey>("best-match");
+  const [darkPreview, setDarkPreview] = useState(false);
+  const [selectedRecipe, setSelectedRecipe] = useState<Recipe | null>(null);
 
   // Form state
   const [name, setName] = useState("");
@@ -195,6 +241,7 @@ const PantryVaultMockup = () => {
   const [unit, setUnit] = useState("g");
   const [cost, setCost] = useState("");
   const [expiresAt, setExpiresAt] = useState("");
+  const [aiInput, setAiInput] = useState("");
 
   const handleAdd = (e: React.FormEvent) => {
     e.preventDefault();
@@ -251,6 +298,8 @@ const PantryVaultMockup = () => {
       )
     );
   }, [items]);
+
+  const recipeCards = useMemo(() => matchingRecipes.map((r) => toRecipe(r, items)), [matchingRecipes, items]);
 
   // Sort recipes per active sort key
   const sortedRecipes = useMemo(() => {
