@@ -238,7 +238,7 @@ const PantryAiInput = ({ onAdd }: PantryAiInputProps) => {
                         value={item.cost ?? ""}
                         onChange={(e) => updateItem(i, "cost", e.target.value)}
                         placeholder="Cost"
-                        className="h-6 w-20 text-xs pl-5 pr-1.5"
+                        className="h-7 w-24 text-xs pl-5 pr-1.5 placeholder:text-xs"
                         min="0"
                         step="0.01"
                       />
@@ -250,7 +250,7 @@ const PantryAiInput = ({ onAdd }: PantryAiInputProps) => {
                           variant="outline"
                           title="Expiration date (optional)"
                           className={cn(
-                            "h-6 w-32 justify-start px-1.5 text-left text-xs font-normal",
+                            "h-7 w-56 justify-start px-2 text-left text-xs font-normal",
                             !item.expiresAt && "text-muted-foreground"
                           )}
                         >
