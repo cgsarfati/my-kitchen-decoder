@@ -97,9 +97,9 @@ const Index = () => {
     });
   }, []);
 
-  const handleUpdate = useCallback((id: string, quantity: number, unit: string) => {
+  const handleUpdate = useCallback((id: string, updates: Partial<Omit<PantryItem, "id" | "name">>) => {
     setItems((prev) =>
-      prev.map((item) => (item.id === id ? { ...item, quantity, unit } : item))
+      prev.map((item) => (item.id === id ? { ...item, ...updates } : item))
     );
   }, []);
 

@@ -1,11 +1,15 @@
 import { useState } from "react";
-import { X, Pencil, Check, AlertTriangle, Clock } from "lucide-react";
+import { X, Pencil, Check, AlertTriangle, Clock, DollarSign, Calendar } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Calendar as CalendarPicker } from "@/components/ui/calendar";
 import { COMMON_UNITS } from "@/types/pantry";
 import type { PantryItem } from "@/types/pantry";
-import { daysUntilDate } from "@/lib/dateUtils";
+import { daysUntilDate, formatIsoDateForDisplay, isoDateToLocalDate } from "@/lib/dateUtils";
+import { cn } from "@/lib/utils";
+import { format } from "date-fns";
 
 /** Map ingredient keywords to emoji icons */
 const INGREDIENT_ICONS: Record<string, string> = {
@@ -53,24 +57,33 @@ function formatExpiryLabel(expiresAt?: string): string {
 interface PantryListProps {
   items: PantryItem[];
   onRemove: (id: string) => void;
-  onUpdate?: (id: string, quantity: number, unit: string) => void;
+  onUpdate?: (id: string, updates: Partial<Omit<PantryItem, "id" | "name">>) => void;
 }
 
 const PantryList = ({ items, onRemove, onUpdate }: PantryListProps) => {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editQty, setEditQty] = useState("");
   const [editUnit, setEditUnit] = useState("");
+  const [editCost, setEditCost] = useState("");
+  const [editExpiresAt, setEditExpiresAt] = useState("");
 
   const startEdit = (item: PantryItem) => {
     setEditingId(item.id);
     setEditQty(String(item.quantity));
     setEditUnit(item.unit);
+    setEditCost(item.cost !== undefined ? String(item.cost) : "");
+    setEditExpiresAt(item.expiresAt ?? "");
   };
 
   const saveEdit = (id: string) => {
     const qty = parseFloat(editQty);
     if (!isNaN(qty) && qty > 0 && onUpdate) {
-      onUpdate(id, qty, editUnit);
+      onUpdate(id, {
+        quantity: qty,
+        unit: editUnit,
+        cost: editCost ? parseFloat(editCost) : undefined,
+        expiresAt: editExpiresAt || undefined,
+      });
     }
     setEditingId(null);
   };
@@ -106,7 +119,7 @@ const PantryList = ({ items, onRemove, onUpdate }: PantryListProps) => {
             <div className="min-w-0 flex-1">
               <span className="font-medium text-foreground capitalize text-sm block truncate">{item.name}</span>
               {editingId === item.id ? (
-                <div className="flex items-center gap-1 mt-0.5">
+                <div className="flex flex-wrap items-center gap-1 mt-1">
                   <Input
                     type="number"
                     value={editQty}
@@ -132,6 +145,38 @@ const PantryList = ({ items, onRemove, onUpdate }: PantryListProps) => {
                       ))}
                     </SelectContent>
                   </Select>
+                  <div className="relative">
+                    <DollarSign className="absolute left-1.5 top-1/2 -translate-y-1/2 h-3 w-3 text-muted-foreground pointer-events-none" />
+                    <Input
+                      type="number"
+                      value={editCost}
+                      onChange={(e) => setEditCost(e.target.value)}
+                      placeholder="Cost"
+                      className="h-6 w-20 text-xs pl-5 pr-1.5 placeholder:text-xs"
+                      min="0"
+                      step="0.01"
+                    />
+                  </div>
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        className={cn("h-6 w-44 justify-start px-1.5 text-left text-xs font-normal", !editExpiresAt && "text-muted-foreground")}
+                      >
+                        <Calendar className="mr-1 h-3 w-3 shrink-0 text-muted-foreground" />
+                        {editExpiresAt ? `Expires on ${formatIsoDateForDisplay(editExpiresAt)}` : "Expires on dd/mm/yyyy"}
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0" align="start">
+                      <CalendarPicker
+                        mode="single"
+                        selected={isoDateToLocalDate(editExpiresAt)}
+                        onSelect={(date) => setEditExpiresAt(date ? format(date, "yyyy-MM-dd") : "")}
+                        initialFocus
+                      />
+                    </PopoverContent>
+                  </Popover>
                   <Button
                     variant="ghost"
                     size="icon"

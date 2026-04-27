@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Loader2, ArrowUpDown, Clock, ChefHat, Users, SearchX, FlaskConical, Lightbulb, ListMinus } from "lucide-react";
+import { Loader2, ArrowUpDown, Clock, ChefHat, Users, SearchX, FlaskConical, Lightbulb, ListMinus, AlarmClock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -10,7 +10,7 @@ import {
 import RecipeCard from "@/components/RecipeCard";
 import type { Recipe } from "@/types/recipe";
 
-type SortOption = "match" | "time" | "servings" | "fewest_missing";
+type SortOption = "match" | "expires_soon" | "time" | "servings" | "fewest_missing";
 
 const PAGE_SIZE = 6;
 
@@ -36,6 +36,12 @@ const sortRecipes = (recipes: Recipe[], sortBy: SortOption): Recipe[] => {
       if (aTotalMissing !== bTotalMissing) return aTotalMissing - bTotalMissing;
       return b.usedIngredientCount - a.usedIngredientCount;
     }
+    if (sortBy === "expires_soon") {
+      const aCount = a.expiringSoonIngredients?.length ?? 0;
+      const bCount = b.expiringSoonIngredients?.length ?? 0;
+      if (aCount !== bCount) return bCount - aCount;
+      return b.usedIngredientCount - a.usedIngredientCount;
+    }
     // Default: match quality
     const aMissing = a.missedIngredientCount;
     const bMissing = b.missedIngredientCount;
@@ -52,6 +58,7 @@ const sortRecipes = (recipes: Recipe[], sortBy: SortOption): Recipe[] => {
 
 const SORT_LABELS: Record<SortOption, { label: string; icon: React.ReactNode }> = {
   match: { label: "Best Match", icon: <ChefHat className="h-4 w-4" /> },
+  expires_soon: { label: "Expires Soon", icon: <AlarmClock className="h-4 w-4" /> },
   fewest_missing: { label: "Fewest Missing", icon: <ListMinus className="h-4 w-4" /> },
   time: { label: "Fastest", icon: <Clock className="h-4 w-4" /> },
   servings: { label: "Most Servings", icon: <Users className="h-4 w-4" /> },
