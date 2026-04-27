@@ -18,6 +18,7 @@ import { loadPantry, savePantry } from "@/lib/pantryStorage";
 import type { PantryItem } from "@/types/pantry";
 import type { Recipe } from "@/types/recipe";
 import { trackEvent, AnalyticsEvents } from "@/lib/analytics";
+import { daysUntilDate } from "@/lib/dateUtils";
 
 const Index = () => {
   const [items, setItems] = useState<PantryItem[]>([]);
@@ -27,7 +28,7 @@ const Index = () => {
   const [selectedRecipe, setSelectedRecipe] = useState<Recipe | null>(null);
   const [demoMode, setDemoMode] = useState(true);
   const [pantryId, setPantryId] = useState<string | undefined>();
-  const [inputMode, setInputMode] = useState<"manual" | "ai">("manual");
+  const [inputMode, setInputMode] = useState<"manual" | "ai">("ai");
   const [pantryLoaded, setPantryLoaded] = useState(false);
   const [darkMode, setDarkMode] = useState(() => {
     if (typeof window !== "undefined") {
@@ -102,18 +103,9 @@ const Index = () => {
     );
   }, []);
 
-  const daysUntilExpiry = (expiresAt?: string): number | null => {
-    if (!expiresAt) return null;
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    const exp = new Date(expiresAt);
-    exp.setHours(0, 0, 0, 0);
-    return Math.round((exp.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
-  };
-
   const recipeUsesExpiredItem = (recipe: Recipe, pantryItems: PantryItem[]) => {
     const expiredItems = pantryItems.filter((item) => {
-      const days = daysUntilExpiry(item.expiresAt);
+      const days = daysUntilDate(item.expiresAt);
       return days !== null && days < 0;
     });
     if (expiredItems.length === 0) return false;
