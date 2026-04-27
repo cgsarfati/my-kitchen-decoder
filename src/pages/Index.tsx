@@ -187,7 +187,7 @@ const Index = () => {
           missedIngredients: missed.map((i) => ({ id: i.id, name: i.name, amount: i.amount, unit: i.unit, original: i.original })),
         };
       }).filter((r) => r.usedIngredientCount > 0);
-      const enriched = enrichRecipesWithQuantityMatch(filtered, items);
+      const enriched = enrichRecipesWithQuantityMatch(filtered, items).filter((recipe) => !recipeUsesExpiredItem(recipe, items));
       setRecipes(enriched);
       trackEvent(AnalyticsEvents.SEARCH_RESULTS, { result_count: enriched.length, full_matches: enriched.filter(r => r.missedIngredientCount === 0).length, demo: true });
       setIsLoading(false);
@@ -205,7 +205,7 @@ const Index = () => {
       }
       if (data?.error === "RATE_LIMIT") throw new Error("RATE_LIMIT");
       if (data?.error) throw new Error(data.error);
-      const enriched = enrichRecipesWithQuantityMatch(data.recipes || [], items);
+      const enriched = enrichRecipesWithQuantityMatch(data.recipes || [], items).filter((recipe) => !recipeUsesExpiredItem(recipe, items));
       setRecipes(enriched);
       trackEvent(AnalyticsEvents.SEARCH_RESULTS, { result_count: enriched.length, full_matches: enriched.filter(r => r.missedIngredientCount === 0).length, demo: false });
     } catch (err: any) {
