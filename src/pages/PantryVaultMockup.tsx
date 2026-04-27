@@ -1,11 +1,10 @@
 import { useState, useMemo } from "react";
 import { Link } from "react-router-dom";
-import { ChefHat, Plus, X, Calendar, DollarSign, AlertTriangle, Clock, Flame, ArrowLeft, Moon, Sun } from "lucide-react";
+import { ChefHat, Plus, X, Calendar, DollarSign, AlertTriangle, Clock, Flame, ArrowLeft, Moon, Sun, List, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   Select,
   SelectContent,
@@ -260,7 +259,7 @@ function parseMockAiItems(text: string): MockBatch[] {
    MAIN MOCKUP PAGE
    ============================================================ */
 type SortKey = "best-match" | "expiring-soon" | "ready-time";
-type InputMode = "manual" | "describe";
+type InputMode = "manual" | "ai";
 
 const PantryVaultMockup = () => {
   const [items, setItems] = useState<MockBatch[]>(SEED_ITEMS);
