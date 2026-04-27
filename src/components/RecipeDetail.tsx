@@ -2,6 +2,7 @@ import { ArrowLeft, Clock, Users, ExternalLink, CheckCircle2, XCircle, AlertTria
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import SubstituteSuggestion from "@/components/SubstituteSuggestion";
+import RecipeAdaptation from "@/components/RecipeAdaptation";
 import type { Recipe } from "@/types/recipe";
 
 
@@ -68,6 +69,7 @@ interface RecipeDetailProps {
 
 const RecipeDetail = ({ recipe, onBack, pantryItems = [], demoMode = false }: RecipeDetailProps) => {
   const isFullMatch = recipe.missedIngredientCount === 0 && (recipe.insufficientCount ?? 0) === 0;
+  const canShowAdaptation = !isFullMatch && pantryItems.length > 0;
 
   return (
     <div className="space-y-6">
@@ -118,6 +120,13 @@ const RecipeDetail = ({ recipe, onBack, pantryItems = [], demoMode = false }: Re
           )}
         </div>
       </div>
+
+      {canShowAdaptation && (
+        <div className="space-y-3">
+          <h3 className="text-xl text-foreground font-body font-semibold">Pantry adaptation</h3>
+          <RecipeAdaptation recipe={recipe} pantryItems={pantryItems} demoMode={demoMode} placement="detail" />
+        </div>
+      )}
 
       {/* Ingredients */}
       <div className="space-y-3">
