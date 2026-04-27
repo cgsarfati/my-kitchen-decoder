@@ -48,6 +48,7 @@ const MOCK_RECIPES: MockRecipe[] = [
     image: "https://img.spoonacular.com/recipes/716429-312x231.jpg",
     readyInMinutes: 35,
     servings: 4,
+    sourceUrl: "https://spoonacular.com/recipes/garlic-butter-chicken-with-rice-716429",
     usesIngredients: ["chicken breast", "garlic", "rice", "olive oil"],
     ingredients: [
       { name: "chicken breast", amount: 1, unit: "lb" },
@@ -62,6 +63,7 @@ const MOCK_RECIPES: MockRecipe[] = [
     image: "https://img.spoonacular.com/recipes/659135-312x231.jpg",
     readyInMinutes: 25,
     servings: 2,
+    sourceUrl: "https://spoonacular.com/recipes/lemon-herb-salmon-659135",
     usesIngredients: ["salmon", "lemon", "garlic", "olive oil"],
     ingredients: [
       { name: "salmon", amount: 1, unit: "lb" },
@@ -76,6 +78,7 @@ const MOCK_RECIPES: MockRecipe[] = [
     image: "https://img.spoonacular.com/recipes/715594-312x231.jpg",
     readyInMinutes: 20,
     servings: 3,
+    sourceUrl: "https://spoonacular.com/recipes/spinach-mushroom-pasta-715594",
     usesIngredients: ["pasta", "spinach", "mushroom", "garlic"],
     ingredients: [
       { name: "pasta", amount: 200, unit: "g" },
@@ -90,6 +93,7 @@ const MOCK_RECIPES: MockRecipe[] = [
     image: "https://img.spoonacular.com/recipes/716627-312x231.jpg",
     readyInMinutes: 30,
     servings: 4,
+    sourceUrl: "https://spoonacular.com/recipes/classic-chicken-stir-fry-716627",
     usesIngredients: ["chicken breast", "garlic", "olive oil"],
     ingredients: [
       { name: "chicken breast", amount: 1.5, unit: "lb" },
@@ -103,6 +107,7 @@ const MOCK_RECIPES: MockRecipe[] = [
     image: "https://img.spoonacular.com/recipes/715415-312x231.jpg",
     readyInMinutes: 45,
     servings: 4,
+    sourceUrl: "https://spoonacular.com/recipes/mushroom-risotto-715415",
     usesIngredients: ["rice", "mushroom", "garlic", "olive oil"],
     ingredients: [
       { name: "rice", amount: 1.5, unit: "cup" },
