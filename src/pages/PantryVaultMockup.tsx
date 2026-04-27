@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   Select,
   SelectContent,
@@ -228,12 +229,14 @@ function toRecipe(recipe: MockRecipe, items: MockBatch[]): Recipe {
    MAIN MOCKUP PAGE
    ============================================================ */
 type SortKey = "best-match" | "expiring-soon" | "ready-time";
+type InputMode = "manual" | "describe";
 
 const PantryVaultMockup = () => {
   const [items, setItems] = useState<MockBatch[]>(SEED_ITEMS);
   const [sortKey, setSortKey] = useState<SortKey>("best-match");
   const [darkPreview, setDarkPreview] = useState(false);
   const [selectedRecipe, setSelectedRecipe] = useState<Recipe | null>(null);
+  const [inputMode, setInputMode] = useState<InputMode>("manual");
 
   // Form state
   const [name, setName] = useState("");
