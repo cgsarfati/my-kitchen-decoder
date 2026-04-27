@@ -36,6 +36,7 @@ interface MockRecipe {
   image: string;
   readyInMinutes: number;
   servings: number;
+  sourceUrl: string;
   /** ingredient names this recipe uses (normalized lowercase) */
   usesIngredients: string[];
   ingredients: Array<{ name: string; amount: number; unit: string }>;
@@ -223,7 +224,7 @@ function toRecipe(recipe: MockRecipe, items: MockBatch[]): Recipe {
     servings: recipe.servings,
     readyInMinutes: recipe.readyInMinutes,
     instructions: "Cook ingredients together until done. Season to taste and serve warm.",
-    sourceUrl: "",
+    sourceUrl: recipe.sourceUrl,
     extendedIngredients: matchedIngredients,
     matchedIngredients,
     insufficientCount,
