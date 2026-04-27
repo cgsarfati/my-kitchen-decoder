@@ -234,26 +234,27 @@ export function calculateMaxServings(
     // Always-available ingredients don't constrain max servings
     if (isAlwaysAvailable(ingNameLower)) continue;
 
-    // Find matching pantry item
-    const pantryItem =
-      pantryItems.find((p) => p.name.toLowerCase() === ingNameLower) ??
-      pantryItems.find(
-        (p) =>
-          ingNameLower.includes(p.name.toLowerCase()) ||
-          p.name.toLowerCase().includes(ingNameLower)
-      );
-
-    if (!pantryItem) continue;
-
-    const pantryBase = toBaseAmount(pantryItem.quantity, pantryItem.unit);
     const recipeBase = toBaseAmount(ing.amount, ing.unit);
+    if (!recipeBase) continue;
+    const exactMatches = pantryItems.filter((p) => p.name.toLowerCase() === ingNameLower);
+    const matchingItems = exactMatches.length > 0 ? exactMatches : pantryItems.filter(
+      (p) => ingNameLower.includes(p.name.toLowerCase()) || p.name.toLowerCase().includes(ingNameLower)
+    );
 
-    // Can't compare if units are incompatible
-    if (!pantryBase || !recipeBase) continue;
-    if (pantryBase.category !== recipeBase.category) continue;
+    if (matchingItems.length === 0) continue;
+
+    let totalBaseAmount = 0;
+    let hasComparable = false;
+    for (const pantryItem of matchingItems) {
+      const pantryBase = toBaseAmount(pantryItem.quantity, pantryItem.unit);
+      if (!pantryBase || pantryBase.category !== recipeBase.category) continue;
+      hasComparable = true;
+      totalBaseAmount += pantryBase.baseAmount;
+    }
+    if (!hasComparable) continue;
 
     comparableCount++;
-    const ratio = pantryBase.baseAmount / recipeBase.baseAmount;
+    const ratio = totalBaseAmount / recipeBase.baseAmount;
     if (ratio < minRatio) minRatio = ratio;
   }
 
