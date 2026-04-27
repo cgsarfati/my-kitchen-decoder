@@ -1,9 +1,10 @@
 import { useState, useMemo } from "react";
 import { Link } from "react-router-dom";
-import { ChefHat, Plus, X, Calendar, DollarSign, AlertTriangle, Clock, Flame, ArrowLeft, ChevronDown } from "lucide-react";
+import { ChefHat, Plus, X, Calendar, DollarSign, AlertTriangle, Clock, Flame, ArrowLeft, Moon, Sun } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
+import { Textarea } from "@/components/ui/textarea";
 import {
   Select,
   SelectContent,
@@ -12,6 +13,9 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { COMMON_UNITS } from "@/types/pantry";
+import RecipeCard from "@/components/RecipeCard";
+import RecipeDetail from "@/components/RecipeDetail";
+import type { Recipe, RecipeIngredientWithStatus } from "@/types/recipe";
 
 /* ============================================================
    MOCKUP-ONLY TYPES (don't touch real PantryItem)
@@ -33,6 +37,7 @@ interface MockRecipe {
   servings: number;
   /** ingredient names this recipe uses (normalized lowercase) */
   usesIngredients: string[];
+  ingredients: Array<{ name: string; amount: number; unit: string }>;
 }
 
 const MOCK_RECIPES: MockRecipe[] = [
@@ -43,6 +48,12 @@ const MOCK_RECIPES: MockRecipe[] = [
     readyInMinutes: 35,
     servings: 4,
     usesIngredients: ["chicken breast", "garlic", "rice", "olive oil"],
+    ingredients: [
+      { name: "chicken breast", amount: 1, unit: "lb" },
+      { name: "garlic", amount: 2, unit: "clove" },
+      { name: "rice", amount: 1, unit: "cup" },
+      { name: "olive oil", amount: 2, unit: "tbsp" },
+    ],
   },
   {
     id: 2,
@@ -51,6 +62,12 @@ const MOCK_RECIPES: MockRecipe[] = [
     readyInMinutes: 25,
     servings: 2,
     usesIngredients: ["salmon", "lemon", "garlic", "olive oil"],
+    ingredients: [
+      { name: "salmon", amount: 1, unit: "lb" },
+      { name: "lemon", amount: 1, unit: "whole" },
+      { name: "garlic", amount: 2, unit: "clove" },
+      { name: "olive oil", amount: 1, unit: "tbsp" },
+    ],
   },
   {
     id: 3,
@@ -59,6 +76,12 @@ const MOCK_RECIPES: MockRecipe[] = [
     readyInMinutes: 20,
     servings: 3,
     usesIngredients: ["pasta", "spinach", "mushroom", "garlic"],
+    ingredients: [
+      { name: "pasta", amount: 200, unit: "g" },
+      { name: "spinach", amount: 100, unit: "g" },
+      { name: "mushroom", amount: 150, unit: "g" },
+      { name: "garlic", amount: 2, unit: "clove" },
+    ],
   },
   {
     id: 4,
@@ -67,6 +90,11 @@ const MOCK_RECIPES: MockRecipe[] = [
     readyInMinutes: 30,
     servings: 4,
     usesIngredients: ["chicken breast", "garlic", "olive oil"],
+    ingredients: [
+      { name: "chicken breast", amount: 1.5, unit: "lb" },
+      { name: "garlic", amount: 3, unit: "clove" },
+      { name: "olive oil", amount: 2, unit: "tbsp" },
+    ],
   },
   {
     id: 5,
@@ -75,6 +103,12 @@ const MOCK_RECIPES: MockRecipe[] = [
     readyInMinutes: 45,
     servings: 4,
     usesIngredients: ["rice", "mushroom", "garlic", "olive oil"],
+    ingredients: [
+      { name: "rice", amount: 1.5, unit: "cup" },
+      { name: "mushroom", amount: 200, unit: "g" },
+      { name: "garlic", amount: 2, unit: "clove" },
+      { name: "olive oil", amount: 2, unit: "tbsp" },
+    ],
   },
 ];
 
@@ -146,6 +180,50 @@ function iconFor(name: string): string {
   return "🥘";
 }
 
+function totalsByIngredient(items: MockBatch[]): Map<string, number> {
+  const totals = new Map<string, number>();
+  for (const item of items) {
+    totals.set(item.name, (totals.get(item.name) ?? 0) + item.quantity);
+  }
+  return totals;
+}
+
+function toRecipe(recipe: MockRecipe, items: MockBatch[]): Recipe {
+  const totals = totalsByIngredient(items);
+  const matchedIngredients: RecipeIngredientWithStatus[] = recipe.ingredients.map((ing, index) => {
+    const pantryName = Array.from(totals.keys()).find((p) => ing.name.includes(p) || p.includes(ing.name));
+    const available = pantryName ? totals.get(pantryName) ?? 0 : 0;
+    const status = !pantryName ? "missing" : available >= ing.amount ? "have" : "insufficient";
+    return {
+      id: recipe.id * 100 + index,
+      name: ing.name,
+      amount: ing.amount,
+      unit: ing.unit,
+      original: `${ing.amount} ${ing.unit} ${ing.name}`,
+      status,
+    };
+  });
+  const usedIngredients = matchedIngredients.filter((ing) => ing.status !== "missing");
+  const missedIngredients = matchedIngredients.filter((ing) => ing.status === "missing");
+  const insufficientCount = matchedIngredients.filter((ing) => ing.status === "insufficient").length;
+  return {
+    id: recipe.id,
+    title: recipe.title,
+    image: recipe.image,
+    usedIngredientCount: usedIngredients.length,
+    missedIngredientCount: missedIngredients.length,
+    usedIngredients,
+    missedIngredients,
+    servings: recipe.servings,
+    readyInMinutes: recipe.readyInMinutes,
+    instructions: "Cook ingredients together until done. Season to taste and serve warm.",
+    sourceUrl: "",
+    extendedIngredients: matchedIngredients,
+    matchedIngredients,
+    insufficientCount,
+  };
+}
+
 /* ============================================================
    MAIN MOCKUP PAGE
    ============================================================ */
@@ -154,6 +232,8 @@ type SortKey = "best-match" | "expiring-soon" | "ready-time";
 const PantryVaultMockup = () => {
   const [items, setItems] = useState<MockBatch[]>(SEED_ITEMS);
   const [sortKey, setSortKey] = useState<SortKey>("best-match");
+  const [darkPreview, setDarkPreview] = useState(false);
+  const [selectedRecipe, setSelectedRecipe] = useState<Recipe | null>(null);
 
   // Form state
   const [name, setName] = useState("");
@@ -161,6 +241,7 @@ const PantryVaultMockup = () => {
   const [unit, setUnit] = useState("g");
   const [cost, setCost] = useState("");
   const [expiresAt, setExpiresAt] = useState("");
+  const [aiInput, setAiInput] = useState("");
 
   const handleAdd = (e: React.FormEvent) => {
     e.preventDefault();
@@ -218,18 +299,20 @@ const PantryVaultMockup = () => {
     );
   }, [items]);
 
+  const recipeCards = useMemo(() => matchingRecipes.map((r) => toRecipe(r, items)), [matchingRecipes, items]);
+
   // Sort recipes per active sort key
   const sortedRecipes = useMemo(() => {
-    const list = [...matchingRecipes];
+    const list = [...recipeCards];
     if (sortKey === "ready-time") {
       return list.sort((a, b) => a.readyInMinutes - b.readyInMinutes);
     }
     if (sortKey === "expiring-soon") {
       // Score each recipe by the soonest-expiring dated ingredient it uses.
       // Recipes using only undated items get pushed to the bottom (Infinity).
-      const score = (r: MockRecipe) => {
+      const score = (r: Recipe) => {
         let min: number | null = null;
-        for (const ing of r.usesIngredients) {
+        for (const ing of r.extendedIngredients.map((ingredient) => ingredient.name)) {
           for (const [pname, days] of ingredientUrgency.entries()) {
             if ((ing.includes(pname) || pname.includes(ing)) && days !== null) {
               if (min === null || days < min) min = days;
@@ -241,18 +324,20 @@ const PantryVaultMockup = () => {
       return list.sort((a, b) => score(a) - score(b));
     }
     // best-match: by # of pantry ingredients used (desc)
-    const pantryNames = new Set(items.map((i) => i.name));
-    const matched = (r: MockRecipe) =>
-      r.usesIngredients.filter((ing) =>
-        Array.from(pantryNames).some((p) => ing.includes(p) || p.includes(ing))
-      ).length;
-    return list.sort((a, b) => matched(b) - matched(a));
-  }, [matchingRecipes, sortKey, ingredientUrgency, items]);
+    return list.sort((a, b) => {
+      const aFull = a.missedIngredientCount === 0 && (a.insufficientCount ?? 0) === 0;
+      const bFull = b.missedIngredientCount === 0 && (b.insufficientCount ?? 0) === 0;
+      if (aFull !== bFull) return aFull ? -1 : 1;
+      if (a.missedIngredientCount !== b.missedIngredientCount) return a.missedIngredientCount - b.missedIngredientCount;
+      if ((a.insufficientCount ?? 0) !== (b.insufficientCount ?? 0)) return (a.insufficientCount ?? 0) - (b.insufficientCount ?? 0);
+      return b.usedIngredientCount - a.usedIngredientCount;
+    });
+  }, [recipeCards, sortKey, ingredientUrgency]);
 
   // For badges on recipe cards: which dated ingredient drives the urgency
-  const recipeUrgencyMeta = (r: MockRecipe): { days: number | null; ingredient: string | null } => {
+  const recipeUrgencyMeta = (r: Recipe): { days: number | null; ingredient: string | null } => {
     let best: { days: number; ingredient: string } | null = null;
-    for (const ing of r.usesIngredients) {
+    for (const ing of r.extendedIngredients.map((ingredient) => ingredient.name)) {
       for (const [pname, days] of ingredientUrgency.entries()) {
         if ((ing.includes(pname) || pname.includes(ing)) && days !== null) {
           if (!best || days < best.days) best = { days, ingredient: pname };
@@ -268,7 +353,7 @@ const PantryVaultMockup = () => {
   }).length;
 
   return (
-    <div className="min-h-screen bg-kitchen-counter">
+    <div className={`min-h-screen bg-kitchen-counter ${darkPreview ? "dark" : ""}`}>
       {/* Header */}
       <header className="border-b-2 border-kitchen bg-wood-grain sticky top-0 z-10">
         <div className="container max-w-3xl mx-auto flex items-center justify-between py-4 px-4">
@@ -283,7 +368,19 @@ const PantryVaultMockup = () => {
             </div>
             <h1 className="text-xl text-foreground">Pantry Vault — Mockup</h1>
           </div>
-          <Badge variant="outline" className="text-xs">Demo Mode</Badge>
+          <div className="flex items-center gap-2">
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={() => setDarkPreview((prev) => !prev)}
+              className="gap-2 text-xs"
+            >
+              {darkPreview ? <Sun className="h-3.5 w-3.5" /> : <Moon className="h-3.5 w-3.5" />}
+              {darkPreview ? "Light" : "Dark"}
+            </Button>
+            <Badge variant="outline" className="text-xs">Demo Mode</Badge>
+          </div>
         </div>
       </header>
 
@@ -303,33 +400,27 @@ const PantryVaultMockup = () => {
               <span className="inline-flex h-7 w-7 items-center justify-center rounded-lg bg-primary/10">🛒</span>
               Add to Pantry
             </h2>
-            <p className="text-sm text-muted-foreground">
-              Cost and expiry are optional. Each add creates a new batch — duplicates allowed.
-            </p>
           </div>
 
           <form onSubmit={handleAdd} className="space-y-3">
-            {/* Row 1: name */}
-            <Input
-              placeholder="Ingredient (e.g. chicken breast)"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              className="bg-card"
-            />
-
-            {/* Row 2: qty + unit */}
-            <div className="flex gap-2">
+            <div className="grid grid-cols-[minmax(0,1fr)_5.5rem_7rem] gap-2">
+              <Input
+                placeholder="Ingredient (e.g. chicken breast)"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                className="bg-card"
+              />
               <Input
                 type="number"
                 placeholder="Qty"
                 value={qty}
                 onChange={(e) => setQty(e.target.value)}
-                className="w-24 bg-card"
+                className="bg-card"
                 min="0"
                 step="any"
               />
               <Select value={unit} onValueChange={setUnit}>
-                <SelectTrigger className="w-28 bg-card"><SelectValue /></SelectTrigger>
+                <SelectTrigger className="bg-card"><SelectValue /></SelectTrigger>
                 <SelectContent>
                   {COMMON_UNITS.map((u) => (
                     <SelectItem key={u} value={u}>{u}</SelectItem>
@@ -366,6 +457,12 @@ const PantryVaultMockup = () => {
                 <Plus className="h-5 w-5" />
               </Button>
             </div>
+            <Textarea
+              placeholder="AI add: 1 lb chicken breast expiring Friday, $7.50; 2 cups rice"
+              value={aiInput}
+              onChange={(e) => setAiInput(e.target.value)}
+              className="min-h-20 bg-card resize-none"
+            />
           </form>
         </section>
 
@@ -377,7 +474,6 @@ const PantryVaultMockup = () => {
                 <span className="inline-flex h-7 w-7 items-center justify-center rounded-lg bg-primary/10">🧺</span>
                 Your Pantry ({items.length})
               </h2>
-              <p className="text-sm text-muted-foreground">Sorted by name. Same-name batches sit adjacent.</p>
             </div>
             {expiringCount > 0 && (
               <Badge variant="outline" className="border-warning/50 text-warning bg-warning/5 gap-1">
@@ -451,11 +547,6 @@ const PantryVaultMockup = () => {
                 <span className="inline-flex h-7 w-7 items-center justify-center rounded-lg bg-primary/10">📖</span>
                 Recipes ({sortedRecipes.length})
               </h2>
-              <p className="text-sm text-muted-foreground">
-                {hasAnyExpiry
-                  ? `"Expiring soon" sort is available — pantry has ${items.filter(i => i.expiresAt).length} dated item(s).`
-                  : "Add expiry dates to unlock the \"Expiring soon\" sort."}
-              </p>
             </div>
             <div className="flex items-center gap-2">
               <span className="text-xs text-muted-foreground">Sort:</span>
@@ -479,59 +570,32 @@ const PantryVaultMockup = () => {
             </div>
           </div>
 
-          <div className="space-y-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             {sortedRecipes.map((r) => {
               const meta = sortKey === "expiring-soon" ? recipeUrgencyMeta(r) : { days: null, ingredient: null };
               const urgent = meta.days !== null && meta.days <= 3;
               return (
-                <div
-                  key={r.id}
-                  className="flex gap-3 rounded-xl border border-border bg-card overflow-hidden hover:shadow-kitchen transition-all"
-                >
-                  <img
-                    src={r.image}
-                    alt={r.title}
-                    className="w-24 h-24 sm:w-32 sm:h-32 object-cover shrink-0"
-                  />
-                  <div className="flex-1 py-3 pr-3 min-w-0 space-y-1.5">
-                    <div className="flex items-start justify-between gap-2">
-                      <h3 className="font-semibold text-foreground leading-tight truncate">{r.title}</h3>
-                      {sortKey === "expiring-soon" && meta.days !== null && (
-                        <Badge
-                          variant="outline"
-                          className={`shrink-0 text-[11px] gap-1 ${
-                            urgent
-                              ? meta.days < 0
-                                ? "border-destructive/50 bg-destructive/10 text-destructive"
-                                : "border-warning/50 bg-warning/10 text-warning"
-                              : "border-border text-muted-foreground"
-                          }`}
-                        >
-                          <Flame className="h-3 w-3" />
-                          {meta.days < 0
-                            ? `Expired ${Math.abs(meta.days)}d ago`
-                            : meta.days === 0
-                            ? "Use today"
-                            : `Use in ${meta.days}d`}
-                        </Badge>
-                      )}
-                    </div>
-                    <div className="text-xs text-muted-foreground flex items-center gap-2 flex-wrap">
-                      <span className="inline-flex items-center gap-1"><Clock className="h-3 w-3" /> {r.readyInMinutes} min</span>
-                      <span>·</span>
-                      <span>{r.servings} servings</span>
-                    </div>
-                    {sortKey === "expiring-soon" && meta.ingredient && (
-                      <p className="text-xs text-muted-foreground capitalize">
-                        Uses your <span className="font-medium text-foreground">{meta.ingredient}</span>
-                      </p>
-                    )}
-                    {sortKey !== "expiring-soon" && (
-                      <p className="text-xs text-muted-foreground capitalize truncate">
-                        Uses: {r.usesIngredients.slice(0, 3).join(", ")}
-                      </p>
-                    )}
-                  </div>
+                <div key={r.id} className="relative">
+                  <RecipeCard recipe={r} onClick={setSelectedRecipe} />
+                  {sortKey === "expiring-soon" && meta.days !== null && (
+                    <Badge
+                      variant="outline"
+                      className={`absolute top-3 right-3 z-10 shrink-0 text-[11px] gap-1 ${
+                        urgent
+                          ? meta.days < 0
+                            ? "border-destructive/50 bg-destructive/10 text-destructive"
+                            : "border-warning/50 bg-warning/10 text-warning"
+                          : "border-border bg-card text-muted-foreground"
+                      }`}
+                    >
+                      <Flame className="h-3 w-3" />
+                      {meta.days < 0
+                        ? `Expired ${Math.abs(meta.days)}d ago`
+                        : meta.days === 0
+                        ? "Use today"
+                        : `Use in ${meta.days}d`}
+                    </Badge>
+                  )}
                 </div>
               );
             })}
@@ -540,6 +604,14 @@ const PantryVaultMockup = () => {
             )}
           </div>
         </section>
+
+        {selectedRecipe && (
+          <div className="fixed inset-0 z-50 bg-background/80 backdrop-blur-sm p-4 overflow-y-auto" onClick={() => setSelectedRecipe(null)}>
+            <div className="mx-auto my-6 max-w-2xl surface-paper rounded-2xl p-5 md:p-6" onClick={(e) => e.stopPropagation()}>
+              <RecipeDetail recipe={selectedRecipe} onBack={() => setSelectedRecipe(null)} demoMode />
+            </div>
+          </div>
+        )}
 
         {/* Footer note */}
         <div className="text-center text-xs text-muted-foreground pb-4">
