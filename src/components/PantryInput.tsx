@@ -10,6 +10,7 @@ import { checkGenericIngredient } from "@/lib/ingredientValidation";
 import { getSpellSuggestions, KNOWN_INGREDIENTS } from "@/lib/spellCheck";
 import { trackEvent, AnalyticsEvents } from "@/lib/analytics";
 import { cn } from "@/lib/utils";
+import { formatIsoDateForDisplay, isoDateToLocalDate } from "@/lib/dateUtils";
 
 interface PantryInputProps {
   onAdd: (item: Omit<PantryItem, "id">) => void;
@@ -31,7 +32,7 @@ const PantryInput = ({ onAdd }: PantryInputProps) => {
   const inputRef = useRef<HTMLInputElement>(null);
   const autocompleteRef = useRef<HTMLDivElement>(null);
 
-  const selectedExpiryDate = expiresAt ? new Date(`${expiresAt}T00:00:00`) : undefined;
+  const selectedExpiryDate = isoDateToLocalDate(expiresAt);
 
   // Close autocomplete on outside click
   useEffect(() => {
@@ -241,7 +242,7 @@ const PantryInput = ({ onAdd }: PantryInputProps) => {
                 title="Expiration date (optional)"
               >
                 <Calendar className="mr-2 h-4 w-4 shrink-0 text-muted-foreground" />
-                {selectedExpiryDate ? format(selectedExpiryDate, "MM/dd/yyyy") : "Expires"}
+                {selectedExpiryDate ? `Expires on ${formatIsoDateForDisplay(expiresAt)}` : "Expires on dd/mm/yyyy"}
               </Button>
             </PopoverTrigger>
             <PopoverContent className="w-auto p-0" align="start">
