@@ -1,4 +1,12 @@
 import type { Recipe } from "@/types/recipe";
+import demoBlackBeanRiceSkillet from "@/assets/demo-black-bean-rice-skillet.jpg";
+import demoCheddarBeanStuffedTortillas from "@/assets/demo-cheddar-bean-stuffed-tortillas.jpg";
+import demoCheesyChickenQuesadillas from "@/assets/demo-cheesy-chicken-quesadillas.jpg";
+import demoChickenBlackBeanTacos from "@/assets/demo-chicken-black-bean-tacos.jpg";
+import demoChickenBurritoRiceBowls from "@/assets/demo-chicken-burrito-rice-bowls.jpg";
+import demoCilantroLemonBlackBeanTacos from "@/assets/demo-cilantro-lemon-black-bean-tacos.jpg";
+import demoLemonYogurtChickenTacos from "@/assets/demo-lemon-yogurt-chicken-tacos.jpg";
+import demoTomatoGarlicChickenRice from "@/assets/demo-tomato-garlic-chicken-rice.jpg";
 
 /**
  * Mock recipe data for demo mode.
@@ -310,7 +318,7 @@ export const MOCK_RECIPES: Recipe[] = [
   {
     id: 112,
     title: "Chicken Black Bean Tacos",
-    image: "https://img.spoonacular.com/recipes/650485-312x231.jpg",
+    image: demoChickenBlackBeanTacos,
     usedIngredientCount: 10,
     missedIngredientCount: 0,
     usedIngredients: [
@@ -347,7 +355,7 @@ export const MOCK_RECIPES: Recipe[] = [
   {
     id: 113,
     title: "Cheesy Chicken Quesadillas",
-    image: "https://img.spoonacular.com/recipes/642129-312x231.jpg",
+    image: demoCheesyChickenQuesadillas,
     usedIngredientCount: 6,
     missedIngredientCount: 0,
     usedIngredients: [
@@ -376,7 +384,7 @@ export const MOCK_RECIPES: Recipe[] = [
   {
     id: 114,
     title: "Chicken Burrito Rice Bowls",
-    image: "https://img.spoonacular.com/recipes/715446-312x231.jpg",
+    image: demoChickenBurritoRiceBowls,
     usedIngredientCount: 8,
     missedIngredientCount: 0,
     usedIngredients: [
@@ -409,7 +417,7 @@ export const MOCK_RECIPES: Recipe[] = [
   {
     id: 115,
     title: "Black Bean & Rice Skillet",
-    image: "https://img.spoonacular.com/recipes/641975-312x231.jpg",
+    image: demoBlackBeanRiceSkillet,
     usedIngredientCount: 7,
     missedIngredientCount: 0,
     usedIngredients: [
@@ -440,7 +448,7 @@ export const MOCK_RECIPES: Recipe[] = [
   {
     id: 116,
     title: "Lemon Yogurt Chicken Tacos",
-    image: "https://img.spoonacular.com/recipes/648506-312x231.jpg",
+    image: demoLemonYogurtChickenTacos,
     usedIngredientCount: 7,
     missedIngredientCount: 1,
     usedIngredients: [
@@ -474,7 +482,7 @@ export const MOCK_RECIPES: Recipe[] = [
   {
     id: 117,
     title: "Cheddar Bean Stuffed Tortillas",
-    image: "https://img.spoonacular.com/recipes/632660-312x231.jpg",
+    image: demoCheddarBeanStuffedTortillas,
     usedIngredientCount: 6,
     missedIngredientCount: 0,
     usedIngredients: [
@@ -503,7 +511,7 @@ export const MOCK_RECIPES: Recipe[] = [
   {
     id: 118,
     title: "Tomato Garlic Chicken Rice",
-    image: "https://img.spoonacular.com/recipes/715538-312x231.jpg",
+    image: demoTomatoGarlicChickenRice,
     usedIngredientCount: 6,
     missedIngredientCount: 0,
     usedIngredients: [
@@ -532,7 +540,7 @@ export const MOCK_RECIPES: Recipe[] = [
   {
     id: 119,
     title: "Cilantro Lemon Black Bean Tacos",
-    image: "https://img.spoonacular.com/recipes/633344-312x231.jpg",
+    image: demoCilantroLemonBlackBeanTacos,
     usedIngredientCount: 7,
     missedIngredientCount: 0,
     usedIngredients: [
