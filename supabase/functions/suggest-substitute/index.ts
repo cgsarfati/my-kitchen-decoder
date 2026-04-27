@@ -77,7 +77,7 @@ If no reasonable substitute exists, return substitute = "" and explain in the in
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        model: "google/gemini-3-flash-preview",
+        model: "google/gemini-2.5-flash",
         messages: [
           {
             role: "system",
@@ -185,6 +185,20 @@ OUTPUT FIELDS:
     }
 
     const parsed = JSON.parse(toolCall.function.arguments);
+    const itemKey = (s: string) => s.toLowerCase().replace(/[^a-z0-9 ]/g, "").replace(/\s+/g, " ").trim();
+
+    const shortage = Array.isArray(parsed.pantryUsage)
+      ? parsed.pantryUsage.find((usage: { name?: string; needAmount?: number; needUnit?: string }) => {
+          const pantryItem = body.pantryItems.find((p) => itemKey(p.name) === itemKey(String(usage.name ?? "")));
+          return pantryItem && pantryItem.unit === usage.needUnit && typeof usage.needAmount === "number" && usage.needAmount > pantryItem.quantity;
+        })
+      : undefined;
+
+    if (shortage) {
+      parsed.sufficientInPantry = false;
+      const pantryItem = body.pantryItems.find((p) => itemKey(p.name) === itemKey(String(shortage.name ?? "")));
+      parsed.instruction = `${parsed.instruction} You only have ${pantryItem?.quantity ?? "some"} ${pantryItem?.unit ?? ""} of ${shortage.name}, so this pantry substitute is short of the ${shortage.needAmount} ${shortage.needUnit} needed.`.trim();
+    }
 
     // Guardrail: reject self-substitutions. The AI sometimes returns the same ingredient
     // back (e.g. "use olive oil for olive oil") which is nonsense — catch it here.
