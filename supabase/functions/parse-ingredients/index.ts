@@ -36,7 +36,7 @@ serve(async (req) => {
         messages: [
           {
             role: "system",
-            content: `You are a kitchen ingredient parser. The user describes what's in their pantry in natural language. Extract each ingredient with a quantity and unit.
+            content: `You are a kitchen ingredient parser. The user describes what's in their pantry in natural language. Extract each ingredient with a quantity, unit, and optional cost and expiration date when mentioned.
 
 UNITS:
 - Use standard abbreviated units: g, kg, oz, lb, ml, l, cup, tbsp, tsp, clove, can, slice, bunch.
@@ -45,6 +45,12 @@ UNITS:
 NAMES:
 - Normalize to the common singular form ("tomatoes" → "tomato", "eggs" → "egg").
 - Keep the user's specificity ("meat" only if they didn't specify the type).
+
+COST AND EXPIRATION:
+- If the user mentions a price or value for an ingredient, return cost as a number in dollars, without currency symbols.
+- If the user mentions an expiration date or freshness window, return expiresAt in YYYY-MM-DD format.
+- Resolve relative expiration phrases like "expires tomorrow", "expires in 2 weeks", or "good until Friday" using today's date.
+- If cost or expiration is not mentioned for an ingredient, omit that field.
 
 QUANTITY ESTIMATION (important):
 When the user is vague ("some", "a bit", "a little", "enough for X", "a small bag", "half a jar"), do NOT use a fixed default. Reason about a realistic real-world amount based on the CONTEXT they describe, then return that number. Think about typical container sizes, typical single-meal portions, and the ingredient's density.
@@ -82,6 +88,8 @@ If the user gives no context at all for an ingredient (just names it), estimate 
                           type: "string",
                           description: "Unit of measurement (g, kg, oz, lb, ml, l, cup, tbsp, tsp, clove, can, slice, bunch)",
                         },
+                        cost: { type: "number", description: "Optional ingredient cost in dollars, if mentioned" },
+                        expiresAt: { type: "string", description: "Optional expiration date in YYYY-MM-DD format, if mentioned" },
                       },
                       required: ["name", "quantity", "unit"],
                       additionalProperties: false,
