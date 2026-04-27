@@ -408,8 +408,6 @@ const Index = () => {
             <RecipeDetail
               recipe={selectedRecipe}
               onBack={() => setSelectedRecipe(null)}
-              pantryItems={items}
-              demoMode={demoMode}
             />
           </div>
         </main>
