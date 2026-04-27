@@ -605,6 +605,14 @@ const PantryVaultMockup = () => {
           </div>
         </section>
 
+        {selectedRecipe && (
+          <div className="fixed inset-0 z-50 bg-background/80 backdrop-blur-sm p-4 overflow-y-auto" onClick={() => setSelectedRecipe(null)}>
+            <div className="mx-auto my-6 max-w-2xl surface-paper rounded-2xl p-5 md:p-6" onClick={(e) => e.stopPropagation()}>
+              <RecipeDetail recipe={selectedRecipe} onBack={() => setSelectedRecipe(null)} demoMode />
+            </div>
+          </div>
+        )}
+
         {/* Footer note */}
         <div className="text-center text-xs text-muted-foreground pb-4">
           This is a visual mockup. No data is saved. <Link to="/" className="underline">Back to live app</Link>
