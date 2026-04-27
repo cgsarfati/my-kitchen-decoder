@@ -94,10 +94,20 @@ const PantryList = ({ items, onRemove, onUpdate }: PantryListProps) => {
 
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-      {items.map((item) => (
+      {items.map((item) => {
+        const expiryDays = daysUntilExpiry(item.expiresAt);
+        const isExpired = expiryDays !== null && expiryDays < 0;
+        const isSoon = expiryDays !== null && expiryDays >= 0 && expiryDays <= 3;
+        return (
         <div
           key={item.id}
-          className="flex items-center justify-between bg-surface-warm rounded-xl px-4 py-3 border border-border group hover:border-primary/40 hover:shadow-kitchen transition-all"
+          className={`flex items-center justify-between rounded-xl px-4 py-3 border group hover:shadow-kitchen transition-all ${
+            isExpired
+              ? "bg-destructive/10 border-destructive/50"
+              : isSoon
+              ? "bg-warning/10 border-warning/50"
+              : "bg-surface-warm border-border hover:border-primary/40"
+          }`}
         >
           <div className="flex items-center gap-3 min-w-0 flex-1">
             <span className="text-lg leading-none">{getIngredientIcon(item.name)}</span>
@@ -144,8 +154,14 @@ const PantryList = ({ items, onRemove, onUpdate }: PantryListProps) => {
                   className="text-xs text-muted-foreground cursor-pointer hover:text-primary transition-colors inline-flex items-center gap-1"
                   onClick={() => startEdit(item)}
                 >
-                  {item.quantity} {item.unit}
+                  {item.quantity} {item.unit}{item.cost !== undefined ? ` · $${item.cost.toFixed(2)}` : ""}
                   <Pencil className="h-2.5 w-2.5 opacity-0 group-hover:opacity-100 transition-opacity" />
+                </span>
+              )}
+              {(isExpired || isSoon) && (
+                <span className={`mt-1 text-[11px] font-medium flex items-center gap-1 ${isExpired ? "text-destructive" : "text-warning"}`}>
+                  {isExpired ? <AlertTriangle className="h-3 w-3" /> : <Clock className="h-3 w-3" />}
+                  {formatExpiryLabel(item.expiresAt)}
                 </span>
               )}
             </div>
@@ -159,7 +175,8 @@ const PantryList = ({ items, onRemove, onUpdate }: PantryListProps) => {
             <X className="h-3.5 w-3.5" />
           </Button>
         </div>
-      ))}
+        );
+      })}
     </div>
   );
 };
