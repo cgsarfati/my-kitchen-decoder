@@ -1,11 +1,15 @@
 import { useState, useRef, useEffect } from "react";
 import { Plus, AlertTriangle, SpellCheck, DollarSign, Calendar } from "lucide-react";
+import { format } from "date-fns";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Calendar as CalendarPicker } from "@/components/ui/calendar";
 import { COMMON_UNITS, type PantryItem } from "@/types/pantry";
 import { checkGenericIngredient } from "@/lib/ingredientValidation";
 import { getSpellSuggestions, KNOWN_INGREDIENTS } from "@/lib/spellCheck";
 import { trackEvent, AnalyticsEvents } from "@/lib/analytics";
+import { cn } from "@/lib/utils";
 
 interface PantryInputProps {
   onAdd: (item: Omit<PantryItem, "id">) => void;
@@ -26,6 +30,8 @@ const PantryInput = ({ onAdd }: PantryInputProps) => {
   const [activeIndex, setActiveIndex] = useState(-1);
   const inputRef = useRef<HTMLInputElement>(null);
   const autocompleteRef = useRef<HTMLDivElement>(null);
+
+  const selectedExpiryDate = expiresAt ? new Date(`${expiresAt}T00:00:00`) : undefined;
 
   // Close autocomplete on outside click
   useEffect(() => {
@@ -223,22 +229,30 @@ const PantryInput = ({ onAdd }: PantryInputProps) => {
             <DollarSign className="absolute left-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
             <Input type="number" placeholder="Cost" value={cost} onChange={(e) => setCost(e.target.value)} className="bg-card pl-8" min="0" step="0.01" />
           </div>
-          <div className="relative flex-1">
-            <Calendar className="absolute left-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
-            <Input
-              type="date"
-              value={expiresAt}
-              onChange={(e) => setExpiresAt(e.target.value)}
-              aria-label="Expiration date optional"
-              title="Expiration date (optional)"
-              className="bg-card pl-8 text-foreground dark:[color-scheme:dark] [&::-webkit-calendar-picker-indicator]:opacity-0"
-            />
-            {!expiresAt && (
-              <span className="pointer-events-none absolute left-8 top-1/2 -translate-y-1/2 text-sm text-muted-foreground sm:hidden">
-                Expires (optional)
-              </span>
-            )}
-          </div>
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button
+                type="button"
+                variant="outline"
+                className={cn(
+                  "flex-1 justify-start bg-card px-3 text-left font-normal text-foreground hover:bg-card hover:text-foreground",
+                  !expiresAt && "text-muted-foreground hover:text-muted-foreground"
+                )}
+                title="Expiration date (optional)"
+              >
+                <Calendar className="mr-2 h-4 w-4 shrink-0 text-muted-foreground" />
+                {selectedExpiryDate ? format(selectedExpiryDate, "MM/dd/yyyy") : "Expires"}
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-auto p-0" align="start">
+              <CalendarPicker
+                mode="single"
+                selected={selectedExpiryDate}
+                onSelect={(date) => setExpiresAt(date ? format(date, "yyyy-MM-dd") : "")}
+                initialFocus
+              />
+            </PopoverContent>
+          </Popover>
           <Button type="submit" variant="hero" size="icon" className="shrink-0 self-stretch sm:self-auto">
             <Plus className="h-5 w-5" />
           </Button>

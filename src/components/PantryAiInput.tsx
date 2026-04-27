@@ -1,13 +1,17 @@
 import { useState } from "react";
 import { Sparkles, Loader2, Plus, X, DollarSign, Calendar } from "lucide-react";
+import { format } from "date-fns";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Calendar as CalendarPicker } from "@/components/ui/calendar";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { COMMON_UNITS, type PantryItem } from "@/types/pantry";
 import { trackEvent, AnalyticsEvents } from "@/lib/analytics";
+import { cn } from "@/lib/utils";
 
 interface PantryAiInputProps {
   onAdd: (item: Omit<PantryItem, "id">) => void;
@@ -238,17 +242,30 @@ const PantryAiInput = ({ onAdd }: PantryAiInputProps) => {
                         step="0.01"
                       />
                     </div>
-                    <div className="relative">
-                      <Calendar className="absolute left-1.5 top-1/2 -translate-y-1/2 h-3 w-3 text-muted-foreground pointer-events-none" />
-                      <Input
-                        type="date"
-                        value={item.expiresAt ?? ""}
-                        onChange={(e) => updateItem(i, "expiresAt", e.target.value)}
-                        aria-label={`${item.name} expiration date optional`}
-                        title="Expiration date (optional)"
-                        className="h-6 w-32 text-xs pl-5 pr-1.5 dark:[color-scheme:dark] [&::-webkit-calendar-picker-indicator]:opacity-0"
-                      />
-                    </div>
+                    <Popover>
+                      <PopoverTrigger asChild>
+                        <Button
+                          type="button"
+                          variant="outline"
+                          title="Expiration date (optional)"
+                          className={cn(
+                            "h-6 w-32 justify-start px-1.5 text-left text-xs font-normal",
+                            !item.expiresAt && "text-muted-foreground"
+                          )}
+                        >
+                          <Calendar className="mr-1 h-3 w-3 shrink-0 text-muted-foreground" />
+                          {item.expiresAt ? format(new Date(`${item.expiresAt}T00:00:00`), "MM/dd/yyyy") : "Expires"}
+                        </Button>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-auto p-0" align="start">
+                        <CalendarPicker
+                          mode="single"
+                          selected={item.expiresAt ? new Date(`${item.expiresAt}T00:00:00`) : undefined}
+                          onSelect={(date) => updateItem(i, "expiresAt", date ? format(date, "yyyy-MM-dd") : "")}
+                          initialFocus
+                        />
+                      </PopoverContent>
+                    </Popover>
                   </div>
                 </div>
               </div>
