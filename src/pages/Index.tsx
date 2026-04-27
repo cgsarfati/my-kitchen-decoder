@@ -425,6 +425,7 @@ const Index = () => {
           isLoading={isLoading}
           hasSearched={hasSearched}
           onRecipeClick={(recipe) => { trackEvent(AnalyticsEvents.VIEW_RECIPE, { recipe_id: recipe.id, recipe_title: recipe.title }); setSelectedRecipe(recipe); }}
+          pantryItems={items}
           demoMode={demoMode}
         />
       </main>
