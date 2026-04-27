@@ -330,6 +330,18 @@ const PantryVaultMockup = () => {
     return map;
   }, [items]);
 
+  const getRecipeUrgencyMeta = (r: Recipe): { days: number | null; ingredient: string | null } => {
+    let best: { days: number; ingredient: string } | null = null;
+    for (const ing of r.extendedIngredients.map((ingredient) => ingredient.name)) {
+      for (const [pname, days] of ingredientUrgency.entries()) {
+        if ((ing.includes(pname) || pname.includes(ing)) && days !== null) {
+          if (!best || days < best.days) best = { days, ingredient: pname };
+        }
+      }
+    }
+    return best ? { days: best.days, ingredient: best.ingredient } : { days: null, ingredient: null };
+  };
+
   // Filter recipes to those that use at least one pantry ingredient
   const matchingRecipes = useMemo(() => {
     const pantryNames = new Set(items.map((i) => i.name));
@@ -342,7 +354,10 @@ const PantryVaultMockup = () => {
 
   const recipeCards = useMemo(() => matchingRecipes.map((r) => toRecipe(r, items)), [matchingRecipes, items]);
   const cookableRecipeCards = useMemo(
-    () => recipeCards.filter((r) => !recipeUrgencyMeta(r).days || recipeUrgencyMeta(r).days! >= 0),
+    () => recipeCards.filter((r) => {
+      const days = getRecipeUrgencyMeta(r).days;
+      return days === null || days >= 0;
+    }),
     [recipeCards, ingredientUrgency]
   );
 
