@@ -86,12 +86,12 @@ const RecipeResults = ({ recipes, isLoading, hasSearched, onRecipeClick, demoMod
             We couldn't find recipes matching your current ingredients. Here are some things to try:
           </p>
         </div>
-        <div className="space-y-2 text-sm text-left max-w-2xl mx-auto">
-          <div className="flex items-start gap-2 text-muted-foreground">
+        <div className="space-y-2 text-sm max-w-2xl mx-auto">
+          <div className="flex items-start justify-center gap-2 text-muted-foreground text-center sm:text-left">
             <Lightbulb className="h-4 w-4 mt-0.5 text-primary shrink-0" />
             <span>Add more common ingredients like <strong>garlic</strong>, <strong>onion</strong>, or <strong>olive oil</strong></span>
           </div>
-          <div className="flex items-start gap-2 text-muted-foreground">
+          <div className="flex items-start justify-center gap-2 text-muted-foreground text-center sm:text-left">
             <Lightbulb className="h-4 w-4 mt-0.5 text-primary shrink-0" />
             <span>Try broader ingredient names (e.g. "chicken" instead of "chicken thigh")</span>
           </div>
