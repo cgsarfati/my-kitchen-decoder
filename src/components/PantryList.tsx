@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { X, Pencil, Check } from "lucide-react";
+import { X, Pencil, Check, AlertTriangle, Clock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -38,6 +38,24 @@ function getIngredientIcon(name: string): string {
     if (lower.includes(keyword)) return icon;
   }
   return "🥘";
+}
+
+function daysUntilExpiry(expiresAt?: string): number | null {
+  if (!expiresAt) return null;
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const exp = new Date(expiresAt);
+  exp.setHours(0, 0, 0, 0);
+  return Math.round((exp.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
+}
+
+function formatExpiryLabel(expiresAt?: string): string {
+  const days = daysUntilExpiry(expiresAt);
+  if (days === null) return "";
+  if (days < 0) return `Expired ${Math.abs(days)}d ago`;
+  if (days === 0) return "Expires today";
+  if (days === 1) return "Expires tomorrow";
+  return `Expires in ${days}d`;
 }
 
 interface PantryListProps {
