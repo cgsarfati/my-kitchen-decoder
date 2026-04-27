@@ -127,6 +127,28 @@ export function compareQuantity(
   return pantryBase.baseAmount >= recipeBase.baseAmount * 0.95 ? "have" : "insufficient";
 }
 
+function compareTotalQuantity(
+  pantryItems: { name: string; quantity: number; unit: string }[],
+  recipeAmount: number,
+  recipeUnit: string
+): IngredientMatchStatus {
+  if (!recipeAmount || recipeAmount <= 0) return "have";
+  const recipeBase = toBaseAmount(recipeAmount, recipeUnit);
+  if (!recipeBase) return "insufficient";
+
+  let total = 0;
+  let comparable = false;
+  for (const item of pantryItems) {
+    const pantryBase = toBaseAmount(item.quantity, item.unit);
+    if (!pantryBase || pantryBase.category !== recipeBase.category) continue;
+    comparable = true;
+    total += pantryBase.baseAmount;
+  }
+
+  if (!comparable) return "insufficient";
+  return total >= recipeBase.baseAmount * 0.95 ? "have" : "insufficient";
+}
+
 export interface IngredientWithStatus {
   id: number;
   name: string;
@@ -164,38 +186,12 @@ export function matchIngredients(
 
     // If Spoonacular says we have it, check quantity
     if (usedSet.has(ingNameLower)) {
-      // Find matching pantry item
-      const pantryItem = pantryItems.find(
-        (p) => p.name.toLowerCase() === ingNameLower
+      const exactMatches = pantryItems.filter((p) => p.name.toLowerCase() === ingNameLower);
+      const partialMatches = exactMatches.length > 0 ? exactMatches : pantryItems.filter(
+        (p) => ingNameLower.includes(p.name.toLowerCase()) || p.name.toLowerCase().includes(ingNameLower)
       );
-
-      if (!pantryItem) {
-        // Name didn't match exactly — try partial match
-        const partialMatch = pantryItems.find(
-          (p) =>
-            ingNameLower.includes(p.name.toLowerCase()) ||
-            p.name.toLowerCase().includes(ingNameLower)
-        );
-
-        if (partialMatch) {
-          const status = compareQuantity(
-            partialMatch.quantity,
-            partialMatch.unit,
-            ing.amount,
-            ing.unit
-          );
-          return { ...ing, status };
-        }
-
-        return { ...ing, status: "have" as const };
-      }
-
-      const status = compareQuantity(
-        pantryItem.quantity,
-        pantryItem.unit,
-        ing.amount,
-        ing.unit
-      );
+      if (partialMatches.length === 0) return { ...ing, status: "have" as const };
+      const status = compareTotalQuantity(partialMatches, ing.amount, ing.unit);
       return { ...ing, status };
     }
 
