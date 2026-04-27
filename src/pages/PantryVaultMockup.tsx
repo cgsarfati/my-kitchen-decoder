@@ -303,7 +303,7 @@ const PantryVaultMockup = () => {
 
   // Sort recipes per active sort key
   const sortedRecipes = useMemo(() => {
-    const list = [...matchingRecipes];
+    const list = [...recipeCards];
     if (sortKey === "ready-time") {
       return list.sort((a, b) => a.readyInMinutes - b.readyInMinutes);
     }
@@ -312,7 +312,7 @@ const PantryVaultMockup = () => {
       // Recipes using only undated items get pushed to the bottom (Infinity).
       const score = (r: MockRecipe) => {
         let min: number | null = null;
-        for (const ing of r.usesIngredients) {
+        for (const ing of r.extendedIngredients.map((ingredient) => ingredient.name)) {
           for (const [pname, days] of ingredientUrgency.entries()) {
             if ((ing.includes(pname) || pname.includes(ing)) && days !== null) {
               if (min === null || days < min) min = days;
@@ -324,18 +324,20 @@ const PantryVaultMockup = () => {
       return list.sort((a, b) => score(a) - score(b));
     }
     // best-match: by # of pantry ingredients used (desc)
-    const pantryNames = new Set(items.map((i) => i.name));
-    const matched = (r: MockRecipe) =>
-      r.usesIngredients.filter((ing) =>
-        Array.from(pantryNames).some((p) => ing.includes(p) || p.includes(ing))
-      ).length;
-    return list.sort((a, b) => matched(b) - matched(a));
-  }, [matchingRecipes, sortKey, ingredientUrgency, items]);
+    return list.sort((a, b) => {
+      const aFull = a.missedIngredientCount === 0 && (a.insufficientCount ?? 0) === 0;
+      const bFull = b.missedIngredientCount === 0 && (b.insufficientCount ?? 0) === 0;
+      if (aFull !== bFull) return aFull ? -1 : 1;
+      if (a.missedIngredientCount !== b.missedIngredientCount) return a.missedIngredientCount - b.missedIngredientCount;
+      if ((a.insufficientCount ?? 0) !== (b.insufficientCount ?? 0)) return (a.insufficientCount ?? 0) - (b.insufficientCount ?? 0);
+      return b.usedIngredientCount - a.usedIngredientCount;
+    });
+  }, [recipeCards, sortKey, ingredientUrgency]);
 
   // For badges on recipe cards: which dated ingredient drives the urgency
-  const recipeUrgencyMeta = (r: MockRecipe): { days: number | null; ingredient: string | null } => {
+  const recipeUrgencyMeta = (r: Recipe): { days: number | null; ingredient: string | null } => {
     let best: { days: number; ingredient: string } | null = null;
-    for (const ing of r.usesIngredients) {
+    for (const ing of r.extendedIngredients.map((ingredient) => ingredient.name)) {
       for (const [pname, days] of ingredientUrgency.entries()) {
         if ((ing.includes(pname) || pname.includes(ing)) && days !== null) {
           if (!best || days < best.days) best = { days, ingredient: pname };
@@ -351,7 +353,7 @@ const PantryVaultMockup = () => {
   }).length;
 
   return (
-    <div className="min-h-screen bg-kitchen-counter">
+    <div className={`min-h-screen bg-kitchen-counter ${darkPreview ? "dark" : ""}`}>
       {/* Header */}
       <header className="border-b-2 border-kitchen bg-wood-grain sticky top-0 z-10">
         <div className="container max-w-3xl mx-auto flex items-center justify-between py-4 px-4">
