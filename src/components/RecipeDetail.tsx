@@ -1,7 +1,6 @@
-import { ArrowLeft, Clock, Users, ExternalLink, CheckCircle2, XCircle, AlertTriangle, Sparkles, UtensilsCrossed } from "lucide-react";
+import { ArrowLeft, Clock, Users, ExternalLink, CheckCircle2, XCircle, AlertTriangle, UtensilsCrossed } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import RecipeAdaptation from "@/components/RecipeAdaptation";
 import type { Recipe } from "@/types/recipe";
 
 
@@ -62,13 +61,10 @@ const InstructionSteps = ({ raw }: { raw: string }) => {
 interface RecipeDetailProps {
   recipe: Recipe;
   onBack: () => void;
-  pantryItems?: import("@/types/pantry").PantryItem[];
-  demoMode?: boolean;
 }
 
-const RecipeDetail = ({ recipe, onBack, pantryItems = [], demoMode = false }: RecipeDetailProps) => {
+const RecipeDetail = ({ recipe, onBack }: RecipeDetailProps) => {
   const isFullMatch = recipe.missedIngredientCount === 0 && (recipe.insufficientCount ?? 0) === 0;
-  const canShowAdaptation = !isFullMatch && pantryItems.length > 0;
 
   return (
     <div className="space-y-6">
@@ -124,21 +120,9 @@ const RecipeDetail = ({ recipe, onBack, pantryItems = [], demoMode = false }: Re
               {recipe.missedIngredientCount} missing
             </Badge>
           )}
-          {recipe.isAiGenerated && (
-            <Badge className="bg-primary text-primary-foreground gap-1">
-              <Sparkles className="h-3 w-3" /> AI idea
-            </Badge>
-          )}
         </div>
         {recipe.generationNote && <p className="text-sm text-muted-foreground">{recipe.generationNote}</p>}
       </div>
-
-      {canShowAdaptation && (
-        <div className="space-y-3">
-          <h3 className="text-xl text-foreground font-body font-semibold">Pantry adaptation</h3>
-          <RecipeAdaptation recipe={recipe} pantryItems={pantryItems} demoMode={demoMode} placement="detail" />
-        </div>
-      )}
 
       {/* Ingredients */}
       <div className="space-y-3">
