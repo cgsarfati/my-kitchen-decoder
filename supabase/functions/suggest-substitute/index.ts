@@ -57,6 +57,58 @@ serve(async (req) => {
       ? `The user has ONLY ${body.haveAmount} ${body.haveUnit} of ${body.ingredientName} — that is not enough.`
       : `The user is missing ${body.ingredientName} entirely.`;
 
+    const normalize = (s: string) => s.toLowerCase().replace(/[^a-z0-9 ]/g, "").replace(/\s+/g, " ").trim();
+    const unitKey = (s?: string) => normalize(s ?? "");
+    const tablespoonCount = (amount?: number, unit?: string) => {
+      if (amount == null) return undefined;
+      const key = unitKey(unit);
+      if (["tbsp", "tablespoon", "tablespoons"].includes(key)) return amount;
+      if (["tsp", "teaspoon", "teaspoons"].includes(key)) return amount / 3;
+      if (["cup", "cups"].includes(key)) return amount * 16;
+      if (["ml", "milliliter", "milliliters"].includes(key)) return amount / 15;
+      if (["l", "liter", "liters", "litre", "litres"].includes(key)) return amount * 1000 / 15;
+      return undefined;
+    };
+
+    const oliveOilNeeds = normalize(body.ingredientName).includes("olive oil")
+      ? tablespoonCount(body.requiredAmount, body.requiredUnit)
+      : undefined;
+
+    if (oliveOilNeeds) {
+      const butter = body.pantryItems.find((p) => normalize(p.name).includes("butter"));
+      if (butter) {
+        const needByUnit: Record<string, number> = {
+          g: oliveOilNeeds * 14,
+          gram: oliveOilNeeds * 14,
+          grams: oliveOilNeeds * 14,
+          kg: oliveOilNeeds * 0.014,
+          oz: oliveOilNeeds * 0.5,
+          ounce: oliveOilNeeds * 0.5,
+          ounces: oliveOilNeeds * 0.5,
+          lb: oliveOilNeeds * 0.03125,
+          pound: oliveOilNeeds * 0.03125,
+          pounds: oliveOilNeeds * 0.03125,
+          tbsp: oliveOilNeeds,
+          tablespoon: oliveOilNeeds,
+          tablespoons: oliveOilNeeds,
+        };
+        const needAmount = needByUnit[unitKey(butter.unit)] ?? oliveOilNeeds * 14;
+        const roundedNeed = Math.round(needAmount * 10) / 10;
+        const sufficient = butter.quantity >= roundedNeed;
+
+        return new Response(JSON.stringify({
+          substitute: "Melted butter",
+          instruction: `Use ${roundedNeed} ${butter.unit} melted butter in place of ${body.requiredAmount ?? oliveOilNeeds} ${body.requiredUnit ?? "tbsp"} olive oil.${sufficient ? "" : ` You only have ${butter.quantity} ${butter.unit}, so scale the recipe down or combine with another neutral fat.`}`,
+          fromPantry: [butter.name],
+          sufficientInPantry: sufficient,
+          pantryUsage: [{ name: butter.name, needAmount: roundedNeed, needUnit: butter.unit }],
+          confidence: "high",
+        }), {
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+    }
+
     const userPrompt = `Recipe: "${body.recipeName}"
 Ingredient needed: ${body.ingredientName} — ${requiredLine}
 ${haveLine}
@@ -185,7 +237,7 @@ OUTPUT FIELDS:
     }
 
     const parsed = JSON.parse(toolCall.function.arguments);
-    const itemKey = (s: string) => s.toLowerCase().replace(/[^a-z0-9 ]/g, "").replace(/\s+/g, " ").trim();
+    const itemKey = normalize;
 
     const shortage = Array.isArray(parsed.pantryUsage)
       ? parsed.pantryUsage.find((usage: { name?: string; needAmount?: number; needUnit?: string }) => {
@@ -202,8 +254,7 @@ OUTPUT FIELDS:
 
     // Guardrail: reject self-substitutions. The AI sometimes returns the same ingredient
     // back (e.g. "use olive oil for olive oil") which is nonsense — catch it here.
-    const norm = (s: string) =>
-      s.toLowerCase().replace(/[^a-z0-9 ]/g, "").replace(/\s+/g, " ").trim();
+    const norm = normalize;
     const originalNorm = norm(body.ingredientName);
     const subNorm = norm(parsed.substitute ?? "");
     const isSelfSub =
