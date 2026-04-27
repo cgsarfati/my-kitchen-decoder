@@ -12,7 +12,7 @@ import PantryAiInput from "@/components/PantryAiInput";
 import PantryList from "@/components/PantryList";
 import RecipeResults from "@/components/RecipeResults";
 import RecipeDetail from "@/components/RecipeDetail";
-import { matchIngredients, summarizeMatch, calculateMaxServings, UNIT_MAP } from "@/lib/unitConversion";
+import { matchIngredients, summarizeMatch, calculateMaxServings } from "@/lib/unitConversion";
 import { MOCK_RECIPES } from "@/lib/mockRecipes";
 import { loadPantry, savePantry } from "@/lib/pantryStorage";
 import type { PantryItem } from "@/types/pantry";
@@ -83,33 +83,6 @@ const Index = () => {
 
   const handleAdd = useCallback((item: Omit<PantryItem, "id">) => {
     setItems((prev) => {
-      const existing = prev.find(
-        (i) => i.name.toLowerCase() === item.name.toLowerCase()
-      );
-      if (existing) {
-        const existingUnit = UNIT_MAP[existing.unit.toLowerCase()];
-        const newUnit = UNIT_MAP[item.unit.toLowerCase()];
-
-        if (existingUnit && newUnit && existingUnit.category === newUnit.category) {
-          const newQtyInBase = item.quantity * newUnit.toBase;
-          const addedInExistingUnit = newQtyInBase / existingUnit.toBase;
-          trackEvent(AnalyticsEvents.MERGE_DUPLICATE, { ingredient: item.name, from_unit: item.unit, to_unit: existing.unit });
-          return prev.map((i) =>
-            i.id === existing.id
-              ? { ...i, quantity: Math.round((i.quantity + addedInExistingUnit) * 100) / 100 }
-              : i
-          );
-        }
-
-        if (existing.unit === item.unit) {
-          trackEvent(AnalyticsEvents.MERGE_DUPLICATE, { ingredient: item.name, unit: item.unit });
-          return prev.map((i) =>
-            i.id === existing.id
-              ? { ...i, quantity: i.quantity + item.quantity }
-              : i
-          );
-        }
-      }
       trackEvent(AnalyticsEvents.ADD_INGREDIENT, { ingredient: item.name, quantity: item.quantity, unit: item.unit });
       return [...prev, { ...item, id: crypto.randomUUID() }];
     });
@@ -128,6 +101,27 @@ const Index = () => {
       prev.map((item) => (item.id === id ? { ...item, quantity, unit } : item))
     );
   }, []);
+
+  const daysUntilExpiry = (expiresAt?: string): number | null => {
+    if (!expiresAt) return null;
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const exp = new Date(expiresAt);
+    exp.setHours(0, 0, 0, 0);
+    return Math.round((exp.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
+  };
+
+  const recipeUsesExpiredItem = (recipe: Recipe, pantryItems: PantryItem[]) => {
+    const expiredItems = pantryItems.filter((item) => {
+      const days = daysUntilExpiry(item.expiresAt);
+      return days !== null && days < 0;
+    });
+    if (expiredItems.length === 0) return false;
+    return recipe.extendedIngredients.some((ing) => {
+      const ingName = ing.name.toLowerCase();
+      return expiredItems.some((item) => ingName.includes(item.name.toLowerCase()) || item.name.toLowerCase().includes(ingName));
+    });
+  };
 
   const handleClearAll = useCallback(() => {
     const previousItems = [...items];
@@ -193,7 +187,7 @@ const Index = () => {
           missedIngredients: missed.map((i) => ({ id: i.id, name: i.name, amount: i.amount, unit: i.unit, original: i.original })),
         };
       }).filter((r) => r.usedIngredientCount > 0);
-      const enriched = enrichRecipesWithQuantityMatch(filtered, items);
+      const enriched = enrichRecipesWithQuantityMatch(filtered, items).filter((recipe) => !recipeUsesExpiredItem(recipe, items));
       setRecipes(enriched);
       trackEvent(AnalyticsEvents.SEARCH_RESULTS, { result_count: enriched.length, full_matches: enriched.filter(r => r.missedIngredientCount === 0).length, demo: true });
       setIsLoading(false);
@@ -211,7 +205,7 @@ const Index = () => {
       }
       if (data?.error === "RATE_LIMIT") throw new Error("RATE_LIMIT");
       if (data?.error) throw new Error(data.error);
-      const enriched = enrichRecipesWithQuantityMatch(data.recipes || [], items);
+      const enriched = enrichRecipesWithQuantityMatch(data.recipes || [], items).filter((recipe) => !recipeUsesExpiredItem(recipe, items));
       setRecipes(enriched);
       trackEvent(AnalyticsEvents.SEARCH_RESULTS, { result_count: enriched.length, full_matches: enriched.filter(r => r.missedIngredientCount === 0).length, demo: false });
     } catch (err: any) {

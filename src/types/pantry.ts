@@ -3,6 +3,8 @@ export interface PantryItem {
   name: string;
   quantity: number;
   unit: string;
+  cost?: number;
+  expiresAt?: string;
 }
 
 export const COMMON_UNITS = [

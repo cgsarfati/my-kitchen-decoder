@@ -512,8 +512,8 @@ const PantryVaultMockup = () => {
                 className="min-h-[100px] bg-card resize-none"
               />
               <Button type="button" variant="hero" className="w-full gap-2" onClick={handleAiAdd} disabled={!aiInput.trim()}>
-                <Plus className="h-4 w-4" />
-                Add described items
+                <Sparkles className="h-4 w-4" />
+                Parse Ingredients
               </Button>
             </div>
           )}
@@ -547,7 +547,7 @@ const PantryVaultMockup = () => {
                     key={item.id}
                     className={`group flex items-start justify-between gap-2 rounded-xl px-3 py-2.5 border transition-all hover:shadow-kitchen ${
                       status === "expired"
-                        ? "bg-destructive/5 border-destructive/30"
+                        ? "bg-destructive/10 border-destructive/50"
                         : status === "soon"
                         ? "bg-warning/5 border-warning/30"
                         : "bg-surface-warm border-border"
@@ -564,7 +564,7 @@ const PantryVaultMockup = () => {
                           )}
                         </div>
                         {status === "expired" && (
-                          <div className="text-[11px] font-medium text-destructive flex items-center gap-1 pt-0.5">
+                          <div className="text-[11px] font-semibold text-destructive flex items-center gap-1 pt-0.5">
                             <AlertTriangle className="h-3 w-3" />
                             {formatExpiryLabel(item.expiresAt)}
                           </div>
